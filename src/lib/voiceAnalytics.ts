@@ -68,8 +68,14 @@ class VoiceAnalyticsService {
 
   /**
    * Check if analytics is enabled
+   * Safe for SSR - returns true if localStorage is not available
    */
   isEnabled(): boolean {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return true; // Default to enabled during SSR
+    }
+
     try {
       const settings = localStorage.getItem('voice_settings');
       if (settings) {
@@ -86,10 +92,16 @@ class VoiceAnalyticsService {
   /**
    * Enable or disable analytics tracking
    * Requirement 15.5: Respect user preference for analytics opt-out
+   * Safe for SSR - no-op if localStorage is not available
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const settings = localStorage.getItem('voice_settings');
       const parsed = settings ? JSON.parse(settings) : {};
@@ -349,8 +361,14 @@ class VoiceAnalyticsService {
 
   /**
    * Clear all analytics data
+   * Safe for SSR - no-op if localStorage is not available
    */
   clearAll(): void {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       localStorage.removeItem(`${this.STORAGE_KEY}_events`);
       localStorage.removeItem(`${this.STORAGE_KEY}_metrics`);
@@ -364,6 +382,11 @@ class VoiceAnalyticsService {
   // Private helper methods
 
   private saveEvent(event: VoiceSessionEvent): void {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const events = this.getEvents();
       events.push(event);
@@ -377,6 +400,11 @@ class VoiceAnalyticsService {
   }
 
   private saveMetric(metric: VoicePerformanceMetric): void {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const metrics = this.getMetrics();
       metrics.push(metric);
@@ -390,6 +418,11 @@ class VoiceAnalyticsService {
   }
 
   private saveError(error: VoiceErrorLog): void {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const errors = this.getErrors();
       errors.push(error);
@@ -403,6 +436,11 @@ class VoiceAnalyticsService {
   }
 
   private saveSessionSummary(summary: VoiceSessionSummary): void {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     try {
       const sessions = this.getSessionSummaries();
       sessions.push(summary);
@@ -416,6 +454,11 @@ class VoiceAnalyticsService {
   }
 
   private getEvents(): VoiceSessionEvent[] {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
     try {
       const data = localStorage.getItem(`${this.STORAGE_KEY}_events`);
       return data ? JSON.parse(data) : [];
@@ -425,6 +468,11 @@ class VoiceAnalyticsService {
   }
 
   private getMetrics(): VoicePerformanceMetric[] {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
     try {
       const data = localStorage.getItem(`${this.STORAGE_KEY}_metrics`);
       return data ? JSON.parse(data) : [];
@@ -434,6 +482,11 @@ class VoiceAnalyticsService {
   }
 
   private getErrors(): VoiceErrorLog[] {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
     try {
       const data = localStorage.getItem(`${this.STORAGE_KEY}_errors`);
       return data ? JSON.parse(data) : [];
@@ -443,6 +496,11 @@ class VoiceAnalyticsService {
   }
 
   private getSessionSummaries(): VoiceSessionSummary[] {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return [];
+    }
+
     try {
       const data = localStorage.getItem(`${this.STORAGE_KEY}_sessions`);
       return data ? JSON.parse(data) : [];

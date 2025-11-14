@@ -21,8 +21,14 @@ export class VoiceSettingsManager {
   /**
    * Load voice settings from local storage
    * Returns default settings if none exist
+   * Safe for SSR - returns defaults if localStorage is not available
    */
   load(): VoiceSettings {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return { ...DEFAULT_SETTINGS };
+    }
+
     try {
       const data = localStorage.getItem(this.STORAGE_KEY);
       if (!data) {
@@ -42,8 +48,14 @@ export class VoiceSettingsManager {
 
   /**
    * Save voice settings to local storage
+   * Safe for SSR - returns false if localStorage is not available
    */
   save(settings: Partial<VoiceSettings>): boolean {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     try {
       const currentSettings = this.load();
       const updatedSettings: VoiceSettings = {
@@ -92,8 +104,14 @@ export class VoiceSettingsManager {
 
   /**
    * Reset all settings to defaults
+   * Safe for SSR - returns false if localStorage is not available
    */
   reset(): boolean {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     try {
       localStorage.removeItem(this.STORAGE_KEY);
       return true;
@@ -105,8 +123,14 @@ export class VoiceSettingsManager {
 
   /**
    * Check if local storage is available
+   * Safe for SSR - returns false if localStorage is not available
    */
   isStorageAvailable(): boolean {
+    // Check if we're in a browser environment (localStorage is not available during SSR)
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     try {
       const testKey = '__voice_settings_test__';
       localStorage.setItem(testKey, 'test');
