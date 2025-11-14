@@ -38,7 +38,7 @@ export default function StyleEditor({ styling, onChange }: StyleEditorProps) {
     label: string; 
     value: string; 
     onChange: (value: string) => void;
-    colorRef: React.RefObject<HTMLInputElement>;
+    colorRef: React.RefObject<HTMLInputElement | null>;
   }) => (
     <div className="flex items-center gap-2">
       <div className="relative flex-shrink-0">
