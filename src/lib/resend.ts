@@ -1,7 +1,43 @@
 import { Resend } from "resend";
 
-// Initialize Resend client with API key from environment variables
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization of Resend client to avoid build-time errors
+// Only initialize when actually used (at runtime), not during build
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    const apiKey = process.env.RESEND_API_KEY;
+    
+    // If API key is missing, create a stub that fails gracefully
+    // This allows the build to succeed even without the key
+    if (!apiKey || apiKey.trim() === "") {
+      const stubResend = {
+        emails: {
+          send: async () => {
+            throw new Error(
+              "RESEND_API_KEY is not set. Please add it to your Vercel environment variables."
+            );
+          },
+        },
+      } as unknown as Resend;
+      resendInstance = stubResend;
+      return resendInstance;
+    }
+    
+    // Initialize Resend with the API key
+    resendInstance = new Resend(apiKey);
+  }
+  return resendInstance;
+}
+
+// Export a getter function that lazily initializes Resend
+// This prevents module-level initialization during build
+// The getter only executes when the emails property is accessed at runtime
+export const resend = {
+  get emails() {
+    return getResend().emails;
+  },
+} as Resend;
 
 // Email template for form submission notifications
 export function generateSubmissionEmailHtml(data: {
