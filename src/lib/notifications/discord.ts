@@ -49,11 +49,11 @@ export async function sendDiscordNotification(
             value: data.timestamp,
             inline: true,
           },
-          ...(data.customMessage || config.customMessage
+          ...(data.customMessage
             ? [
                 {
                   name: "Custom Message",
-                  value: data.customMessage || config.customMessage || "",
+                  value: data.customMessage,
                   inline: false,
                 },
               ]

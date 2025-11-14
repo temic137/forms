@@ -59,13 +59,13 @@ export async function sendSlackNotification(
           },
         ],
       },
-      ...(data.customMessage || config.customMessage
+      ...(data.customMessage
         ? [
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Custom Message:*\n${data.customMessage || config.customMessage}`,
+                text: `*Custom Message:*\n${data.customMessage}`,
               },
             },
           ]
