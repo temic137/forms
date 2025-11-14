@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DndContext, DragEndEvent, DragOverlay, DragOverEvent, closestCenter, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { Field, FieldType, FormStyling, NotificationConfig, MultiStepConfig } from "@/types/form";
+import { Field, FieldType, FormStyling, NotificationConfig, MultiStepConfig, FormStep } from "@/types/form";
 import FieldPalette, { fieldTemplates } from "./FieldPalette";
 import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
