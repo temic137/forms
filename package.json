@@ -27,6 +27,7 @@
     "@types/react-dnd": "^2.0.36",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "cohere-ai": "^7.19.0",
     "dotenv": "^17.2.3",
     "firebase": "^12.5.0",
     "firebase-admin": "^13.6.0",

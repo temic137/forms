@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import Link from "next/link";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
-import { Field, FormStyling } from "@/types/form";
+import { Field, FormStyling, NotificationConfig, MultiStepConfig } from "@/types/form";
 import CreationMethodSelector, { CreationMethodInline } from "@/components/CreationMethodSelector";
 import InlineFileUpload from "@/components/InlineFileUpload";
 import InlineDocumentScanner from "@/components/InlineDocumentScanner";
@@ -51,6 +51,8 @@ export default function DashboardPage() {
   const [previewFields, setPreviewFields] = useState<Field[]>([]);
   const [conversationalMode, setConversationalMode] = useState(false);
   const [previewStyling, setPreviewStyling] = useState<FormStyling | undefined>(undefined);
+  const [previewNotifications, setPreviewNotifications] = useState<NotificationConfig | undefined>(undefined);
+  const [previewMultiStepConfig, setPreviewMultiStepConfig] = useState<MultiStepConfig | undefined>(undefined);
 
   // Voice input state
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -185,6 +187,7 @@ export default function DashboardPage() {
       setPreviewTitle(data.title);
       setPreviewFields(normalizedFields);
       setPreviewStyling(undefined); // Use defaults from StyleEditor
+      setPreviewMultiStepConfig(undefined);
       setConversationalMode(false);
       setEditingFormId(null); // This is a new form
       setShowBuilder(true); // Use drag-drop builder instead of old preview
@@ -228,6 +231,7 @@ export default function DashboardPage() {
       setPreviewTitle(data.title || "Imported Form");
       setPreviewFields(normalizedFields);
       setPreviewStyling(undefined); // Use defaults from StyleEditor
+      setPreviewMultiStepConfig(undefined);
       setConversationalMode(false);
       setEditingFormId(null);
       setShowBuilder(true); // Use drag-drop builder
@@ -300,6 +304,7 @@ export default function DashboardPage() {
       setPreviewTitle(jsonData.title || "Imported Form");
       setPreviewFields(normalizedFields);
       setPreviewStyling(undefined); // Use defaults from StyleEditor
+      setPreviewMultiStepConfig(undefined);
       setConversationalMode(false);
       setEditingFormId(null);
       setShowBuilder(true); // Use drag-drop builder
@@ -318,6 +323,8 @@ export default function DashboardPage() {
     setPreviewFields([]);
     setEditingFormId(null);
     setPreviewStyling(undefined); // Use defaults from StyleEditor
+    setPreviewNotifications(undefined);
+    setPreviewMultiStepConfig(undefined);
     setShowBuilder(true);
   };
 
@@ -331,6 +338,8 @@ export default function DashboardPage() {
         setPreviewTitle(data.title);
         setPreviewFields(Array.isArray(data.fieldsJson) ? data.fieldsJson : []);
         setPreviewStyling(data.styling as FormStyling | undefined);
+        setPreviewNotifications(data.notifications as NotificationConfig | undefined);
+        setPreviewMultiStepConfig(data.multiStepConfig as MultiStepConfig | undefined);
         setEditingFormId(formId);
         setShowBuilder(true);
       } else {
@@ -368,6 +377,8 @@ export default function DashboardPage() {
           title: previewTitle,
           fields: previewFields,
           styling: previewStyling,
+          notifications: previewNotifications,
+          multiStepConfig: previewMultiStepConfig,
         }),
       });
 
@@ -396,11 +407,14 @@ export default function DashboardPage() {
         setShowBuilder(false);
         setEditingFormId(null);
         setPreviewStyling(undefined);
+        setPreviewNotifications(undefined);
+        setPreviewMultiStepConfig(undefined);
       }
     } else {
       setShowBuilder(false);
       setEditingFormId(null);
       setPreviewStyling(undefined);
+      setPreviewMultiStepConfig(undefined);
     }
   };
 
@@ -452,9 +466,13 @@ export default function DashboardPage() {
         formTitle={previewTitle}
         fields={previewFields}
         styling={previewStyling}
+        notifications={previewNotifications}
+        multiStepConfig={previewMultiStepConfig}
         onFormTitleChange={setPreviewTitle}
         onFieldsChange={setPreviewFields}
         onStylingChange={setPreviewStyling}
+        onNotificationsChange={setPreviewNotifications}
+        onMultiStepConfigChange={setPreviewMultiStepConfig}
         onSave={handleBuilderSave}
         onCancel={handleBuilderCancel}
         saving={savingForm}

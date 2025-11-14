@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroqClient } from "@/lib/groq";
+import { getAICompletion } from "@/lib/ai-provider";
 import { contentAnalyzer, ContentAnalysis, SuggestedQuestion, FieldType } from "@/lib/content-analyzer";
 import { generateFormDynamically } from "@/lib/dynamic-content-analyzer";
 import { generateWithMultipleModels, MultiModelConfig } from "@/lib/multi-model-analyzer";
@@ -157,12 +157,9 @@ export async function POST(req: Request) {
     // Fallback to rule-based analysis (legacy)
     const analysis = await contentAnalyzer.analyze(content, options);
     const enhancedPrompt = buildEnhancedPrompt(content, analysis, sourceType);
-    const groq = getGroqClient();
     
-    const resp = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.3,
-      response_format: { type: "json_object" },
+    // Use multi-provider AI system (Cohere prioritized for structured JSON generation)
+    const aiResponseObj = await getAICompletion({
       messages: [
         {
           role: "system",
@@ -173,9 +170,13 @@ export async function POST(req: Request) {
           content: enhancedPrompt
         }
       ],
+      temperature: 0.3,
+      maxTokens: 3000,
+      responseFormat: "json",
     });
 
-    const aiResponse = resp.choices[0]?.message?.content ?? "{}";
+    const aiResponse = aiResponseObj.content || "{}";
+    console.log(`Enhanced form generated using ${aiResponseObj.provider} AI provider`);
     const generatedForm = JSON.parse(aiResponse) as { title: string; fields: Field[] };
     const enhancedFields = mergeFieldSuggestions(
       generatedForm.fields,

@@ -130,6 +130,27 @@ providers.push(
           name: user.name,
         };
       } catch (error) {
+        // Enhanced error logging for debugging
+        if (error instanceof Error) {
+          console.error("Firebase ID token verification failed:", {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+          });
+          
+          // Check if it's a Firebase Admin initialization error
+          if (error.message.includes("Missing Firebase Admin credentials")) {
+            throw new Error(
+              "Firebase Admin not configured. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY environment variables."
+            );
+          }
+          
+          // Check if it's a token verification error
+          if (error.message.includes("auth/") || error.message.includes("Firebase")) {
+            throw new Error(`Firebase verification failed: ${error.message}`);
+          }
+        }
+        
         console.error("Firebase ID token verification failed:", error);
         throw new Error("Firebase verification failed");
       }

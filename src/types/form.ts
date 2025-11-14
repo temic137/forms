@@ -158,10 +158,45 @@ export interface FormStyling {
 }
 
 // Notification Configuration
-export interface NotificationConfig {
+export interface EmailNotificationConfig {
   enabled: boolean;
   recipients: string[];
   includeSubmissionData: boolean;
+  customMessage?: string;
+}
+
+export interface SlackNotificationConfig {
+  enabled: boolean;
+  webhookUrl: string;
+  channel?: string;
+  username?: string;
+  iconEmoji?: string;
+}
+
+export interface DiscordNotificationConfig {
+  enabled: boolean;
+  webhookUrl: string;
+  username?: string;
+  avatarUrl?: string;
+}
+
+export interface WebhookNotificationConfig {
+  enabled: boolean;
+  url: string;
+  method?: "POST" | "PUT" | "PATCH";
+  headers?: Record<string, string>;
+  secret?: string;
+}
+
+export interface NotificationConfig {
+  enabled: boolean;
+  email?: EmailNotificationConfig;
+  slack?: SlackNotificationConfig;
+  discord?: DiscordNotificationConfig;
+  webhook?: WebhookNotificationConfig;
+  // Legacy support - will be migrated to email config
+  recipients?: string[];
+  includeSubmissionData?: boolean;
   customMessage?: string;
 }
 

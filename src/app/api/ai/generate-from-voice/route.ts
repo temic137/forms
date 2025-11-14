@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroqClient } from "@/lib/groq";
+import { getAICompletion } from "@/lib/ai-provider";
 import type { Field } from "@/types/form";
 import { enhanceTranscriptForAI } from "@/lib/transcriptProcessor";
 
@@ -46,15 +46,11 @@ export async function POST(req: Request) {
     console.log('Original transcript:', transcript);
     console.log('Enhanced transcript:', enhancedTranscript);
 
-    const groq = getGroqClient();
-
     // Build language-aware system prompt
     const languageContext = getLanguageContext(language);
     
-    const resp = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      temperature: 0.2,
-      response_format: { type: "json_object" },
+    // Use multi-provider AI system (Cohere prioritized for structured JSON generation)
+    const aiResponseObj = await getAICompletion({
       messages: [
         {
           role: "system",
@@ -216,9 +212,13 @@ CONFIDENCE SCORING:
 Analyze the transcript carefully. Extract the form purpose, identify all requested fields, infer appropriate field types, and generate a complete, user-friendly form configuration.`,
         },
       ],
+      temperature: 0.2,
+      maxTokens: 3000,
+      responseFormat: "json",
     });
 
-    const content = resp.choices[0]?.message?.content ?? "{}";
+    const content = aiResponseObj.content || "{}";
+    console.log(`Voice form generated using ${aiResponseObj.provider} AI provider`);
     console.log("AI Response:", content);
     
     const data: unknown = JSON.parse(content);

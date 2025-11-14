@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { resend, generateSubmissionEmailHtml } from "@/lib/resend";
 import { Field, NotificationConfig } from "@/types/form";
 import { addRowToSheet, formatSubmissionForSheet, GoogleSheetsConfig } from "@/lib/google-sheets";
+import { sendNotifications, SubmissionData } from "@/lib/notifications";
 
 interface FileMetadata {
   fieldId: string;
@@ -69,18 +69,18 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     // Get form fields for processing
     const fields = form.fieldsJson as unknown as Field[];
     
-    // Send email notification if enabled
+    // Send notifications to all enabled channels
     const notificationConfig = form.notifications as NotificationConfig | null;
-    if (notificationConfig?.enabled && notificationConfig.recipients.length > 0) {
+    if (notificationConfig?.enabled) {
       try {
-        // Format submission data for email
+        // Format submission data for notifications
         const formattedFields = fields.map((field) => ({
           label: field.label,
           value: String(body[field.id] || ""),
           type: field.type,
         }));
 
-        // Format file attachments for email
+        // Format file attachments for notifications
         const formattedFiles = submissionWithFiles?.files.map((file) => {
           const field = fields.find((f) => f.id === file.fieldId);
           return {
@@ -90,26 +90,32 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
           };
         }) || [];
 
-        // Generate email HTML
-        const emailHtml = generateSubmissionEmailHtml({
+        // Prepare notification data
+        const notificationData: SubmissionData = {
           formTitle: form.title,
           submissionId: submission.id,
           timestamp: new Date().toLocaleString(),
           fields: formattedFields,
           files: formattedFiles.length > 0 ? formattedFiles : undefined,
           customMessage: notificationConfig.customMessage,
-        });
+        };
 
-        // Send email to all recipients
-        await resend.emails.send({
-          from: "Form Builder <onboarding@resend.dev>", // Update with your verified domain
-          to: notificationConfig.recipients,
-          subject: `New submission: ${form.title}`,
-          html: emailHtml,
-        });
-      } catch (emailError) {
+        // Send notifications to all enabled channels
+        const results = await sendNotifications(notificationConfig, notificationData);
+        
+        // Log results
+        const successful = results.filter((r) => r.success);
+        const failed = results.filter((r) => !r.success);
+        
+        if (successful.length > 0) {
+          console.log(`✓ Notifications sent: ${successful.map((r) => r.type).join(", ")}`);
+        }
+        if (failed.length > 0) {
+          console.error(`✗ Notification failures: ${failed.map((r) => `${r.type}: ${r.error}`).join(", ")}`);
+        }
+      } catch (notificationError) {
         // Log error but don't fail the submission
-        console.error("Failed to send notification email:", emailError);
+        console.error("Failed to send notifications:", notificationError);
       }
     }
 

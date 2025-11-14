@@ -14,7 +14,8 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         fieldsJson: true, 
         conversationalMode: true,
         styling: true,
-        notifications: true 
+        notifications: true,
+        multiStepConfig: true
       },
     });
     if (!form) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -34,7 +35,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     const { id } = await context.params;
     const body = await req.json();
-    const { title, fields, conversationalMode, styling, notifications } = body;
+    const { title, fields, conversationalMode, styling, notifications, multiStepConfig } = body;
 
     // Check if form belongs to user
     const form = await prisma.form.findUnique({
@@ -54,11 +55,12 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     const updated = await prisma.form.update({
       where: { id },
       data: {
-        ...(title && { title }),
-        ...(fields && { fieldsJson: fields }),
+        ...(title !== undefined && { title }),
+        ...(fields !== undefined && { fieldsJson: fields }),
         ...(conversationalMode !== undefined && { conversationalMode }),
-        ...(styling && { styling }),
-        ...(notifications && { notifications }),
+        ...(styling !== undefined && { styling }),
+        ...(notifications !== undefined && { notifications }),
+        ...(multiStepConfig !== undefined && { multiStepConfig: multiStepConfig || null }),
       },
     });
 
@@ -78,7 +80,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
     const { id } = await context.params;
     const body = await req.json();
-    const { title, fields, conversationalMode, styling, notifications } = body;
+    const { title, fields, conversationalMode, styling, notifications, multiStepConfig } = body;
 
     // Check if form belongs to user
     const form = await prisma.form.findUnique({
@@ -98,11 +100,12 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
     const updated = await prisma.form.update({
       where: { id },
       data: {
-        ...(title && { title }),
-        ...(fields && { fieldsJson: fields }),
+        ...(title !== undefined && { title }),
+        ...(fields !== undefined && { fieldsJson: fields }),
         ...(conversationalMode !== undefined && { conversationalMode }),
-        ...(styling && { styling }),
-        ...(notifications && { notifications }),
+        ...(styling !== undefined && { styling }),
+        ...(notifications !== undefined && { notifications }),
+        ...(multiStepConfig !== undefined && { multiStepConfig: multiStepConfig || null }),
       },
     });
 

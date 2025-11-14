@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroqClient } from "@/lib/groq";
+import { getAICompletion } from "@/lib/ai-provider";
 
 export const runtime = "nodejs";
 
@@ -127,13 +127,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid brief" }, { status: 400 });
     }
 
-    const groq = getGroqClient();
-    
-    // Use advanced prompt with enhanced reasoning
-    const resp = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // Use larger model for better intelligence
-      temperature: 0.3, // Slightly higher for creativity while maintaining consistency
-      response_format: { type: "json_object" },
+    // Use multi-provider AI system (Cohere prioritized for structured JSON generation)
+    // Falls back to Gemini, Together, or Groq if Cohere is unavailable
+    const aiResponse = await getAICompletion({
       messages: [
         {
           role: "system",
@@ -144,9 +140,13 @@ export async function POST(req: Request) {
           content: buildUserPrompt(brief),
         },
       ],
+      temperature: 0.3, // Slightly higher for creativity while maintaining consistency
+      maxTokens: 3000,
+      responseFormat: "json", // Request JSON format for structured form data
     });
 
-    const content = resp.choices[0]?.message?.content ?? "{}";
+    const content = aiResponse.content || "{}";
+    console.log(`Form generated using ${aiResponse.provider} AI provider`);
     const data = JSON.parse(content) as { title: string; fields: Field[] };
     
     // Validate response structure

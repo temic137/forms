@@ -4,8 +4,9 @@
  */
 
 import Groq from "groq-sdk";
+import { CohereClient } from "cohere-ai";
 
-export type AIProvider = "gemini" | "groq" | "together" | "huggingface";
+export type AIProvider = "gemini" | "groq" | "together" | "huggingface" | "cohere";
 
 interface AIMessage {
   role: "system" | "user" | "assistant";
@@ -159,11 +160,92 @@ async function callTogether(options: AICompletionOptions): Promise<string> {
 }
 
 /**
+ * Cohere API Client (FREE tier - Excellent for structured generation)
+ * Get key from: https://dashboard.cohere.com/api-keys
+ * Free tier: 100 requests/min, great for form generation
+ */
+async function callCohere(options: AICompletionOptions): Promise<string> {
+  const apiKey = process.env.COHERE_API_KEY;
+  if (!apiKey) {
+    throw new Error("COHERE_API_KEY not configured");
+  }
+
+  const cohere = new CohereClient({
+    token: apiKey,
+  });
+
+  // Use Command R or Command R+ (free tier models, excellent for structured tasks)
+  // Available models: command, command-r, command-r-plus, command-r7b-12-2024
+  const model = options.model || "command";
+
+  // Combine system and user messages for Cohere
+  const systemMessage = options.messages.find(m => m.role === "system")?.content || "";
+  const userMessages = options.messages.filter(m => m.role !== "system");
+  
+  // Build the full prompt combining system and user messages
+  let prompt = "";
+  if (systemMessage) {
+    prompt = `${systemMessage}\n\n`;
+  }
+  
+  // Combine all user messages
+  for (const msg of userMessages) {
+    if (msg.role === "user") {
+      prompt += `${msg.content}\n\n`;
+    } else if (msg.role === "assistant") {
+      prompt += `Assistant: ${msg.content}\n\n`;
+    }
+  }
+  
+  // For JSON format, add explicit instruction
+  if (options.responseFormat === "json") {
+    prompt += "\n\nIMPORTANT: Respond with ONLY valid JSON. No markdown, no code blocks, no explanatory text. Just the raw JSON object.";
+  }
+
+  try {
+    // Use Cohere's generate endpoint for better structured output
+    const response = await cohere.generate({
+      model,
+      prompt: prompt.trim(),
+      temperature: options.temperature || 0.3,
+      maxTokens: options.maxTokens || 3000,
+    });
+
+    let content = response.generations?.[0]?.text || "";
+    
+    // If JSON format is requested, try to extract JSON from the response
+    if (options.responseFormat === "json") {
+      // Try to extract JSON from markdown code blocks if present
+      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+      if (jsonMatch) {
+        content = jsonMatch[1];
+      } else {
+        // Try to find JSON object in the response
+        const jsonObjectMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonObjectMatch) {
+          content = jsonObjectMatch[0];
+        }
+      }
+    }
+
+    return content.trim();
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new Error(`Cohere API error: ${errorMsg}`);
+  }
+}
+
+/**
  * Main AI completion function with automatic provider fallback
  */
 export async function getAICompletion(options: AICompletionOptions): Promise<AIResponse> {
-  // Try providers in order of quality/speed
+  // Try providers in order of quality/speed for form generation
+  // Cohere is prioritized for structured JSON generation (excellent for forms)
   const providers: { name: AIProvider; fn: () => Promise<string> }[] = [
+    {
+      name: "cohere",
+      fn: () => callCohere(options),
+    },
     {
       name: "gemini",
       fn: () => callGemini(options),
@@ -210,6 +292,9 @@ export async function getAICompletion(options: AICompletionOptions): Promise<AIR
 export function getAvailableProviders(): AIProvider[] {
   const available: AIProvider[] = [];
   
+  if (process.env.COHERE_API_KEY) {
+    available.push("cohere");
+  }
   if (process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY) {
     available.push("gemini");
   }
