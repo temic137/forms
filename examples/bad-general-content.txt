@@ -1,0 +1,25 @@
+Customer Service Knowledge Base for AI Chatbot Platform
+
+Overview
+
+Our AI-powered customer service platform is designed to revolutionize how businesses handle customer support. By integrating intelligent chatbots, our platform provides exceptional, round-the-clock service, ensuring that your customers receive timely and relevant answers.
+
+Key Features
+
+24/7 Availability
+
+Never miss a customer query. Our AI-driven chatbots are available 24/7, ensuring customers receive consistent support at any time of the day or night.
+
+Smart Responses
+
+Powered by cutting-edge artificial intelligence, our chatbots provide responses that understand the context of the customer's query, delivering accurate and relevant solutions.
+
+Analytics & Insights
+
+Gain valuable insights into customer behavior and needs with our platform's robust analytics tools. These features help businesses fine-tune their customer service strategy, improving customer satisfaction.
+
+NOTE: This file will be REJECTED by the import system because it's general documentation, not form data. This is the correct behavior - you should use the AI prompt feature to describe what form you want instead.
+
+
+
+

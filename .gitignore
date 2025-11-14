@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma generated
+/src/generated/prisma
+/generated/prisma-client
+
+# build logs
+*.log
+build.log
+
+# firebase admin sdk keys (security)
+*-firebase-adminsdk-*.json

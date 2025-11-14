@@ -1,26 +1,352 @@
 @import "tailwindcss";
 
 :root {
+  /* Clean White Theme */
   --background: #ffffff;
-  --foreground: #171717;
+  --background-subtle: #f8f9fa;
+  --foreground: #202124;
+  --foreground-muted: #5f6368;
+  --foreground-subtle: #80868b;
+  
+  /* Card Design */
+  --card-bg: #ffffff;
+  --card-bg-hover: #f8f9fa;
+  --card-border: #e8eaed;
+  --card-border-hover: #dadce0;
+  --card-radius: 12px;
+  --card-radius-lg: 16px;
+  --card-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  --card-shadow-hover: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+  
+  /* Accent Colors - Blue */
+  --accent: #1a73e8;
+  --accent-hover: #1765cc;
+  --accent-light: rgba(26, 115, 232, 0.1);
+  --accent-dark: #ffffff;
+  
+  /* Status Colors */
+  --success: #1e8e3e;
+  --success-hover: #188038;
+  --success-light: rgba(30, 142, 62, 0.1);
+  
+  --error: #d93025;
+  --error-hover: #c5221f;
+  --error-light: rgba(217, 48, 37, 0.1);
+  
+  --warning: #f9ab00;
+  --warning-hover: #ea8600;
+  --warning-light: rgba(249, 171, 0, 0.1);
+  
+  /* Dividers & Borders */
+  --divider: #e8eaed;
+  --divider-subtle: #f1f3f4;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* Typography */
+  --font-body: "Roboto", "Google Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Roboto", "Google Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Removed @theme - using standard CSS custom properties */
+
+/* Modern Card-Based Design Utilities */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.card:hover {
+  background: var(--card-bg-hover);
+  border-color: var(--card-border-hover);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.card-lg {
+  border-radius: var(--card-radius-lg);
+  padding: var(--spacing-xl);
+}
+
+.section {
+  padding: var(--spacing-lg) 0;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+}
+
+.section-value {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--foreground);
+  margin-bottom: var(--spacing-xs);
+}
+
+.divider {
+  height: 1px;
+  background: var(--divider);
+  border: none;
+  margin: var(--spacing-lg) 0;
+}
+
+.divider-subtle {
+  background: var(--divider-subtle);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: var(--background-subtle);
+  color: var(--foreground);
+  border: 1px solid var(--card-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--card-bg-hover);
+  border-color: var(--card-border-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--card-bg);
+  color: var(--foreground);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans, var(--font-body));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  line-height: 1.6;
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  color: var(--foreground);
+  background-color: #ffffff;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: var(--foreground-subtle);
+  opacity: 1;
+}
+
+button {
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Accessibility: Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Accessibility: Visible focus indicators for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Custom animations for voice input */
+@keyframes pulse-slow {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce-subtle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1s ease-in-out infinite;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Tutorial and Help Modal Animations */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Duplicate animations removed - kept first definitions above */

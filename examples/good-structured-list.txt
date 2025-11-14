@@ -1,0 +1,22 @@
+Full Name
+Email Address
+Phone Number
+Date of Birth
+Street Address
+City
+State
+ZIP Code
+Company Name
+Job Title
+Years of Experience
+LinkedIn Profile URL
+Resume Upload
+Cover Letter
+Expected Salary
+Available Start Date
+How did you hear about us?
+Additional Comments
+
+
+
+

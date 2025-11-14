@@ -1,0 +1,53 @@
+CUSTOMER FEEDBACK FORM
+
+Thank you for choosing our service! Please help us improve by providing your feedback.
+
+Personal Information:
+Full Name: _______________________________
+Email Address: _______________________________
+Phone Number: _______________________________
+
+Feedback:
+How would you rate your experience?
+[ ] Excellent
+[ ] Good
+[ ] Average
+[ ] Poor
+[ ] Very Poor
+
+Which product/service did you use? _______________________________
+
+What did you like most about our service?
+_____________________________________________
+_____________________________________________
+_____________________________________________
+
+What could we improve?
+_____________________________________________
+_____________________________________________
+_____________________________________________
+
+Additional Comments:
+_____________________________________________
+_____________________________________________
+_____________________________________________
+
+Would you recommend us to others?
+[ ] Yes
+[ ] No
+[ ] Maybe
+
+Follow-up:
+[ ] I'd like someone to contact me about my feedback
+
+Preferred contact method:
+[ ] Email
+[ ] Phone
+
+Date: ____ / ____ / ________
+
+Thank you for your time!
+
+
+
+

@@ -1,0 +1,79 @@
+{
+  "title": "Contact Form",
+  "fields": [
+    {
+      "id": "full_name",
+      "label": "Full Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "John Doe"
+    },
+    {
+      "id": "email",
+      "label": "Email Address",
+      "type": "email",
+      "required": true,
+      "placeholder": "john.doe@example.com",
+      "helpText": "We'll never share your email with anyone else"
+    },
+    {
+      "id": "phone",
+      "label": "Phone Number",
+      "type": "tel",
+      "required": false,
+      "placeholder": "(555) 123-4567"
+    },
+    {
+      "id": "subject",
+      "label": "Subject",
+      "type": "select",
+      "required": true,
+      "options": [
+        "General Inquiry",
+        "Technical Support",
+        "Billing Question",
+        "Feature Request",
+        "Other"
+      ]
+    },
+    {
+      "id": "priority",
+      "label": "Priority",
+      "type": "radio",
+      "required": true,
+      "options": ["Low", "Medium", "High", "Urgent"]
+    },
+    {
+      "id": "message",
+      "label": "Message",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Please describe your inquiry in detail...",
+      "helpText": "Minimum 10 characters"
+    },
+    {
+      "id": "attachments",
+      "label": "Attachments",
+      "type": "file",
+      "required": false,
+      "helpText": "Upload any relevant files (max 10MB)"
+    },
+    {
+      "id": "contact_preferences",
+      "label": "How would you like us to contact you?",
+      "type": "checkbox",
+      "required": false,
+      "options": ["Email", "Phone", "SMS"]
+    },
+    {
+      "id": "newsletter",
+      "label": "Subscribe to our newsletter",
+      "type": "checkbox",
+      "required": false
+    }
+  ]
+}
+
+
+
+

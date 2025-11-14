@@ -1,0 +1,135 @@
+"use client";
+
+import { signOut, useSession } from "next-auth/react";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+
+function UserMenu() {
+  const { data: session } = useSession();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (!session) {
+    return (
+      <div className="flex items-center gap-3">
+        <Link
+          href="/auth/signin"
+          className="px-4 py-2 rounded-lg font-medium transition-all"
+          style={{
+            color: 'var(--foreground)',
+            border: '1px solid var(--card-border)',
+          }}
+        >
+          Sign In
+        </Link>
+        <Link
+          href="/auth/signup"
+          className="px-4 py-2 rounded-lg font-medium transition-all"
+          style={{
+            background: 'var(--accent)',
+            color: 'var(--accent-dark)',
+          }}
+        >
+          Sign Up
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+        style={{
+          background: 'var(--card-bg)',
+          border: '1px solid var(--card-border)',
+        }}
+      >
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center font-medium"
+          style={{
+            background: 'var(--accent-light)',
+            color: 'var(--foreground)',
+          }}
+        >
+          {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase()}
+        </div>
+        <span style={{ color: 'var(--foreground)' }}>
+          {session.user?.name || session.user?.email}
+        </span>
+        <svg
+          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          style={{ color: 'var(--foreground-muted)' }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute right-0 mt-2 w-48 py-2 rounded-lg shadow-lg z-50"
+          style={{
+            background: 'var(--card-bg)',
+            border: '1px solid var(--card-border)',
+          }}
+        >
+          <Link
+            href="/dashboard"
+            className="block px-4 py-2 transition-colors"
+            style={{ color: 'var(--foreground)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--card-bg-hover)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+            onClick={() => setIsOpen(false)}
+          >
+            Dashboard
+          </Link>
+          <div
+            className="my-2"
+            style={{
+              height: '1px',
+              background: 'var(--divider)',
+            }}
+          />
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              signOut({ callbackUrl: "/" });
+            }}
+            className="w-full text-left px-4 py-2 transition-colors"
+            style={{ color: 'var(--foreground)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--card-bg-hover)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export { UserMenu };
+export default UserMenu;

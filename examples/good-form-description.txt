@@ -1,0 +1,31 @@
+Create a comprehensive event registration form with the following fields:
+
+Required Fields:
+- Full name (first and last name as separate fields)
+- Email address (with email validation)
+- Phone number (with proper formatting)
+- Number of attendees (numeric field, minimum 1, maximum 10)
+
+Event Selection:
+- Event type (dropdown with options: Workshop, Conference, Networking Event, Webinar)
+- Session preference (radio buttons: Morning, Afternoon, Evening)
+
+Optional Fields:
+- Company/Organization name
+- Job title
+- Dietary restrictions (text area for detailed requirements)
+- Special accommodations needed (text area)
+- T-shirt size (dropdown: XS, S, M, L, XL, XXL)
+
+Agreement:
+- Checkbox for accepting terms and conditions (required)
+- Checkbox for photo consent (optional)
+- Checkbox for receiving event updates via email (optional)
+
+Additional Information:
+- How did you hear about us? (text field)
+- Any questions or comments? (text area)
+
+
+
+
