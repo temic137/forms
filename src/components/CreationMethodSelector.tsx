@@ -1,8 +1,8 @@
 "use client";
 
-import { Upload, FileJson, Camera } from "lucide-react";
+import { Upload, FileJson, Camera, Globe } from "lucide-react";
 
-export type CreationMethodInline = "prompt" | "file" | "json" | "scan";
+export type CreationMethodInline = "prompt" | "file" | "json" | "scan" | "url";
 
 interface CreationMethodSelectorProps {
   selectedMethod: CreationMethodInline;
@@ -30,6 +30,11 @@ const methods = [
     id: "scan" as CreationMethodInline,
     label: "Scan Form",
     icon: Camera,
+  },
+  {
+    id: "url" as CreationMethodInline,
+    label: "Website URL",
+    icon: Globe,
   },
 ];
 

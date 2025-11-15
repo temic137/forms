@@ -12,7 +12,7 @@ import { TimeSeriesChart } from "@/components/analytics/TimeSeriesChart";
 import { BarChart } from "@/components/analytics/BarChart";
 import { FieldAnalyticsCard } from "@/components/analytics/FieldAnalyticsCard";
 import ShareButton from "@/components/ShareButton";
-import IntegrationButton from "@/components/IntegrationButton";
+// import IntegrationButton from "@/components/IntegrationButton";
 
 interface Submission {
   id: string;
@@ -180,7 +180,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ id: stri
 
           {formId && (
             <div className="flex items-center gap-2">
-              <IntegrationButton formId={formId} />
+              {/* <IntegrationButton formId={formId} /> */}
               <ShareButton url={shareUrl || undefined} label="Share" />
             </div>
           )}

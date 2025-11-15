@@ -101,7 +101,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         };
 
         // Send notifications to all enabled channels
-        const results = await sendNotifications(notificationConfig, notificationData);
+        const results = await sendNotifications(notificationConfig, notificationData, formId);
         
         // Log results
         const successful = results.filter((r) => r.success);

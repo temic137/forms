@@ -9,6 +9,7 @@ import CreationMethodSelector, { CreationMethodInline } from "@/components/Creat
 import InlineFileUpload from "@/components/InlineFileUpload";
 import InlineDocumentScanner from "@/components/InlineDocumentScanner";
 import InlineJSONImport from "@/components/InlineJSONImport";
+import InlineURLScraper from "@/components/InlineURLScraper";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -180,6 +181,44 @@ export default function Home() {
     }
   }
 
+  async function handleURLScrape(url: string) {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/ai/generate-from-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || "Failed to scrape URL and generate form");
+      }
+
+      const data = await response.json();
+      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
+        id: f.id || `field_${Date.now()}_${idx}`,
+        label: f.label || "Field",
+        type: f.type || "text",
+        required: f.required || false,
+        options: f.options || [],
+        placeholder: f.placeholder,
+        helpText: f.helpText,
+        order: f.order || idx,
+        conditionalLogic: f.conditionalLogic || [],
+      }));
+
+      setTitle(data.title || "Form from URL");
+      setFields(normalizedFields);
+      setShowForm(true);
+      setCreationMethod("prompt"); // Reset to prompt after success
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to scrape URL and generate form");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Auto-submit after 3 seconds of silence
   useEffect(() => {
     if (silenceTimerRef.current) {
@@ -340,19 +379,14 @@ export default function Home() {
         {/* Command Bar */}
         <div className="border-b" style={{ borderColor: 'var(--divider)' }}>
           <div className="max-w-7xl mx-auto px-6 py-4">
-            <form onSubmit={handleSubmit} className="flex items-center gap-3">
+            <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="flex-1">
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Add or modify fields... (e.g., 'add phone number field')"
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border transition-colors"
-                  style={{
-                    background: 'var(--card-bg)',
-                    borderColor: 'var(--card-border)',
-                    color: 'var(--foreground)'
-                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 transition-all"
                   disabled={loading}
                 />
               </div>
@@ -360,15 +394,13 @@ export default function Home() {
                 type="button"
                 onClick={handleVoiceClick}
                 disabled={loading || !isSupported}
-                className="btn btn-secondary"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title={isListening ? "Stop recording" : "Start voice input"}
               >
                 {isListening ? (
-                  <>
-                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <rect x="6" y="6" width="8" height="8" />
-                    </svg>
-                  </>
+                  <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <rect x="6" y="6" width="8" height="8" />
+                  </svg>
                 ) : (
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
@@ -407,8 +439,7 @@ export default function Home() {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-0 py-1 bg-transparent border-none text-lg font-medium focus:outline-none"
-                        style={{ color: 'var(--foreground)' }}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-base font-medium focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 transition-all"
                         placeholder="Untitled Form"
                       />
                     }
@@ -445,24 +476,14 @@ export default function Home() {
                                 type="text"
                                 value={field.label}
                                 onChange={(e) => updateField(index, { label: e.target.value })}
-                                className="w-full px-3 py-2 text-sm rounded-lg border transition-colors"
-                                style={{
-                                  background: 'var(--background-subtle)',
-                                  borderColor: 'var(--card-border)',
-                                  color: 'var(--foreground)'
-                                }}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 transition-all"
                                 placeholder="Field label"
                               />
                               <div className="flex gap-2 items-center">
                                 <select
                                   value={field.type}
                                   onChange={(e) => updateField(index, { type: e.target.value as Field["type"] })}
-                                  className="px-3 py-2 text-sm rounded-lg border transition-colors"
-                                  style={{
-                                    background: 'var(--background-subtle)',
-                                    borderColor: 'var(--card-border)',
-                                    color: 'var(--foreground)'
-                                  }}
+                                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 transition-all"
                                 >
                                   <option value="text">Text</option>
                                   <option value="email">Email</option>
@@ -515,6 +536,7 @@ export default function Home() {
                     formId="preview"
                     fields={fields}
                     formTitle={title}
+                    isPreview={true}
                     onSubmit={async () => {
                       // Preview mode - no actual submission
                     }}
@@ -565,10 +587,10 @@ export default function Home() {
                   
                   {/* Show different UI based on creation method */}
                   {creationMethod === "prompt" && (
-                    <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-                      <div className="flex items-center gap-4 border-2 border-black rounded-xl px-4 py-3 focus-within:ring-4 focus-within:ring-black focus-within:ring-offset-2 transition-all">
-                        <div className="shrink-0 text-black">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+                      <div className="flex items-center gap-3 border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-300 transition-all">
+                        <div className="shrink-0 text-gray-400">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
                         </div>
@@ -577,38 +599,38 @@ export default function Home() {
                           value={query}
                           onChange={(e) => setQuery(e.target.value)}
                           placeholder="Create a contact form with name, email, and message..."
-                          className="flex-1 bg-transparent border-none text-lg focus:outline-none text-black placeholder-gray-400"
+                          className="flex-1 bg-transparent border-none text-base focus:outline-none text-gray-900 placeholder-gray-400"
                           autoFocus
                           disabled={loading}
                         />
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex justify-end gap-3">
+                      <div className="flex justify-end gap-2">
                         <button
                           type="button"
                           onClick={handleVoiceClick}
                           disabled={loading || !isSupported}
-                          className="px-6 py-3 border-2 border-black rounded-xl font-medium text-black bg-white hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                           {isListening ? (
-                            <span className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                            <>
+                              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                               <span>Stop</span>
-                            </span>
+                            </>
                           ) : (
-                            <span className="flex items-center gap-2">
+                            <>
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
                               </svg>
                               <span>Voice</span>
-                            </span>
+                            </>
                           )}
                         </button>
                         <button
                           type="submit"
                           disabled={!query.trim() || loading}
-                          className="px-8 py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,0.2)] hover:-translate-x-0.5 hover:-translate-y-0.5 flex items-center gap-2"
+                          className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                           {loading && (
                             <div className="relative w-4 h-4">
@@ -644,6 +666,19 @@ export default function Home() {
                       onCancel={() => setCreationMethod("prompt")}
                       disabled={loading}
                     />
+                  )}
+
+                  {creationMethod === "url" && (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">
+                        Paste a website URL and our AI will analyze the content to generate an appropriate form.
+                      </p>
+                      <InlineURLScraper
+                        onURLSubmit={handleURLScrape}
+                        onCancel={() => setCreationMethod("prompt")}
+                        disabled={loading}
+                      />
+                    </div>
                   )}
                 </div>
               </div>

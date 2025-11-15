@@ -11,10 +11,13 @@ import CreationMethodSelector, { CreationMethodInline } from "@/components/Creat
 import InlineFileUpload from "@/components/InlineFileUpload";
 import InlineDocumentScanner from "@/components/InlineDocumentScanner";
 import InlineJSONImport from "@/components/InlineJSONImport";
+import InlineURLScraper from "@/components/InlineURLScraper";
 import ShareButton from "@/components/ShareButton";
-import IntegrationButton from "@/components/IntegrationButton";
+// import IntegrationButton from "@/components/IntegrationButton";
 import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
 import { FileText, MessageSquare, Calendar, Edit2, Trash2, BarChart3 } from "lucide-react";
+import { useToastContext } from "@/contexts/ToastContext";
+import { ConfirmationDialog, useConfirmDialog } from "@/components/ConfirmationDialog";
 
 interface Form {
   id: string;
@@ -29,6 +32,8 @@ interface Form {
 export default function DashboardPage() {
   const { status } = useSession();
   const router = useRouter();
+  const toast = useToastContext();
+  const { confirm, dialogState } = useConfirmDialog();
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -83,6 +88,37 @@ export default function DashboardPage() {
     if (status === "authenticated") {
       fetchForms();
     }
+  }, [status]);
+
+  // Restore editing state if returning from preview
+  useEffect(() => {
+    if (status === "authenticated") {
+      const storedEditingFormId = sessionStorage.getItem('formPreviewEditingFormId');
+      const storedPreviewData = sessionStorage.getItem('formPreviewData');
+
+      if (storedEditingFormId && storedPreviewData && !editingFormId && !showBuilder) {
+        // Restore the preview/builder state from sessionStorage
+        try {
+          const previewData = JSON.parse(storedPreviewData);
+          setPreviewTitle(previewData.title || "Untitled Form");
+          setPreviewFields(Array.isArray(previewData.fields) ? previewData.fields : []);
+          setPreviewStyling(previewData.styling || undefined);
+          setPreviewNotifications(previewData.notifications || undefined);
+          setPreviewMultiStepConfig(previewData.multiStepConfig || undefined);
+          setShowBuilder(true);
+          setEditingFormId(storedEditingFormId === 'preview' ? null : storedEditingFormId);
+
+          // Clean up sessionStorage
+          sessionStorage.removeItem('formPreviewEditingFormId');
+          sessionStorage.removeItem('formPreviewData');
+        } catch (error) {
+          console.error('Error restoring preview state:', error);
+          sessionStorage.removeItem('formPreviewEditingFormId');
+          sessionStorage.removeItem('formPreviewData');
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   const fetchForms = async () => {
@@ -147,7 +183,7 @@ export default function DashboardPage() {
         await startListening();
       } catch (error) {
         console.error('Failed to start voice input:', error);
-        alert('Failed to start voice input. Please check microphone permissions.');
+        toast.error('Failed to start voice input. Please check microphone permissions.');
       }
     }
   };
@@ -170,7 +206,19 @@ export default function DashboardPage() {
       
       if (!res.ok) throw new Error("Failed to generate form");
       
-      const data = await res.json() as { title: string; fields: Partial<Field>[] };
+      const data = await res.json() as { 
+        title: string; 
+        fields: Partial<Field>[];
+        context?: {
+          analysis?: any;
+          summary?: string;
+        };
+      };
+      
+      // Log context for debugging (contains rich analysis)
+      if (data.context) {
+        console.log("Form context analysis:", data.context);
+      }
       
       const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
         id: f.id || `field_${Date.now()}_${idx}`,
@@ -178,6 +226,9 @@ export default function DashboardPage() {
         type: f.type || "text",
         required: f.required || false,
         options: f.options || [],
+        placeholder: f.placeholder,
+        helpText: f.helpText,
+        validation: f.validation,
         order: idx,
         conditionalLogic: [],
         color: '#ffffff',
@@ -194,7 +245,7 @@ export default function DashboardPage() {
       setQuery("");
     } catch (error) {
       console.error("Error generating form:", error);
-      alert("Failed to generate form. Please try again.");
+      toast.error("Failed to generate form. Please try again.");
     } finally {
       setGeneratingForm(false);
     }
@@ -237,7 +288,7 @@ export default function DashboardPage() {
       setShowBuilder(true); // Use drag-drop builder
       setCreationMethod("prompt");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to upload file");
+      toast.error(err instanceof Error ? err.message : "Failed to upload file");
     } finally {
       setGeneratingForm(false);
     }
@@ -280,7 +331,7 @@ export default function DashboardPage() {
       setShowBuilder(true); // Use drag-drop builder
       setCreationMethod("prompt");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to scan document");
+      toast.error(err instanceof Error ? err.message : "Failed to scan document");
     } finally {
       setGeneratingForm(false);
     }
@@ -309,6 +360,49 @@ export default function DashboardPage() {
       setEditingFormId(null);
       setShowBuilder(true); // Use drag-drop builder
       setCreationMethod("prompt");
+    } finally {
+      setGeneratingForm(false);
+    }
+  }
+
+  async function handleURLScrape(url: string) {
+    setGeneratingForm(true);
+    try {
+      const response = await fetch("/api/ai/generate-from-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || "Failed to scrape URL and generate form");
+      }
+
+      const data = await response.json();
+      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
+        id: f.id || `field_${Date.now()}_${idx}`,
+        label: f.label || "Field",
+        type: f.type || "text",
+        required: f.required || false,
+        options: f.options || [],
+        placeholder: f.placeholder,
+        helpText: f.helpText,
+        order: f.order || idx,
+        conditionalLogic: f.conditionalLogic || [],
+        color: '#ffffff',
+      }));
+      
+      setPreviewTitle(data.title || "Form from URL");
+      setPreviewFields(normalizedFields);
+      setPreviewStyling(undefined); // Use defaults from StyleEditor
+      setPreviewMultiStepConfig(undefined);
+      setConversationalMode(false);
+      setEditingFormId(null);
+      setShowBuilder(true); // Use drag-drop builder
+      setCreationMethod("prompt");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to scrape URL and generate form");
     } finally {
       setGeneratingForm(false);
     }
@@ -343,11 +437,11 @@ export default function DashboardPage() {
         setEditingFormId(formId);
         setShowBuilder(true);
       } else {
-        alert("Failed to load form");
+        toast.error("Failed to load form");
       }
     } catch (error) {
       console.error("Error loading form:", error);
-      alert("Failed to load form");
+      toast.error("Failed to load form");
     } finally {
       setLoadingFormId(null);
     }
@@ -356,12 +450,12 @@ export default function DashboardPage() {
   // Save form from builder
   const handleBuilderSave = async () => {
     if (!previewTitle.trim()) {
-      alert("Please enter a form title");
+      toast.warning("Please enter a form title");
       return;
     }
 
     if (previewFields.length === 0) {
-      alert("Please add at least one field");
+      toast.warning("Please add at least one field");
       return;
     }
 
@@ -384,26 +478,41 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(editingFormId ? "Form updated successfully!" : "Form created successfully!");
-        setShowBuilder(false);
-        setEditingFormId(null);
+        toast.success(editingFormId ? "Form updated successfully!" : "Form created successfully!");
+        
+        // If creating a new form, set the editingFormId to the newly created form's ID
+        // This allows the user to continue editing and keeps the builder open
+        if (!editingFormId && data.id) {
+          setEditingFormId(data.id);
+        }
+        
+        // Keep the builder open in both cases (new and existing forms)
         await fetchForms();
       } else {
         const error = await response.json();
-        alert(`Failed to save form: ${error.error || "Unknown error"}`);
+        toast.error(`Failed to save form: ${error.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error saving form:", error);
-      alert("Failed to save form. Please try again.");
+      toast.error("Failed to save form. Please try again.");
     } finally {
       setSavingForm(false);
     }
   };
 
   // Cancel builder
-  const handleBuilderCancel = () => {
+  const handleBuilderCancel = async () => {
     if (previewFields.length > 0) {
-      if (confirm("Are you sure you want to leave? Any unsaved changes will be lost.")) {
+      const confirmed = await confirm(
+        "Discard changes?",
+        "Are you sure you want to leave? Any unsaved changes will be lost.",
+        {
+          confirmText: "Discard",
+          cancelText: "Cancel",
+          variant: "warning",
+        }
+      );
+      if (confirmed) {
         setShowBuilder(false);
         setEditingFormId(null);
         setPreviewStyling(undefined);
@@ -419,7 +528,17 @@ export default function DashboardPage() {
   };
 
   const deleteForm = async (formId: string) => {
-    if (!confirm("Are you sure you want to delete this form? This action cannot be undone.")) {
+    const confirmed = await confirm(
+      "Delete form?",
+      "Are you sure you want to delete this form? This action cannot be undone.",
+      {
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        variant: "danger",
+      }
+    );
+    
+    if (!confirmed) {
       return;
     }
 
@@ -431,12 +550,13 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setForms(forms.filter((f) => f.id !== formId));
+        toast.success("Form deleted successfully");
       } else {
-        alert("Failed to delete form");
+        toast.error("Failed to delete form");
       }
     } catch (error) {
       console.error("Error deleting form:", error);
-      alert("Failed to delete form");
+      toast.error("Failed to delete form");
     } finally {
       setDeletingFormId(null);
     }
@@ -462,31 +582,55 @@ export default function DashboardPage() {
   // Show drag-drop builder (for AI-generated forms, manual creation, and editing)
   if (showBuilder) {
     return (
-      <DragDropFormBuilder
-        formTitle={previewTitle}
-        fields={previewFields}
-        styling={previewStyling}
-        notifications={previewNotifications}
-        multiStepConfig={previewMultiStepConfig}
-        onFormTitleChange={setPreviewTitle}
-        onFieldsChange={setPreviewFields}
-        onStylingChange={setPreviewStyling}
-        onNotificationsChange={setPreviewNotifications}
-        onMultiStepConfigChange={setPreviewMultiStepConfig}
-        onSave={handleBuilderSave}
-        onCancel={handleBuilderCancel}
-        saving={savingForm}
-      />
+      <>
+        <ConfirmationDialog
+          isOpen={dialogState.isOpen}
+          title={dialogState.title}
+          message={dialogState.message}
+          confirmText={dialogState.confirmText}
+          cancelText={dialogState.cancelText}
+          variant={dialogState.variant}
+          onConfirm={dialogState.onConfirm}
+          onCancel={dialogState.onCancel}
+        />
+        <DragDropFormBuilder
+          formTitle={previewTitle}
+          fields={previewFields}
+          styling={previewStyling}
+          notifications={previewNotifications}
+          multiStepConfig={previewMultiStepConfig}
+          onFormTitleChange={setPreviewTitle}
+          onFieldsChange={setPreviewFields}
+          onStylingChange={setPreviewStyling}
+          onNotificationsChange={setPreviewNotifications}
+          onMultiStepConfigChange={setPreviewMultiStepConfig}
+          onSave={handleBuilderSave}
+          onCancel={handleBuilderCancel}
+          saving={savingForm}
+          editingFormId={editingFormId}
+        />
+      </>
     );
   }
 
   // Main dashboard view with form list
 
   return (
-    <div 
-      className="min-h-screen"
-      style={{ background: 'var(--background)' }}
-    >
+    <>
+      <ConfirmationDialog
+        isOpen={dialogState.isOpen}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        variant={dialogState.variant}
+        onConfirm={dialogState.onConfirm}
+        onCancel={dialogState.onCancel}
+      />
+      <div 
+        className="min-h-screen"
+        style={{ background: 'var(--background)' }}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -559,12 +703,9 @@ export default function DashboardPage() {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder="E.g., Create a customer feedback form with name, email, rating, and comments"
-                      className="w-full px-4 py-3 pr-12 rounded-lg transition-all focus:outline-none focus:ring-2 resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
                       style={{
-                        background: 'var(--background-subtle)',
-                        border: '1px solid var(--card-border)',
-                        color: 'var(--foreground)',
-                        minHeight: '100px',
+                        minHeight: '80px',
                       }}
                       disabled={generatingForm}
                     />
@@ -650,6 +791,20 @@ export default function DashboardPage() {
               />
             )}
 
+            {/* URL Scraping Method */}
+            {creationMethod === "url" && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Paste a website URL and our AI will analyze the content to generate an appropriate form.
+                </p>
+                <InlineURLScraper
+                  onURLSubmit={handleURLScrape}
+                  onCancel={() => setCreationMethod("prompt")}
+                  disabled={generatingForm}
+                />
+              </div>
+            )}
+
             {showSuccess && newFormId && (
               <div 
                 className="mt-4 p-4 rounded-lg"
@@ -680,7 +835,7 @@ export default function DashboardPage() {
                         onClick={() => {
                           const link = `${window.location.origin}/f/${newFormId}`;
                           navigator.clipboard.writeText(link);
-                          alert('Link copied!');
+                          toast.success('Link copied!');
                         }}
                         className="px-3 py-1 rounded text-sm font-medium"
                         style={{
@@ -849,9 +1004,6 @@ export default function DashboardPage() {
 
                     <div className="flex gap-2">
                       <div className="flex-1">
-                        <IntegrationButton formId={form.id} />
-                      </div>
-                      <div className="flex-1">
                         <ShareButton 
                           url={`${typeof window !== "undefined" ? window.location.origin : ""}/f/${form.id}`}
                           label="Share"
@@ -886,5 +1038,6 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -1,13 +1,16 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Field, MultiStepConfig } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
 import { validateField } from "@/lib/validation";
 import MultiStepRenderer from "@/components/MultiStepRenderer";
 import FileUpload from "@/components/FileUpload";
 import ConversationalForm from "@/components/ConversationalForm";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 function slugify(input: string): string {
   return input
@@ -50,6 +53,336 @@ function getOptionValue(opt: string | { id?: string; label?: string } | unknown)
   return String(opt);
 }
 
+// Star Rating Field Component
+function StarRatingField({
+  id,
+  value,
+  onSelect,
+  isPreviewMode,
+}: {
+  id: string;
+  value?: number;
+  onSelect: (rating: number) => void;
+  isPreviewMode: boolean;
+}) {
+  const selectedRating = value || 0;
+
+  return (
+    <div className="flex gap-2">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={`text-3xl transition-colors focus:outline-none ${
+            star <= selectedRating
+              ? 'text-yellow-400'
+              : 'text-gray-300 hover:text-yellow-400'
+          }`}
+          onClick={() => onSelect(star)}
+          aria-label={`Rate ${star} out of 5 stars`}
+        >
+          ⭐
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Slider Field Component
+function SliderField({
+  id,
+  value,
+  onChange,
+  isPreviewMode,
+  required,
+  register,
+}: {
+  id: string;
+  value?: number;
+  onChange: (value: number) => void;
+  isPreviewMode: boolean;
+  required: boolean;
+  register?: (name: string, rules?: any) => any;
+}) {
+  const sliderValue = value ?? 50;
+
+  return (
+    <div className="space-y-2">
+      <input
+        id={id}
+        type="range"
+        min="0"
+        max="100"
+        value={sliderValue}
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+        style={{
+          background: `linear-gradient(to right, var(--accent, #3b82f6) 0%, var(--accent, #3b82f6) ${sliderValue}%, #e5e7eb ${sliderValue}%, #e5e7eb 100%)`,
+        }}
+        {...(register && !isPreviewMode ? register(id, { required }) : {})}
+        onChange={(e) => {
+          const newValue = parseInt(e.target.value, 10);
+          onChange(newValue);
+        }}
+      />
+      <div className="flex justify-between text-sm" style={{ color: 'var(--foreground-muted)' }}>
+        <span>0</span>
+        <span>{sliderValue}</span>
+        <span>100</span>
+      </div>
+    </div>
+  );
+}
+
+// Opinion Scale Field Component
+function OpinionScaleField({
+  id,
+  value,
+  onSelect,
+  isPreviewMode,
+  styling,
+}: {
+  id: string;
+  value?: number;
+  onSelect: (value: number) => void;
+  isPreviewMode: boolean;
+  styling?: import("@/types/form").FormStyling;
+}) {
+  const selectedValue = value;
+
+  return (
+    <div className="flex gap-2 justify-between">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+        const isSelected = selectedValue === num;
+        const primaryColor = styling?.primaryColor || 'var(--accent)';
+        
+        return (
+          <button
+            key={num}
+            type="button"
+            className={`w-10 h-10 border-2 rounded-lg transition-colors focus:outline-none ${
+              isSelected
+                ? 'font-semibold'
+                : 'hover:border-blue-500 hover:bg-blue-50'
+            }`}
+            style={{
+              borderColor: isSelected ? primaryColor : 'var(--card-border, #d1d5db)',
+              backgroundColor: isSelected ? `${primaryColor}20` : 'transparent',
+              color: isSelected ? primaryColor : 'var(--foreground)',
+            }}
+            onClick={() => onSelect(num)}
+            aria-label={`Select ${num}`}
+            aria-pressed={isSelected}
+          >
+            {num}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Sortable item component for ranking
+function SortableRankingItem({ 
+  id, 
+  value, 
+  index, 
+  isPreviewMode 
+}: { 
+  id: string; 
+  value: string; 
+  index: number; 
+  isPreviewMode: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: false });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 border rounded-lg bg-white ${
+        isDragging ? 'shadow-lg' : 'border-gray-300'
+      } ${isPreviewMode ? 'cursor-move' : 'cursor-grab active:cursor-grabbing'}`}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="flex items-center justify-center"
+        style={{ touchAction: 'none' }}
+      >
+        <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
+        </svg>
+      </div>
+      <span className="flex-1" style={{ color: 'var(--foreground)' }}>{value}</span>
+      <span className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>#{index + 1}</span>
+    </div>
+  );
+}
+
+// Ranking field component with drag-and-drop
+function RankingField({
+  fieldId,
+  options,
+  value,
+  onChange,
+  onBlur,
+  isPreviewMode,
+  styling,
+}: {
+  fieldId: string;
+  options: (string | { id?: string; label?: string })[];
+  value?: string[];
+  onChange: (rankedOptions: string[]) => void;
+  onBlur: () => void;
+  isPreviewMode: boolean;
+  styling?: import("@/types/form").FormStyling;
+}) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Convert options to strings
+  const optionStrings = useMemo(() => 
+    options.map(opt => getOptionValue(opt)),
+    [options]
+  );
+
+  // Track the last value we sent via onChange to prevent sync loops
+  const lastSentValueRef = useRef<string[] | undefined>(undefined);
+  
+  // Initialize ranked order from value or use default order
+  const [rankedItems, setRankedItems] = useState<string[]>(() => {
+    if (value && Array.isArray(value)) {
+      // Validate that all items in value exist in options
+      const validItems = value.filter(item => optionStrings.includes(item));
+      // Add any missing options
+      const missingItems = optionStrings.filter(opt => !validItems.includes(opt));
+      const initialItems = [...validItems, ...missingItems];
+      lastSentValueRef.current = initialItems;
+      return initialItems;
+    }
+    const initialItems = optionStrings;
+    lastSentValueRef.current = initialItems;
+    return initialItems;
+  });
+
+  // Update ranked items when options change
+  useEffect(() => {
+    setRankedItems(prev => {
+      const newItems = [...prev];
+      // Remove items that no longer exist in options
+      const filtered = newItems.filter(item => optionStrings.includes(item));
+      // Add new options that weren't in the previous list
+      const newOptions = optionStrings.filter(opt => !filtered.includes(opt));
+      return [...filtered, ...newOptions];
+    });
+  }, [optionStrings]);
+
+  // Sync ranked items with value prop when it changes externally (e.g., form reset)
+  // Skip if the value matches what we just sent (prevents sync loops)
+  useEffect(() => {
+    // Skip if we don't have options ready
+    if (!optionStrings.length) return;
+    
+    // Build the expected items array from the value prop
+    const validItems = value && Array.isArray(value) 
+      ? value.filter(item => optionStrings.includes(item))
+      : [];
+    const missingItems = optionStrings.filter(opt => !validItems.includes(opt));
+    const expectedItems = [...validItems, ...missingItems];
+    const expectedItemsStr = JSON.stringify(expectedItems);
+    
+    // Get the last sent value as string for comparison
+    const lastSentStr = lastSentValueRef.current ? JSON.stringify(lastSentValueRef.current) : null;
+    
+    // If the expected items match what we just sent, skip sync (it's our own change)
+    if (expectedItemsStr === lastSentStr) {
+      return;
+    }
+    
+    // Update state only if it's actually different
+    setRankedItems(prev => {
+      const prevStr = JSON.stringify(prev);
+      if (prevStr !== expectedItemsStr) {
+        // This is an external change, update the ref
+        lastSentValueRef.current = expectedItems;
+        return expectedItems;
+      }
+      return prev;
+    });
+  }, [value, optionStrings]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    let newItems: string[] = [];
+    
+    // Update local state first
+    setRankedItems((items) => {
+      const oldIndex = items.indexOf(active.id as string);
+      const newIndex = items.indexOf(over.id as string);
+      newItems = arrayMove(items, oldIndex, newIndex);
+      return newItems;
+    });
+    
+    // Update ref to track what we're sending (before calling onChange)
+    lastSentValueRef.current = newItems;
+    
+    // Defer onChange to avoid updating parent state during render
+    // Use setTimeout to ensure it runs after the current render cycle
+    setTimeout(() => {
+      onChange(newItems);
+      // Only trigger blur validation if not in preview mode
+      if (!isPreviewMode) {
+        onBlur();
+      }
+    }, 0);
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={rankedItems} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">
+          {rankedItems.map((item, index) => (
+            <SortableRankingItem
+              key={item}
+              id={item}
+              value={item}
+              index={index}
+              isPreviewMode={isPreviewMode}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
 export default function FormRenderer({
   formId,
   fields,
@@ -59,6 +392,7 @@ export default function FormRenderer({
   styling,
   formTitle,
   conversationalMode,
+  isPreview = false,
 }: {
   formId: string;
   fields: Field[];
@@ -68,6 +402,7 @@ export default function FormRenderer({
   styling?: import("@/types/form").FormStyling;
   formTitle?: string;
   conversationalMode?: boolean;
+  isPreview?: boolean;
 }) {
   const { register, handleSubmit, formState, watch, setValue, trigger } = useForm();
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
@@ -107,6 +442,12 @@ export default function FormRenderer({
       if (!visibleFieldIds.includes(field.id)) {
         // Field is hidden, clear its value
         setValue(field.id, undefined);
+        
+        // Special handling for date-range fields - clear both start and end
+        if (field.type === "date-range") {
+          setValue(`${field.id}_start`, undefined);
+          setValue(`${field.id}_end`, undefined);
+        }
       }
     });
   }, [visibleFieldIds, fields, setValue]);
@@ -115,6 +456,28 @@ export default function FormRenderer({
   const validateFieldWithRules = useCallback((fieldId: string): string | null => {
     const field = fields.find((f) => f.id === fieldId);
     if (!field) return null;
+    
+    // Special handling for date-range fields
+    if (field.type === "date-range") {
+      const startValue = formValues[`${fieldId}_start`];
+      const endValue = formValues[`${fieldId}_end`];
+      
+      if (field.required) {
+        if (!startValue || (typeof startValue === "string" && !startValue.trim())) {
+          return "Start date is required";
+        }
+        if (!endValue || (typeof endValue === "string" && !endValue.trim())) {
+          return "End date is required";
+        }
+        
+        // Validate that end date is after start date
+        if (startValue && endValue && new Date(endValue) < new Date(startValue)) {
+          return "End date must be after start date";
+        }
+      }
+      
+      return null;
+    }
     
     const value = formValues[fieldId];
     
@@ -257,63 +620,229 @@ export default function FormRenderer({
   }
 
   // Render field helper function
-  function renderField(f: Field, idx: number) {
+  function renderField(f: Field, idx: number, isPreviewMode = isPreview) {
     const id = f.id || slugify(f.label);
-    
+
     const label = f.label || `Field ${idx + 1}`;
     const type = f.type || inferTypeFromLabel(label);
     const required = Boolean(f.required);
     const options = f.options || [];
     const placeholder = f.placeholder || `Enter ${label.toLowerCase()}`;
     const helpText = f.helpText;
-    
+
     // Check if field should be visible based on conditional logic
     const isVisible = visibleFieldIds.includes(id);
-    
+
     if (!isVisible) {
       return null;
     }
-    
-    const hasError = formState.errors[id] || validationErrors[id];
+
+    // Special handling for date-range fields - check both start and end errors
+    const hasError = type === "date-range" 
+      ? (formState.errors[`${id}_start`] || formState.errors[`${id}_end`] || validationErrors[id])
+      : (formState.errors[id] || validationErrors[id]);
     const errorId = `${id}-error`;
     const helpTextId = `${id}-help`;
-    
+
+    // Display-only fields (no form input)
+    const isDisplayOnly = [
+      "display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video", "html"
+    ].includes(type);
+
+    // Render display-only fields
+    if (isDisplayOnly) {
+      return (
+        <div key={id} className="space-y-2">
+          {type === "h1" && (
+            <h1
+              className="text-4xl font-bold"
+              style={{ color: styling?.primaryColor || '#111827' }}
+            >
+              {label}
+            </h1>
+          )}
+          {type === "heading" && (
+            <h2
+              className="text-2xl font-bold"
+              style={{ color: styling?.primaryColor || '#111827' }}
+            >
+              {label}
+            </h2>
+          )}
+          {(type === "paragraph" || type === "display-text") && (
+            <p style={{ color: styling?.primaryColor || '#374151' }}>
+              {helpText || label}
+            </p>
+          )}
+          {type === "banner" && (
+            <div 
+              className="border-l-4 p-4 rounded"
+              style={{
+                backgroundColor: styling?.primaryColor 
+                  ? (styling.primaryColor.startsWith('#') 
+                      ? `rgba(${parseInt(styling.primaryColor.slice(1, 3), 16)}, ${parseInt(styling.primaryColor.slice(3, 5), 16)}, ${parseInt(styling.primaryColor.slice(5, 7), 16)}, 0.1)`
+                      : `${styling.primaryColor}1A`)
+                  : 'rgba(59, 130, 246, 0.1)',
+                borderColor: styling?.primaryColor || '#3b82f6',
+              }}
+            >
+              <p 
+                className="font-medium"
+                style={{ color: styling?.primaryColor || '#1e40af' }}
+              >
+                {label}
+              </p>
+              {helpText && (
+                <p 
+                  className="text-sm mt-1"
+                  style={{ 
+                    color: styling?.primaryColor || '#1e3a8a'
+                  }}
+                >
+                  {helpText}
+                </p>
+              )}
+            </div>
+          )}
+          {type === "divider" && (
+            <hr 
+              className="border-t-2"
+              style={{ borderColor: 'var(--card-border)' }}
+            />
+          )}
+          {type === "image" && (
+            <div className="rounded-lg overflow-hidden">
+              {helpText || placeholder ? (
+                <img
+                  src={helpText || placeholder}
+                  alt={label || "Image"}
+                  className="w-full h-auto max-h-96 object-contain"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent && !parent.querySelector('.image-placeholder')) {
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'image-placeholder border-2 border-dashed border-gray-300 rounded-lg p-8 text-center';
+                      placeholder.innerHTML = `
+                        <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="text-gray-500 mt-2">Image failed to load</p>
+                      `;
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-500 mt-2">Image will be displayed here</p>
+                  {label && <p className="text-sm text-gray-400 mt-1">{label}</p>}
+                </div>
+              )}
+            </div>
+          )}
+          {type === "video" && (
+            <div className="rounded-lg overflow-hidden">
+              {helpText || placeholder ? (
+                <video
+                  src={helpText || placeholder}
+                  controls
+                  className="w-full h-auto max-h-96"
+                  style={{ backgroundColor: 'var(--card-bg)' }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-500 mt-2">Video will be displayed here</p>
+                  {label && <p className="text-sm text-gray-400 mt-1">{label}</p>}
+                </div>
+              )}
+            </div>
+          )}
+          {type === "html" && (
+            <div dangerouslySetInnerHTML={{ __html: helpText || label }} />
+          )}
+        </div>
+      );
+    }
+
+    // Render form input fields
     return (
       <div key={id} className="space-y-2">
-        <label 
-          className="block text-sm font-medium" 
-          htmlFor={type === "radio" ? undefined : id}
-          style={{ color: styling?.primaryColor || 'var(--foreground-muted)' }}
-        >
-          {label}
-          {required && (
-            <span 
-              className="ml-1" 
-              style={{ color: styling?.primaryColor || 'var(--accent)' }}
-              aria-label="required"
-            >
-              *
-            </span>
-          )}
-        </label>
-        
-        {helpText && (
+        {!isDisplayOnly && (
+          <label
+            className="block text-sm font-medium"
+            htmlFor={type === "radio" || type === "checkboxes" || type === "multiselect" ? undefined : id}
+            style={{ color: styling?.primaryColor || 'var(--foreground-muted)' }}
+          >
+            {label}
+            {required && (
+              <span
+                className="ml-1"
+                style={{ color: styling?.primaryColor || 'var(--accent)' }}
+                aria-label="required"
+              >
+                *
+              </span>
+            )}
+          </label>
+        )}
+
+        {helpText && !isDisplayOnly && (
           <p id={helpTextId} className="text-sm -mt-1" style={{ color: 'var(--foreground-subtle)' }}>
             {helpText}
           </p>
         )}
-        
-        {type === "file" ? (
+
+        {/* File Upload */}
+        {(type === "file" || type === "file-uploader") && (
           <FileUpload
             fieldId={id}
             formId={formId}
             submissionId={tempSubmissionId}
             config={f.fileConfig || { acceptedTypes: "all", maxSizeMB: 10, multiple: false }}
             value={formValues[id]}
-            onChange={(urls) => setValue(id, urls)}
+            onChange={(urls) => isPreviewMode ? undefined : setValue(id, urls)}
             error={validationErrors[id]}
           />
-        ) : type === "textarea" ? (
+        )}
+
+        {/* Text Inputs */}
+        {(type === "short-answer" || type === "text") && (
+          <input
+            id={id}
+            type="text"
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            placeholder={placeholder}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {/* Long Text / Textarea */}
+        {(type === "long-answer" || type === "textarea") && (
           <textarea
             id={id}
             rows={4}
@@ -326,17 +855,22 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...register(id, { required })}
+            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
             placeholder={placeholder}
-            onBlur={() => handleFieldBlur(id)}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
           />
-        ) : type === "select" ? (
-          <select
+        )}
+
+        {/* Contact Info */}
+        {type === "email" && (
+          <input
             id={id}
+            type="email"
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -346,14 +880,188 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...register(id, { required })}
-            onBlur={() => handleFieldBlur(id)}
+            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            placeholder={placeholder || "your@email.com"}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {type === "phone" && (
+          <input
+            id={id}
+            type="tel"
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            placeholder={placeholder || "+1 (555) 000-0000"}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {type === "address" && (
+          <div className="space-y-2">
+            <input
+              type="text"
+              placeholder="Street Address"
+              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                hasError ? "border-red-500" : ""
+              }`}
+              style={{
+                '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                background: 'var(--card-bg)',
+                borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                color: 'var(--foreground)',
+              } as React.CSSProperties}
+              {...(isPreviewMode ? { name: `${id}_street`, value: formValues[`${id}_street`] || '' } : register(`${id}_street`, { required }))}
+              onChange={isPreviewMode ? (e) => setValue(`${id}_street`, e.target.value) : undefined}
+              onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                placeholder="City"
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                  hasError ? "border-red-500" : ""
+                }`}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { name: `${id}_city`, value: formValues[`${id}_city`] || '' } : register(`${id}_city`, { required }))}
+                onChange={isPreviewMode ? (e) => setValue(`${id}_city`, e.target.value) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+              />
+              <input
+                type="text"
+                placeholder="State/Province"
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                  hasError ? "border-red-500" : ""
+                }`}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { name: `${id}_state`, value: formValues[`${id}_state`] || '' } : register(`${id}_state`, { required }))}
+                onChange={isPreviewMode ? (e) => setValue(`${id}_state`, e.target.value) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                placeholder="ZIP/Postal Code"
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                  hasError ? "border-red-500" : ""
+                }`}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { name: `${id}_zip`, value: formValues[`${id}_zip`] || '' } : register(`${id}_zip`, { required }))}
+                onChange={isPreviewMode ? (e) => setValue(`${id}_zip`, e.target.value) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+              />
+              <input
+                type="text"
+                placeholder="Country"
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                  hasError ? "border-red-500" : ""
+                }`}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { name: `${id}_country`, value: formValues[`${id}_country`] || '' } : register(`${id}_country`, { required }))}
+                onChange={isPreviewMode ? (e) => setValue(`${id}_country`, e.target.value) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Choice Fields */}
+        {(type === "multiple-choice" || type === "choices" || type === "radio") && (
+          <div
+            role="radiogroup"
+            aria-labelledby={`${id}-label`}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-required={required ? "true" : "false"}
+            className="space-y-2"
+          >
+            {options.map((opt, i) => {
+              const optValue = getOptionValue(opt);
+              const isChecked = formValues[id] === optValue;
+              return (
+                <label key={i} className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={id}
+                    value={optValue}
+                    checked={isChecked}
+                    {...(isPreviewMode ? {} : register(id, { required }))}
+                    className="w-4 h-4 focus:ring-2 transition-colors"
+                    style={{
+                      accentColor: styling?.primaryColor || 'var(--accent)',
+                      '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                    } as React.CSSProperties}
+                    onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+                    onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+                    aria-label={optValue}
+                  />
+                  <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+
+        {(type === "dropdown" || type === "select") && (
+          <select
+            id={id}
+            value={formValues[id] || ''}
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
           >
-            <option value="">Select an option</option>
+            <option value="">Select an option...</option>
             {options.map((opt, i) => {
               const optValue = getOptionValue(opt);
               return (
@@ -363,47 +1071,61 @@ export default function FormRenderer({
               );
             })}
           </select>
-        ) : type === "radio" ? (
-          <div 
-            role="radiogroup" 
-            aria-labelledby={`${id}-label`}
-            aria-describedby={helpText ? helpTextId : undefined}
-            aria-required={required ? "true" : "false"}
-            className="space-y-2"
-          >
+        )}
+
+        {(type === "checkboxes" || type === "multiselect") && (
+          <div className="space-y-2">
             {options.map((opt, i) => {
               const optValue = getOptionValue(opt);
+              const checkboxId = `${id}_${i}`;
+              const currentValue = formValues[id];
+              const selectedValues = Array.isArray(currentValue) ? currentValue : (currentValue ? [currentValue] : []);
+              const isChecked = selectedValues.includes(optValue);
+              
               return (
                 <label key={i} className="flex items-center gap-3 cursor-pointer">
                   <input
-                    type="radio"
+                    id={checkboxId}
+                    type="checkbox"
+                    name={id}
                     value={optValue}
-                    {...register(id, { required })}
-                    className="w-4 h-4 focus:ring-2 transition-colors"
+                    checked={isChecked}
+                    {...(isPreviewMode ? {} : register(id, { required }))}
+                    className="w-4 h-4 rounded focus:ring-2 transition-colors"
                     style={{
                       accentColor: styling?.primaryColor || 'var(--accent)',
                       '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
                     } as React.CSSProperties}
-                    onBlur={() => handleFieldBlur(id)}
-                    aria-label={optValue}
+                    onChange={isPreviewMode ? (e) => {
+                      const newSelectedValues = e.target.checked
+                        ? [...selectedValues, optValue]
+                        : selectedValues.filter((v: string) => v !== optValue);
+                      setValue(id, newSelectedValues);
+                    } : undefined}
+                    onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                   />
                   <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
                 </label>
               );
             })}
           </div>
-        ) : type === "checkbox" ? (
+        )}
+
+        {type === "checkbox" && (
           <div className="flex items-center gap-3">
             <input
               id={id}
               type="checkbox"
-              {...register(id, { required })}
+              name={id}
+              checked={Boolean(formValues[id])}
+              {...(isPreviewMode ? {} : register(id, { required }))}
               className="w-4 h-4 rounded focus:ring-2 transition-colors"
               style={{
                 accentColor: styling?.primaryColor || 'var(--accent)',
                 '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
               } as React.CSSProperties}
-              onBlur={() => handleFieldBlur(id)}
+              onChange={isPreviewMode ? (e) => setValue(id, e.target.checked) : undefined}
+              onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               aria-describedby={helpText ? helpTextId : undefined}
               aria-invalid={hasError ? "true" : "false"}
               aria-errormessage={hasError ? errorId : undefined}
@@ -413,10 +1135,152 @@ export default function FormRenderer({
               {placeholder}
             </label>
           </div>
-        ) : (
+        )}
+
+        {type === "switch" && (
+          <label className="flex items-center gap-3 cursor-pointer">
+            <div className="relative inline-block w-12 h-6">
+              <input
+                type="checkbox"
+                name={id}
+                checked={Boolean(formValues[id])}
+                {...(isPreviewMode ? {} : register(id, { required }))}
+                className="sr-only peer"
+                onChange={isPreviewMode ? (e) => setValue(id, e.target.checked) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                } as React.CSSProperties}
+              />
+              <div
+                className="w-12 h-6 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  backgroundColor: formValues[id] ? (styling?.primaryColor || '#3b82f6') : '#e5e7eb',
+                } as React.CSSProperties}
+              ></div>
+            </div>
+            <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{label}</span>
+          </label>
+        )}
+
+        {type === "picture-choice" && (
+          <div className="grid grid-cols-3 gap-3">
+            {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
+              const optValue = getOptionValue(opt);
+              const isSelected = formValues[id] === optValue;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={isPreviewMode ? () => setValue(id, optValue) : undefined}
+                  className={`relative border-2 rounded-lg p-4 transition-all ${
+                    isSelected
+                      ? 'border-blue-500 ring-2 ring-blue-200'
+                      : 'border-gray-300 hover:border-blue-400'
+                  } ${isPreviewMode ? 'cursor-pointer' : 'cursor-default'}`}
+                  style={{
+                    borderColor: isSelected 
+                      ? (styling?.primaryColor || '#3b82f6')
+                      : 'var(--card-border)',
+                    '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  } as React.CSSProperties}
+                  disabled={!isPreviewMode}
+                >
+                  <div className="aspect-square bg-gray-100 rounded flex items-center justify-center mb-2">
+                    {typeof opt === 'object' && opt !== null && 'image' in opt && (opt as { image?: string }).image ? (
+                      <img
+                        src={(opt as { image: string }).image}
+                        alt={optValue}
+                        className="w-full h-full object-cover rounded"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </div>
+                  <p className="text-sm text-center" style={{ color: 'var(--foreground)' }}>{optValue}</p>
+                  {isSelected && (
+                    <div 
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: styling?.primaryColor || '#3b82f6' }}
+                    >
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {type === "choice-matrix" && (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="border px-4 py-2 bg-gray-50 text-left" style={{ borderColor: 'var(--card-border)' }}></th>
+                  {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
+                    const optValue = getOptionValue(opt);
+                    return (
+                      <th key={i} className="border px-4 py-2 bg-gray-50 text-center" style={{ borderColor: 'var(--card-border)' }}>
+                        {optValue}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {(f.matrixRows || ["Row 1", "Row 2", "Row 3"]).map((row, rowIdx) => {
+                  const rowId = `${id}_row_${rowIdx}`;
+                  const selectedValue = formValues[rowId];
+                  return (
+                    <tr key={rowIdx}>
+                      <td className="border px-4 py-2 font-medium" style={{ borderColor: 'var(--card-border)' }}>{row}</td>
+                      {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, colIdx) => {
+                        const optValue = getOptionValue(opt);
+                        const isChecked = selectedValue === optValue;
+                        return (
+                          <td key={colIdx} className="border px-4 py-2 text-center" style={{ borderColor: 'var(--card-border)' }}>
+                            <input
+                              type="radio"
+                              name={rowId}
+                              value={optValue}
+                              checked={isChecked}
+                              {...(isPreviewMode ? {} : register(rowId, { required: required && rowIdx === 0 }))}
+                              onChange={isPreviewMode ? (e) => setValue(rowId, e.target.value) : undefined}
+                              onBlur={() => isPreviewMode ? undefined : handleFieldBlur(rowId)}
+                              className="w-4 h-4 focus:ring-2 transition-colors"
+                              style={{
+                                accentColor: styling?.primaryColor || 'var(--accent)',
+                                '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                              } as React.CSSProperties}
+                              disabled={!isPreviewMode}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Date & Time */}
+        {(type === "date" || type === "date-picker") && (
           <input
             id={id}
-            type={type === "text" ? "text" : type}
+            type="date"
+            value={formValues[id] || ''}
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -426,16 +1290,285 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...register(id, { required })}
-            placeholder={placeholder}
-            onBlur={() => handleFieldBlur(id)}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
           />
         )}
-        
+
+        {(type === "time" || type === "time-picker") && (
+          <input
+            id={id}
+            type="time"
+            value={formValues[id] || ''}
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {type === "datetime-picker" && (
+          <input
+            id={id}
+            type="datetime-local"
+            value={formValues[id] || ''}
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {type === "date-range" && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label 
+                htmlFor={`${id}_start`}
+                className="block text-sm mb-1" 
+                style={{ color: 'var(--foreground-muted)' }}
+              >
+                Start Date
+              </label>
+              <input
+                id={`${id}_start`}
+                type="date"
+                value={formValues[`${id}_start`] || ''}
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                  hasError ? "border-red-500" : ""
+                }`}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { name: `${id}_start` } : register(`${id}_start`, { required }))}
+                onChange={isPreviewMode ? (e) => setValue(`${id}_start`, e.target.value) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+                aria-describedby={helpText ? helpTextId : undefined}
+                aria-invalid={hasError ? "true" : "false"}
+                aria-errormessage={hasError ? errorId : undefined}
+                aria-required={required ? "true" : "false"}
+              />
+            </div>
+            <div>
+              <label 
+                htmlFor={`${id}_end`}
+                className="block text-sm mb-1" 
+                style={{ color: 'var(--foreground-muted)' }}
+              >
+                End Date
+              </label>
+              <input
+                id={`${id}_end`}
+                type="date"
+                value={formValues[`${id}_end`] || ''}
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                  hasError ? "border-red-500" : ""
+                }`}
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { name: `${id}_end` } : register(`${id}_end`, { required }))}
+                onChange={isPreviewMode ? (e) => setValue(`${id}_end`, e.target.value) : undefined}
+                onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+                aria-describedby={helpText ? helpTextId : undefined}
+                aria-invalid={hasError ? "true" : "false"}
+                aria-errormessage={hasError ? errorId : undefined}
+                aria-required={required ? "true" : "false"}
+              />
+            </div>
+            {hasError && validationErrors[id] && (
+              <div id={errorId} className="col-span-2 text-sm text-red-500 mt-1">
+                {validationErrors[id]}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rating & Ranking */}
+        {type === "star-rating" && (
+          <StarRatingField
+            id={id}
+            value={formValues[id] as number | undefined}
+            onSelect={(rating) => {
+              setValue(id, rating);
+              // Only trigger validation blur if not in preview mode
+              if (!isPreviewMode) {
+                handleFieldBlur(id);
+              }
+            }}
+            isPreviewMode={isPreviewMode}
+          />
+        )}
+
+        {type === "slider" && (
+          <SliderField
+            id={id}
+            value={formValues[id] as number | undefined}
+            onChange={(value) => {
+              setValue(id, value);
+              // Only trigger validation blur if not in preview mode
+              if (!isPreviewMode) {
+                handleFieldBlur(id);
+              }
+            }}
+            isPreviewMode={isPreviewMode}
+            required={required}
+            register={isPreviewMode ? undefined : register}
+          />
+        )}
+
+        {type === "opinion-scale" && (
+          <OpinionScaleField
+            id={id}
+            value={formValues[id] as number | undefined}
+            onSelect={(value) => {
+              setValue(id, value);
+              // Only trigger validation blur if not in preview mode
+              if (!isPreviewMode) {
+                handleFieldBlur(id);
+              }
+            }}
+            isPreviewMode={isPreviewMode}
+            styling={styling}
+          />
+        )}
+
+        {type === "ranking" && (
+          <RankingField
+            fieldId={id}
+            options={options}
+            value={formValues[id] as string[] | undefined}
+            onChange={(rankedOptions) => {
+              setValue(id, rankedOptions);
+              // Only trigger validation blur if not in preview mode
+              if (!isPreviewMode) {
+                handleFieldBlur(id);
+              }
+            }}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            isPreviewMode={isPreviewMode}
+            styling={styling}
+          />
+        )}
+
+        {/* Numbers */}
+        {type === "number" && (
+          <input
+            id={id}
+            type="number"
+            value={formValues[id] || ''}
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id } : register(id, { required, valueAsNumber: true }))}
+            placeholder={placeholder || "0"}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value ? parseFloat(e.target.value) : undefined) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {type === "currency" && (
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+            <input
+              id={id}
+              type="number"
+              step="0.01"
+              value={formValues[id] || ''}
+              className={`w-full pl-8 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                hasError ? "border-red-500" : ""
+              }`}
+              style={{
+                '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                background: 'var(--card-bg)',
+                borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                color: 'var(--foreground)',
+              } as React.CSSProperties}
+              {...(isPreviewMode ? { name: id } : register(id, { required, valueAsNumber: true }))}
+              placeholder="0.00"
+              onChange={isPreviewMode ? (e) => setValue(id, e.target.value ? parseFloat(e.target.value) : undefined) : undefined}
+              onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+              aria-describedby={helpText ? helpTextId : undefined}
+              aria-invalid={hasError ? "true" : "false"}
+              aria-errormessage={hasError ? errorId : undefined}
+              aria-required={required ? "true" : "false"}
+            />
+          </div>
+        )}
+
+        {/* Fallback for unsupported types */}
+        {![
+          "short-answer", "text", "long-answer", "textarea", "email", "phone", "address",
+          "multiple-choice", "choices", "radio", "dropdown", "select", "checkboxes", "multiselect", "checkbox", "switch",
+          "date", "date-picker", "time", "time-picker", "datetime-picker", "date-range",
+          "star-rating", "slider", "opinion-scale", "ranking", "number", "currency", "file", "file-uploader"
+        ].includes(type) && (
+          <input
+            id={id}
+            type="text"
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            placeholder={placeholder}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
         {hasError && (
           <p id={errorId} className="text-sm text-red-600 mt-1" role="alert">
             {validationErrors[id] || "This field is required"}
@@ -459,6 +1592,14 @@ export default function FormRenderer({
 
   return (
     <div role="main">
+      {formTitle && (
+        <h1 
+          className="text-3xl font-bold mb-6"
+          style={{ color: styling?.primaryColor || 'var(--foreground)' }}
+        >
+          {formTitle}
+        </h1>
+      )}
       <form 
         onSubmit={handleSubmit(onSubmit)} 
         className="space-y-5"
@@ -475,7 +1616,7 @@ export default function FormRenderer({
             config={multiStepConfig}
             steps={multiStepConfig.steps}
             onValidateStep={validateStep}
-            isLastStep={status === "submitting"}
+            isSubmitting={status === "submitting"}
             submitLabel={finalSubmitLabel}
           >
             {(stepFieldIds) => renderFields(stepFieldIds)}

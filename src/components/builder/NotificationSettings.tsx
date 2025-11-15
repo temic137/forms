@@ -275,6 +275,45 @@ export default function NotificationSettings({
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                Notification Frequency
+              </label>
+              <select
+                value={emailConfig.frequency || "immediate"}
+                onChange={(e) => updateEmailConfig({ frequency: e.target.value as any })}
+                className="w-full text-sm px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="immediate">Send immediately (every submission)</option>
+                <option value="hourly">Batch hourly</option>
+                <option value="daily">Batch daily</option>
+                <option value="weekly">Batch weekly</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Choose how often you want to receive notifications to prevent spam.
+              </p>
+            </div>
+
+            {(emailConfig.frequency === "hourly" || emailConfig.frequency === "daily" || emailConfig.frequency === "weekly") && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                  Batch Size Limit <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={emailConfig.batchSize || ""}
+                  onChange={(e) => updateEmailConfig({ batchSize: e.target.value ? parseInt(e.target.value) : undefined })}
+                  placeholder="No limit"
+                  className="w-full text-sm px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Maximum number of submissions per notification (leave empty for no limit).
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">
                 Custom Message <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <textarea

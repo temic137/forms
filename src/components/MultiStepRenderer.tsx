@@ -9,7 +9,7 @@ interface MultiStepRendererProps {
   children: (stepFieldIds: string[]) => ReactNode;
   onStepChange?: (stepIndex: number) => void;
   onValidateStep?: (stepIndex: number) => Promise<boolean>;
-  isLastStep?: boolean;
+  isSubmitting?: boolean;
   submitLabel?: string;
 }
 
@@ -19,7 +19,7 @@ export default function MultiStepRenderer({
   children,
   onStepChange,
   onValidateStep,
-  isLastStep = false,
+  isSubmitting = false,
   submitLabel = "Submit",
 }: MultiStepRendererProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -30,13 +30,15 @@ export default function MultiStepRenderer({
   const isFinalStep = currentStepIndex === steps.length - 1;
   const totalSteps = steps.length;
 
-  async function handleNext() {
+  async function handleNext(e: React.MouseEvent) {
+    e.preventDefault(); // Prevent any potential form submission
+
     // Validate current step before proceeding
     if (onValidateStep) {
       setIsValidating(true);
       const isValid = await onValidateStep(currentStepIndex);
       setIsValidating(false);
-      
+
       if (!isValid) {
         return;
       }
@@ -117,10 +119,10 @@ export default function MultiStepRenderer({
           ) : (
             <button
               type="submit"
-              disabled={isLastStep}
+              disabled={isSubmitting}
               className="px-8 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {submitLabel}
+              {isSubmitting ? "Submitting..." : submitLabel}
             </button>
           )}
         </div>

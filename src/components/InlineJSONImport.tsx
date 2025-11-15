@@ -74,12 +74,7 @@ export default function InlineJSONImport({
         }}
         placeholder={exampleJSON}
         disabled={disabled}
-        className="w-full h-40 px-3 py-2 text-sm font-mono rounded-lg border resize-none transition-colors"
-        style={{
-          background: 'var(--card-bg)',
-          borderColor: 'var(--card-border)',
-          color: 'var(--foreground)',
-        }}
+        className="w-full h-40 px-3 py-2 text-sm font-mono rounded-lg border border-gray-300 bg-white text-gray-900 resize-none focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 transition-all placeholder-gray-400"
       />
 
       {error && (

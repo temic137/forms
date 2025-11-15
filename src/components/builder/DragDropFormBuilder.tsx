@@ -9,7 +9,7 @@ import FieldPalette, { fieldTemplates } from "./FieldPalette";
 import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
-import { Settings, Save, Eye, FileText, Plus } from "lucide-react";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 
@@ -484,6 +484,20 @@ export default function DragDropFormBuilder({
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Top Bar - Simplified Header */}
         <div className="border-b border-gray-200 bg-white px-4 py-3 flex items-center gap-3">
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCancel();
+            }}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative flex-shrink-0"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+
           {/* Form Title */}
           <div className="flex-1 min-w-0">
             <input

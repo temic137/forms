@@ -24,7 +24,8 @@ export interface NotificationResult {
  */
 export async function sendNotifications(
   config: NotificationConfig | null,
-  data: SubmissionData
+  data: SubmissionData,
+  formId?: string
 ): Promise<NotificationResult[]> {
   const results: NotificationResult[] = [];
 
@@ -52,7 +53,7 @@ export async function sendNotifications(
   // Send email notifications
   if (emailConfig?.enabled && emailConfig.recipients.length > 0) {
     try {
-      await sendEmailNotification(emailConfig, notificationDataWithMessage);
+      await sendEmailNotification(emailConfig, notificationDataWithMessage, formId);
       results.push({ type: "email", success: true });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

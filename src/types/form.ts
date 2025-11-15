@@ -163,6 +163,8 @@ export interface EmailNotificationConfig {
   recipients: string[];
   includeSubmissionData: boolean;
   customMessage?: string;
+  frequency?: "immediate" | "hourly" | "daily" | "weekly";
+  batchSize?: number;
 }
 
 export interface SlackNotificationConfig {

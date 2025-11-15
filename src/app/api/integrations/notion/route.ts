@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { addRowToSheet, formatSubmissionForSheet, initializeSheetHeaders, validateGoogleSheetsConnection, GoogleSheetsConfig } from "@/lib/google-sheets";
-import { Field } from "@/types/form";
+import { validateNotionConnection, NotionConfig } from "@/lib/notion";
 
 /**
- * GET - Get Google Sheets integration for a form
+ * GET - Get Notion integration for a form
  */
 export async function GET(req: NextRequest) {
   try {
@@ -37,13 +36,13 @@ export async function GET(req: NextRequest) {
     const integration = await prisma.integration.findFirst({
       where: {
         formId,
-        type: "google_sheets"
+        type: "notion"
       }
     });
 
     return NextResponse.json({ integration });
   } catch (error) {
-    console.error("Error fetching Google Sheets integration:", error);
+    console.error("Error fetching Notion integration:", error);
     return NextResponse.json(
       { error: "Failed to fetch integration" },
       { status: 500 }
@@ -52,7 +51,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST - Create or update Google Sheets integration
+ * POST - Create or update Notion integration
  */
 export async function POST(req: NextRequest) {
   try {
@@ -62,11 +61,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { formId, spreadsheetId, sheetName, enabled = true } = body;
+    const { formId, apiKey, databaseId, enabled = true } = body;
 
-    if (!formId || !spreadsheetId || !sheetName) {
+    if (!formId || !apiKey) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "API key is required" },
         { status: 400 }
       );
     }
@@ -83,52 +82,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
-
-    // Get existing integration to preserve OAuth tokens
+    // Get existing integration to preserve field mapping
     const existingIntegration = await prisma.integration.findFirst({
       where: {
         formId,
-        type: "google_sheets"
+        type: "notion"
       }
     });
 
-    // Preserve OAuth tokens from existing integration
-    const existingConfig = existingIntegration?.config as any || {};
-    const config: GoogleSheetsConfig = {
-      spreadsheetId,
-      sheetName,
-      accessToken: existingConfig.accessToken,
-      refreshToken: existingConfig.refreshToken,
-      expiresAt: existingConfig.expiresAt,
+    const config: NotionConfig = {
+      apiKey: apiKey.trim(),
+      databaseId: databaseId?.trim() || undefined, // Optional - will create if not provided
     };
 
-    // Check if user has connected their Google account (has OAuth tokens)
-    if (!config.accessToken && !process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    // Validate the connection and create database if needed
+    const validation = await validateNotionConnection(config, form.title);
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: "Please connect your Google account first. Click 'Connect Google Account' to authorize." },
+        { error: validation.error || "Failed to validate Notion connection" },
         { status: 400 }
       );
     }
 
-    // Validate the connection before saving
-    try {
-      const validation = await validateGoogleSheetsConnection(config);
-      if (!validation.valid) {
-        return NextResponse.json(
-          { error: validation.error || "Failed to validate Google Sheets connection" },
-          { status: 400 }
-        );
-      }
-      // Update config with refreshed tokens if needed
-      if (validation.updatedConfig) {
-        Object.assign(config, validation.updatedConfig);
-      }
-    } catch (validationError: any) {
-      return NextResponse.json(
-        { error: validationError.message || "Failed to validate Google Sheets connection" },
-        { status: 400 }
-      );
+    // Use created database ID if one was created
+    if (validation.databaseId && !config.databaseId) {
+      config.databaseId = validation.databaseId;
     }
+
+    // Preserve field mapping if it exists
+    const existingConfig = existingIntegration?.config as any || {};
+    const finalConfig = {
+      ...config,
+      fieldMapping: existingConfig.fieldMapping || {},
+    };
 
     let integration;
     if (existingIntegration) {
@@ -136,7 +122,7 @@ export async function POST(req: NextRequest) {
       integration = await prisma.integration.update({
         where: { id: existingIntegration.id },
         data: {
-          config,
+          config: finalConfig,
           enabled
         }
       });
@@ -145,35 +131,20 @@ export async function POST(req: NextRequest) {
       integration = await prisma.integration.create({
         data: {
           formId,
-          type: "google_sheets",
-          config,
+          type: "notion",
+          config: finalConfig,
           enabled
         }
       });
     }
 
-    // Initialize headers if enabled
-    if (enabled && config.spreadsheetId) {
-      try {
-        const fields = form.fieldsJson as unknown as Field[];
-        const headers = [
-          'Submission ID',
-          'Submitted At',
-          ...fields.map(f => f.label)
-        ];
-        await initializeSheetHeaders(config, headers);
-      } catch (headerError) {
-        console.error("Failed to initialize headers (non-critical):", headerError);
-        // Don't fail the integration setup if headers fail - they'll be created on first submission
-      }
-    }
-
     return NextResponse.json({
       success: true,
-      integration
+      integration,
+      databaseTitle: validation.databaseTitle,
     });
   } catch (error) {
-    console.error("Error setting up Google Sheets integration:", error);
+    console.error("Error setting up Notion integration:", error);
     return NextResponse.json(
       { error: "Failed to setup integration" },
       { status: 500 }
@@ -182,7 +153,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * DELETE - Remove Google Sheets integration
+ * DELETE - Remove Notion integration
  */
 export async function DELETE(req: NextRequest) {
   try {
@@ -214,13 +185,13 @@ export async function DELETE(req: NextRequest) {
     await prisma.integration.deleteMany({
       where: {
         formId,
-        type: "google_sheets"
+        type: "notion"
       }
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting Google Sheets integration:", error);
+    console.error("Error deleting Notion integration:", error);
     return NextResponse.json(
       { error: "Failed to delete integration" },
       { status: 500 }

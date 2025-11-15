@@ -33,7 +33,11 @@ export default function FormPreviewPage() {
   }, []);
 
   const handleBack = () => {
-    router.back();
+    // Store the editing form ID in sessionStorage to restore editing state
+    if (previewData) {
+      sessionStorage.setItem('formPreviewEditingFormId', 'preview'); // Use a flag to indicate we came from preview
+    }
+    router.push('/dashboard'); // Go back to dashboard, which will restore the builder state
   };
 
   if (loading) {
@@ -117,12 +121,13 @@ export default function FormPreviewPage() {
             boxShadow: 'var(--card-shadow)'
           }}
         >
-          <FormRenderer 
-            formId="preview" 
+          <FormRenderer
+            formId="preview"
             fields={previewData.fields}
             styling={previewData.styling}
             multiStepConfig={previewData.multiStepConfig}
             formTitle={previewData.title}
+            isPreview={true}
             onSubmit={async () => {
               // Preview mode - show alert instead of submitting
               alert('This is a preview. Form submission is disabled.');
