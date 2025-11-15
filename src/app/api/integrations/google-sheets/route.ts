@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
       integration = await prisma.integration.update({
         where: { id: existingIntegration.id },
         data: {
-          config,
+          config: config as any,
           enabled
         }
       });
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
         data: {
           formId,
           type: "google_sheets",
-          config,
+          config: config as any,
           enabled
         }
       });
