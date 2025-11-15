@@ -102,7 +102,7 @@ function SliderField({
   onChange: (value: number) => void;
   isPreviewMode: boolean;
   required: boolean;
-  register?: (name: string, rules?: any) => unknown;
+  register?: (name: string, rules?: Record<string, unknown>) => unknown;
 }) {
   const sliderValue = value ?? 50;
 
@@ -118,7 +118,7 @@ function SliderField({
         style={{
           background: `linear-gradient(to right, var(--accent, #3b82f6) 0%, var(--accent, #3b82f6) ${sliderValue}%, #e5e7eb ${sliderValue}%, #e5e7eb 100%)`,
         }}
-        {...(register && !isPreviewMode ? register(id, { required }) : {})}
+        {...(register && !isPreviewMode ? register(id, { required }) || {} : {})}
         onChange={(e) => {
           const newValue = parseInt(e.target.value, 10);
           onChange(newValue);

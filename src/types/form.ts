@@ -129,6 +129,7 @@ export interface Field {
   fileConfig?: FileUploadConfig;
   customStyles?: FieldStyles;
   color?: string; // New property for color editing
+  matrixRows?: string[]; // For choice-matrix field type
 }
 
 // Multi-Step Form Types
