@@ -1,7 +1,5 @@
 "use client";
 
-// Fixed duplicate 'name' attribute issue for radio inputs
-
 import { useForm } from "react-hook-form";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Field, MultiStepConfig } from "@/types/form";
@@ -1008,6 +1006,10 @@ export default function FormRenderer({
 
         {/* Choice Fields */}
 
+
+// Search for all instances where we might have duplicate name attributes
+// Let's check the radio buttons section around line 1023
+
 {type === "radio" && (
   <div className="space-y-3">
     {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
@@ -1037,7 +1039,6 @@ export default function FormRenderer({
     })}
   </div>
 )}
-        )}
 
         {(type === "dropdown" || type === "select") && (
           <select

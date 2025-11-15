@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
         id: true,
         name: true,
         email: true,
-        createdAt: true,
       },
     });
 

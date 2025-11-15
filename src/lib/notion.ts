@@ -133,6 +133,10 @@ export async function getDatabaseSchema(
   config: NotionConfig
 ): Promise<{ [key: string]: { type: string; name: string } }> {
   try {
+    if (!config.databaseId) {
+      throw new Error('Database ID is required');
+    }
+    
     const notion = getNotionClient(config.apiKey);
     const database = await notion.databases.retrieve({
       database_id: config.databaseId,
