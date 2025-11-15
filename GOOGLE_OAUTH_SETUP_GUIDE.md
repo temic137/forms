@@ -299,3 +299,4 @@ If you're stuck:
 Once all steps are complete, your users will be able to connect their Google Sheets with just a few clicks! 🎉
 
 
+

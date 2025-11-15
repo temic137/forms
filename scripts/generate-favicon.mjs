@@ -63,3 +63,4 @@ async function convertSvgToIco() {
 
 convertSvgToIco();
 
+
