@@ -9,7 +9,7 @@ import FieldPalette, { fieldTemplates } from "./FieldPalette";
 import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
-import { Settings, Save, Eye, FileText, Plus, ArrowLeft } from "lucide-react";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 
@@ -48,6 +48,7 @@ export default function DragDropFormBuilder({
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showFieldPalette, setShowFieldPalette] = useState(false);
   const [hoveredDropIndex, setHoveredDropIndex] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -472,18 +473,42 @@ export default function DragDropFormBuilder({
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-white overflow-hidden">
       {/* Left Sidebar - Field Palette & Theme Settings */}
-      <FieldPalette 
-        onFieldSelect={handleFieldSelect}
-        styling={styling}
-        onStylingChange={onStylingChange}
-      />
+      {/* Mobile backdrop */}
+      {showFieldPalette && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setShowFieldPalette(false)}
+        />
+      )}
+      
+      {/* Sidebar - slides in on mobile, always visible on desktop */}
+      <div className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 lg:transform-none ${
+        showFieldPalette ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        {/* Close button for mobile */}
+        <button
+          onClick={() => setShowFieldPalette(false)}
+          className="lg:hidden absolute top-4 right-4 z-10 p-2 bg-white rounded-md shadow-lg text-gray-600 hover:text-gray-900"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        
+        <FieldPalette 
+          onFieldSelect={(fieldType) => {
+            handleFieldSelect(fieldType);
+            setShowFieldPalette(false); // Close on mobile after selection
+          }}
+          styling={styling}
+          onStylingChange={onStylingChange}
+        />
+      </div>
 
       {/* Main Canvas */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Top Bar - Simplified Header */}
-        <div className="border-b border-gray-200 bg-white px-4 py-3 flex items-center gap-3">
+        <div className="border-b border-gray-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
           {/* Back Button */}
           <button
             type="button"
@@ -492,7 +517,7 @@ export default function DragDropFormBuilder({
               e.stopPropagation();
               onCancel();
             }}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative flex-shrink-0"
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative shrink-0"
             title="Back to Dashboard"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -504,25 +529,34 @@ export default function DragDropFormBuilder({
               type="text"
               value={formTitle}
               onChange={(e) => onFormTitleChange(e.target.value)}
-              className="text-lg font-semibold w-full px-2 py-1.5 border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-900 placeholder:text-gray-400"
+              className="text-base sm:text-lg font-semibold w-full px-2 py-1.5 border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-900 placeholder:text-gray-400"
               placeholder="Form title"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Mobile Menu Button - Show Field Palette */}
+            <button
+              onClick={() => setShowFieldPalette(true)}
+              className="lg:hidden p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+              title="Add Fields"
+            >
+              <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            
             {/* Multi-Page Toggle */}
             <button
               onClick={handleToggleMultiPage}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors font-medium flex items-center gap-1.5 ${
+              className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors font-medium flex items-center gap-1 sm:gap-1.5 ${
                 multiStepConfig?.enabled
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
               title={multiStepConfig?.enabled ? "Disable Multi-Page" : "Enable Multi-Page"}
             >
-              <FileText className="w-4 h-4" />
-              <span>Multi-Page</span>
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Multi-Page</span>
               {multiStepConfig?.enabled && (
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500 rounded">
                   {multiStepConfig.steps.length}
@@ -535,20 +569,20 @@ export default function DragDropFormBuilder({
               <>
                 <button
                   onClick={handleAddPage}
-                  className="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium flex items-center gap-1.5"
+                  className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
                   title="Add Page"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Page</span>
                 </button>
-                <div className="w-px h-6 bg-gray-200" />
+                <div className="hidden sm:block w-px h-6 bg-gray-200" />
               </>
             )}
 
             {/* Preview Button */}
             <button
               onClick={handlePreview}
-              className="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium flex items-center gap-1.5"
+              className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
               title="Preview Form"
             >
               <Eye className="w-4 h-4" />
@@ -556,28 +590,28 @@ export default function DragDropFormBuilder({
             </button>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-200" />
+            <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
             {/* Settings Button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className={`p-2 rounded-md transition-colors ${
+              className={`p-1.5 sm:p-2 rounded-md transition-colors ${
                 showSettings
                   ? "bg-gray-100 text-gray-900"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
               title="Settings"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-200" />
+            <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
             {/* Cancel Button */}
             <button
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium"
+              className="hidden sm:block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium"
             >
               Cancel
             </button>
@@ -586,7 +620,7 @@ export default function DragDropFormBuilder({
             <button
               onClick={onSave}
               disabled={saving}
-              className="px-4 py-1.5 text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               {saving ? (
                 <>
@@ -594,12 +628,12 @@ export default function DragDropFormBuilder({
                     <div className="absolute inset-0 border-2 border-white border-opacity-25 rounded-full"></div>
                     <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   </div>
-                  <span>Saving</span>
+                  <span className="hidden sm:inline">Saving</span>
                 </>
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5" />
-                  <span>Save</span>
+                  <span className="\hidden sm:inline\">Save</span>
                 </>
               )}
             </button>
@@ -608,7 +642,7 @@ export default function DragDropFormBuilder({
 
         {/* Canvas Area */}
         <div 
-          className="flex-1 overflow-y-auto p-8"
+          className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8"
           style={{ 
             backgroundColor: styling?.backgroundColor || '#f3f4f6',
           }}
@@ -820,55 +854,63 @@ export default function DragDropFormBuilder({
           </div>
         </div>
 
-        {/* Settings Panel (Right Sidebar) */}
+        {/* Settings Panel (Right Sidebar on desktop, modal on mobile) */}
         {showSettings && (
-          <div className="absolute inset-y-0 right-0 w-96 bg-white border-l border-gray-200 shadow-xl z-50 flex flex-col">
-            <div className="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between bg-gray-50">
-              <h2 className="text-base font-semibold text-gray-900">Settings</h2>
-              <button
-                onClick={() => setShowSettings(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <>
+            {/* Mobile backdrop */}
+            <div 
+              className="lg:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowSettings(false)}
+            />
+            
+            <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-96 max-w-full bg-white border-l border-gray-200 shadow-xl z-50 flex flex-col">
+              <div className="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between bg-gray-50">
+                <h2 className="text-base font-semibold text-gray-900">Settings</h2>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                {/* Multi-page settings - simple checkboxes */}
+                {multiStepConfig?.enabled && (
+                  <div className="border-t border-gray-200 pt-6 space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Multi-Page Settings</h3>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={multiStepConfig.showProgressBar}
+                        onChange={(e) =>
+                          onMultiStepConfigChange({ ...multiStepConfig, showProgressBar: e.target.checked })
+                        }
+                        className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
+                      />
+                      Show progress bar
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={multiStepConfig.allowBackNavigation}
+                        onChange={(e) =>
+                          onMultiStepConfigChange({ ...multiStepConfig, allowBackNavigation: e.target.checked })
+                        }
+                        className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
+                      />
+                      Allow back navigation
+                    </label>
+                  </div>
+                )}
+                <NotificationSettings
+                  config={notifications}
+                  onChange={onNotificationsChange}
+                />
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
-              {/* Multi-page settings - simple checkboxes */}
-              {multiStepConfig?.enabled && (
-                <div className="border-t border-gray-200 pt-6 space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-900">Multi-Page Settings</h3>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={multiStepConfig.showProgressBar}
-                      onChange={(e) =>
-                        onMultiStepConfigChange({ ...multiStepConfig, showProgressBar: e.target.checked })
-                      }
-                      className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
-                    />
-                    Show progress bar
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={multiStepConfig.allowBackNavigation}
-                      onChange={(e) =>
-                        onMultiStepConfigChange({ ...multiStepConfig, allowBackNavigation: e.target.checked })
-                      }
-                      className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
-                    />
-                    Allow back navigation
-                  </label>
-                </div>
-              )}
-              <NotificationSettings
-                config={notifications}
-                onChange={onNotificationsChange}
-              />
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>

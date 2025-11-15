@@ -41,7 +41,7 @@ export function Card({ children, className = "", hover = false, onClick }: CardP
 export function CardHeader({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div 
-      className={`px-6 py-5 border-b ${className}`}
+      className={`px-4 sm:px-6 py-4 sm:py-5 border-b ${className}`}
       style={{ borderColor: 'var(--divider)' }}
     >
       {children}
@@ -62,7 +62,7 @@ export function CardTitle({ children, className = "" }: { children: React.ReactN
 
 export function CardContent({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`px-6 py-5 ${className}`}>
+    <div className={`px-4 sm:px-6 py-4 sm:py-5 ${className}`}>
       {children}
     </div>
   );

@@ -44,14 +44,14 @@ export default function CreationMethodSelector({
   disabled = false,
 }: CreationMethodSelectorProps) {
   return (
-    <div className="flex items-center gap-2 mb-3">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
       <span 
-        className="text-sm font-medium shrink-0"
+        className="text-xs sm:text-sm font-medium shrink-0"
         style={{ color: 'var(--foreground-muted)' }}
       >
         Create from:
       </span>
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1.5 sm:gap-2 flex-wrap">
         {methods.map((method) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;

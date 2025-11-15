@@ -26,10 +26,10 @@ export default async function PublicFormPage({ params }: Props) {
   if (!form) return notFound();
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8" style={{ background: 'var(--background)' }}>
+    <div className="min-h-screen py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8" style={{ background: 'var(--background)' }}>
       <div className="max-w-2xl mx-auto">
         <div 
-          className="border p-8"
+          className="border p-4 sm:p-6 md:p-8"
           style={{
             background: 'var(--card-bg)',
             borderColor: 'var(--card-border)',

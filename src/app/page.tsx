@@ -341,17 +341,17 @@ export default function Home() {
           background: 'var(--background)',
           borderColor: 'var(--divider)'
         }}>
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-medium" style={{ color: 'var(--foreground)' }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <h1 className="text-lg sm:text-xl font-medium" style={{ color: 'var(--foreground)' }}>
                   Forms
                 </h1>
-                <span className="text-sm" style={{ color: 'var(--foreground-subtle)' }}>
+                <span className="hidden sm:inline text-sm" style={{ color: 'var(--foreground-subtle)' }}>
                   Builder
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={startOver}
                   className="btn btn-ghost"
@@ -425,8 +425,8 @@ export default function Home() {
         </div>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 md:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             {/* Left: Form Editor */}
             <div className="space-y-6">
               {/* Title Card */}
@@ -557,27 +557,27 @@ export default function Home() {
       {/* Hero Section */}
       <main className="flex-1">
         {/* Hero Content */}
-        <section className="relative overflow-hidden pt-32 pb-24 px-6">
+        <section className="relative overflow-hidden pt-16 sm:pt-24 md:pt-32 pb-16 sm:pb-20 md:pb-24 px-4 sm:px-6">
           <div className="max-w-5xl mx-auto">
             {/* Hero Text */}
-            <div className="text-center mb-16 animate-fade-in">
-              <h1 className="text-8xl md:text-9xl font-extralight mb-8 tracking-tighter text-black">
+            <div className="text-center mb-12 sm:mb-14 md:mb-16 animate-fade-in">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-extralight mb-6 sm:mb-8 tracking-tighter text-black">
                 Build Forms
                 <br />
                 <span className="font-black">Instantly</span>
               </h1>
-              <p className="text-2xl md:text-3xl mb-4 font-light text-gray-600 max-w-2xl mx-auto">
+              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-3 sm:mb-4 font-light text-gray-600 max-w-2xl mx-auto px-4">
                 Describe what you need, and we&apos;ll build it
               </p>
-              <p className="text-lg max-w-xl mx-auto text-gray-500">
+              <p className="text-base sm:text-lg max-w-xl mx-auto text-gray-500 px-4">
                 Create beautiful, functional forms in seconds with AI. No coding required.
               </p>
             </div>
 
             {/* Main Input Card */}
-            <div className="max-w-3xl mx-auto mb-16 animate-scale-in">
-              <div className="bg-white border-2 border-black rounded-2xl shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:shadow-[12px_12px_0_0_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1">
-                <div className="p-8">
+            <div className="max-w-3xl mx-auto mb-12 sm:mb-14 md:mb-16 animate-scale-in">
+              <div className="bg-white border-2 border-black rounded-xl sm:rounded-2xl shadow-[4px_4px_0_0_rgba(0,0,0,1)] sm:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] sm:hover:shadow-[12px_12px_0_0_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 sm:hover:-translate-x-1 sm:hover:-translate-y-1">
+                <div className="p-4 sm:p-6 md:p-8">
                   {/* Creation Method Selector */}
                   <CreationMethodSelector
                     selectedMethod={creationMethod}
@@ -587,26 +587,26 @@ export default function Home() {
                   
                   {/* Show different UI based on creation method */}
                   {creationMethod === "prompt" && (
-                    <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+                    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                       <div className="relative">
                         <input
                           type="text"
                           value={query}
                           onChange={(e) => setQuery(e.target.value)}
                           placeholder="Create a contact form with name, email, and message..."
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg text-base focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 text-gray-900 placeholder-gray-400 transition-all"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 text-gray-900 placeholder-gray-400 transition-all"
                           autoFocus
                           disabled={loading}
                         />
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-col sm:flex-row justify-end gap-2">
                         <button
                           type="button"
                           onClick={handleVoiceClick}
                           disabled={loading || !isSupported}
-                          className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          className="px-4 py-2 sm:py-2 border border-gray-300 rounded-lg font-medium text-sm sm:text-base text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {isListening ? (
                             <>
@@ -625,7 +625,7 @@ export default function Home() {
                         <button
                           type="submit"
                           disabled={!query.trim() || loading}
-                          className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          className="px-4 sm:px-6 py-2 sm:py-2 bg-gray-900 text-white rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {loading && (
                             <div className="relative w-4 h-4">
@@ -703,11 +703,11 @@ export default function Home() {
             )}
 
             {/* Quick Actions */}
-            <div className="text-center mb-20">
-              <p className="text-sm mb-6 font-medium text-gray-500 uppercase tracking-wider">
+            <div className="text-center mb-12 sm:mb-20">
+              <p className="text-xs sm:text-sm mb-4 sm:mb-6 font-medium text-gray-500 uppercase tracking-wider">
                 Popular Templates
               </p>
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 px-4">
                 {quickActions.map((action) => (
                   <button
                     key={action.label}
@@ -716,7 +716,7 @@ export default function Home() {
                       generateForm(action.query);
                     }}
                     disabled={loading}
-                    className="px-5 py-2.5 border-2 border-black rounded-full text-sm font-medium text-black bg-white hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 border-2 border-black rounded-full text-xs sm:text-sm font-medium text-black bg-white hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {action.label}
                   </button>
@@ -727,18 +727,18 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24 px-6 bg-gray-50">
+        <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-20">
-              <h2 className="text-5xl md:text-6xl font-extralight mb-6 text-black tracking-tight">
+            <div className="text-center mb-12 sm:mb-16 md:mb-20">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight mb-4 sm:mb-6 text-black tracking-tight">
                 Everything you need
               </h2>
-              <p className="text-xl max-w-2xl mx-auto text-gray-600">
+              <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-gray-600 px-4">
                 Powerful features that make form creation effortless
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Feature 1 */}
               <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
                 <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
@@ -834,21 +834,21 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 px-6 bg-white">
+        <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-white">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-5xl md:text-6xl font-extralight mb-8 text-black tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight mb-6 sm:mb-8 text-black tracking-tight">
               Ready to build?
             </h2>
-            <p className="text-xl mb-12 max-w-2xl mx-auto text-gray-600">
+            <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-12 max-w-2xl mx-auto text-gray-600 px-4">
               Get started in seconds. No account required.
             </p>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-4 px-4">
               <button
                 onClick={() => {
                   const input = document.querySelector('input[type="text"]') as HTMLInputElement;
                   if (input) input.focus();
                 }}
-                className="px-10 py-4 bg-black text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-all shadow-[6px_6px_0_0_rgba(0,0,0,0.2)] hover:shadow-[8px_8px_0_0_rgba(0,0,0,0.2)] hover:-translate-x-1 hover:-translate-y-1"
+                className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-black text-white rounded-xl font-bold text-base sm:text-lg hover:bg-gray-800 transition-all shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] sm:shadow-[6px_6px_0_0_rgba(0,0,0,0.2)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,0.2)] sm:hover:shadow-[8px_8px_0_0_rgba(0,0,0,0.2)] hover:-translate-x-0.5 hover:-translate-y-0.5 sm:hover:-translate-x-1 sm:hover:-translate-y-1 w-full sm:w-auto"
               >
                 Start Creating
               </button>
@@ -858,10 +858,10 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t-2 border-black bg-white">
+      <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t-2 border-black bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-            <div className="flex gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 text-xs sm:text-sm">
+            <div className="flex gap-4 sm:gap-6">
               <a href="#" className="text-gray-600 hover:text-black transition-colors font-medium">About</a>
               <a href="#" className="text-gray-600 hover:text-black transition-colors font-medium">Help</a>
             </div>

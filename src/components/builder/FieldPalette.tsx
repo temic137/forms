@@ -141,6 +141,13 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
       <div className="flex-1 overflow-y-auto">
         {activeTab === "fields" ? (
           <div className="p-3">
+            {/* Mobile instruction banner */}
+            <div className="lg:hidden mb-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-700 font-medium">
+                💡 Tap any field below to add it to your form
+              </p>
+            </div>
+            
             {/* Search */}
             <div className="mb-3">
               <div className="relative">
@@ -194,9 +201,10 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                           <button
                             key={field.type}
                             onClick={() => onFieldSelect(field.type)}
-                            className="w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-md
+                            className="w-full flex items-center gap-2 px-2.5 py-2.5 text-left rounded-md
                                      hover:bg-blue-50 hover:text-blue-600 text-gray-700
-                                     transition-colors text-xs font-medium group cursor-pointer"
+                                     transition-colors text-xs font-medium group cursor-pointer
+                                     active:bg-blue-100 touch-manipulation"
                             draggable
                             onDragStart={(e) => {
                               e.dataTransfer.setData("fieldType", field.type);
@@ -205,6 +213,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                           >
                             <span className="text-base leading-none">{field.icon}</span>
                             <span className="flex-1 truncate">{field.label}</span>
+                            <span className="text-xs text-gray-400 group-hover:text-blue-500 lg:hidden">+</span>
                           </button>
                         ))}
                       </div>

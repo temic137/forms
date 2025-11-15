@@ -63,32 +63,32 @@ export default function FormCreationMethods({
   const [hoveredMethod, setHoveredMethod] = useState<CreationMethod | null>(null);
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      <div className="text-center mb-12">
+    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="text-center mb-8 sm:mb-12">
         <div 
-          className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
+          className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full mb-3 sm:mb-4"
           style={{
             background: 'var(--accent-light)',
             color: 'var(--accent)',
           }}
         >
-          <Sparkles className="w-8 h-8" />
+          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
         </div>
         <h2 
-          className="text-3xl font-bold mb-3"
+          className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 px-4"
           style={{ color: 'var(--foreground)' }}
         >
           How would you like to create your form?
         </h2>
         <p 
-          className="text-lg"
+          className="text-base sm:text-lg px-4"
           style={{ color: 'var(--foreground-muted)' }}
         >
           Choose the method that works best for you
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {methods.map((method) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;
