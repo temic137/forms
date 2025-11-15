@@ -1,5 +1,7 @@
 "use client";
 
+// Fixed duplicate 'name' attribute issue for radio inputs
+
 import { useForm } from "react-hook-form";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Field, MultiStepConfig } from "@/types/form";
