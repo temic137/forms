@@ -4,10 +4,11 @@
  */
 
 export interface GoogleSheetsConfig {
-  spreadsheetId: string;
+  spreadsheetId: string | null;
   sheetName: string;
   accessToken?: string;
   refreshToken?: string;
+  expiresAt?: Date | string | number | null;
 }
 
 export interface SheetRow {
@@ -83,13 +84,17 @@ export async function initializeSheetHeaders(
  */
 export async function validateGoogleSheetsConnection(
   config: GoogleSheetsConfig
-): Promise<boolean> {
+): Promise<{ valid: boolean; error?: string; updatedConfig?: GoogleSheetsConfig }> {
   try {
     // Test the connection by attempting to read sheet metadata
-    return true;
-  } catch (error) {
+    // If tokens are expired, refresh them here if needed
+    return { valid: true };
+  } catch (error: any) {
     console.error('Invalid Google Sheets connection:', error);
-    return false;
+    return { 
+      valid: false, 
+      error: error.message || 'Failed to validate Google Sheets connection' 
+    };
   }
 }
 
@@ -160,6 +165,7 @@ export async function exchangeCodeForTokens(code: string): Promise<{
     expiresIn: 3600
   };
 }
+
 
 
 
