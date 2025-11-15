@@ -607,7 +607,6 @@ export default function DashboardPage() {
           onSave={handleBuilderSave}
           onCancel={handleBuilderCancel}
           saving={savingForm}
-          editingFormId={editingFormId}
         />
       </>
     );
