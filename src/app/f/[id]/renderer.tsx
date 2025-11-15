@@ -1007,38 +1007,36 @@ export default function FormRenderer({
         )}
 
         {/* Choice Fields */}
-        {(type === "multiple-choice" || type === "choices" || type === "radio") && (
-          <div
-            role="radiogroup"
-            aria-labelledby={`${id}-label`}
-            aria-describedby={helpText ? helpTextId : undefined}
-            aria-required={required ? "true" : "false"}
-            className="space-y-2"
-          >
-            {options.map((opt, i) => {
-              const optValue = getOptionValue(opt);
-              const isChecked = formValues[id] === optValue;
-              return (
-                <label key={i} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    value={optValue}
-                    checked={isChecked}
-                    {...(isPreviewMode ? { name: id } : register(id, { required }))}
-                    className="w-4 h-4 focus:ring-2 transition-colors"
-                    style={{
-                      accentColor: styling?.primaryColor || 'var(--accent)',
-                      '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
-                    } as React.CSSProperties}
-                    onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
-                    onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
-                    aria-label={optValue}
-                  />
-                  <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
-                </label>
-              );
-            })}
-          </div>
+
+{type === "radio" && (
+  <div className="space-y-3">
+    {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
+      const optValue = getOptionValue(opt);
+      const radioId = `${id}_${i}`;
+      const isChecked = formValues[id] === optValue;
+      
+      return (
+        <label key={i} className="flex items-center gap-3 cursor-pointer">
+          <input
+            id={radioId}
+            type="radio"
+            value={optValue}
+            checked={isChecked}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            className="w-4 h-4 focus:ring-2 transition-colors"
+            style={{
+              accentColor: styling?.primaryColor || 'var(--accent)',
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+            } as React.CSSProperties}
+            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+          />
+          <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
+        </label>
+      );
+    })}
+  </div>
+)}
         )}
 
         {(type === "dropdown" || type === "select") && (
