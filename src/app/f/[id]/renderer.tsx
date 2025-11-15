@@ -102,7 +102,7 @@ function SliderField({
   onChange: (value: number) => void;
   isPreviewMode: boolean;
   required: boolean;
-  register?: (name: string, rules?: any) => any;
+  register?: (name: string, rules?: any) => unknown;
 }) {
   const sliderValue = value ?? 50;
 
@@ -1020,10 +1020,9 @@ export default function FormRenderer({
                 <label key={i} className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
-                    name={id}
                     value={optValue}
                     checked={isChecked}
-                    {...(isPreviewMode ? {} : register(id, { required }))}
+                    {...(isPreviewMode ? { name: id } : register(id, { required }))}
                     className="w-4 h-4 focus:ring-2 transition-colors"
                     style={{
                       accentColor: styling?.primaryColor || 'var(--accent)',
@@ -1087,10 +1086,9 @@ export default function FormRenderer({
                   <input
                     id={checkboxId}
                     type="checkbox"
-                    name={id}
                     value={optValue}
                     checked={isChecked}
-                    {...(isPreviewMode ? {} : register(id, { required }))}
+                    {...(isPreviewMode ? { name: id } : register(id, { required }))}
                     className="w-4 h-4 rounded focus:ring-2 transition-colors"
                     style={{
                       accentColor: styling?.primaryColor || 'var(--accent)',
@@ -1116,9 +1114,8 @@ export default function FormRenderer({
             <input
               id={id}
               type="checkbox"
-              name={id}
               checked={Boolean(formValues[id])}
-              {...(isPreviewMode ? {} : register(id, { required }))}
+              {...(isPreviewMode ? { name: id } : register(id, { required }))}
               className="w-4 h-4 rounded focus:ring-2 transition-colors"
               style={{
                 accentColor: styling?.primaryColor || 'var(--accent)',
@@ -1142,9 +1139,8 @@ export default function FormRenderer({
             <div className="relative inline-block w-12 h-6">
               <input
                 type="checkbox"
-                name={id}
                 checked={Boolean(formValues[id])}
-                {...(isPreviewMode ? {} : register(id, { required }))}
+                {...(isPreviewMode ? { name: id } : register(id, { required }))}
                 className="sr-only peer"
                 onChange={isPreviewMode ? (e) => setValue(id, e.target.checked) : undefined}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1251,10 +1247,9 @@ export default function FormRenderer({
                           <td key={colIdx} className="border px-4 py-2 text-center" style={{ borderColor: 'var(--card-border)' }}>
                             <input
                               type="radio"
-                              name={rowId}
                               value={optValue}
                               checked={isChecked}
-                              {...(isPreviewMode ? {} : register(rowId, { required: required && rowIdx === 0 }))}
+                              {...(isPreviewMode ? { name: rowId } : register(rowId, { required: required && rowIdx === 0 }))}
                               onChange={isPreviewMode ? (e) => setValue(rowId, e.target.value) : undefined}
                               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(rowId)}
                               className="w-4 h-4 focus:ring-2 transition-colors"
