@@ -1016,20 +1016,31 @@ export default function FormRenderer({
             {options.map((opt, i) => {
               const optValue = getOptionValue(opt);
               const isChecked = formValues[id] === optValue;
+              const registerResult = isPreviewMode ? undefined : register(id, { required });
+              const handleChange = isPreviewMode
+                ? (e: React.ChangeEvent<HTMLInputElement>) => setValue(id, e.target.value)
+                : registerResult?.onChange;
+              const handleBlur = isPreviewMode
+                ? undefined
+                : (event: React.FocusEvent<HTMLInputElement>) => {
+                    registerResult?.onBlur(event);
+                    handleFieldBlur(id);
+                  };
               return (
                 <label key={i} className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
                     value={optValue}
                     checked={isChecked}
-                    {...(isPreviewMode ? { name: id } : register(id, { required }))}
+                    name={registerResult?.name ?? id}
+                    ref={registerResult?.ref}
                     className="w-4 h-4 focus:ring-2 transition-colors"
                     style={{
                       accentColor: styling?.primaryColor || 'var(--accent)',
                       '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
                     } as React.CSSProperties}
-                    onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
-                    onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
                     aria-label={optValue}
                   />
                   <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
