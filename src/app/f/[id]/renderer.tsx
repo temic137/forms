@@ -1006,18 +1006,14 @@ export default function FormRenderer({
 
         {/* Choice Fields */}
 
-
-// Search for all instances where we might have duplicate name attributes
-// Let's check the radio buttons section around line 1023
-
-{type === "radio" && (
-  <div className="space-y-3">
-    {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
-      const optValue = getOptionValue(opt);
-      const radioId = `${id}_${i}`;
-      const isChecked = formValues[id] === optValue;
-      
-      return (
+        {type === "radio" && (
+          <div className="space-y-3">
+            {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
+              const optValue = getOptionValue(opt);
+              const radioId = `${id}_${i}`;
+              const isChecked = formValues[id] === optValue;
+              
+              return (
         <label key={i} className="flex items-center gap-3 cursor-pointer">
           <input
             id={radioId}
