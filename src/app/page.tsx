@@ -386,7 +386,7 @@ export default function Home() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Add or modify fields... (e.g., 'add phone number field')"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-200 transition-all"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none  focus:ring-gray-200 transition-all"
                   disabled={loading}
                 />
               </div>
@@ -588,18 +588,13 @@ export default function Home() {
                   {/* Show different UI based on creation method */}
                   {creationMethod === "prompt" && (
                     <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-                      <div className="flex items-center gap-3 border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-gray-300 transition-all">
-                        <div className="shrink-0 text-gray-400">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
+                      <div className="relative">
                         <input
                           type="text"
                           value={query}
                           onChange={(e) => setQuery(e.target.value)}
                           placeholder="Create a contact form with name, email, and message..."
-                          className="flex-1 bg-transparent border-none text-base focus:outline-none text-gray-900 placeholder-gray-400"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg text-base focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 text-gray-900 placeholder-gray-400 transition-all"
                           autoFocus
                           disabled={loading}
                         />
