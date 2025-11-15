@@ -1016,31 +1016,20 @@ export default function FormRenderer({
             {options.map((opt, i) => {
               const optValue = getOptionValue(opt);
               const isChecked = formValues[id] === optValue;
-              const registerResult = isPreviewMode ? undefined : register(id, { required });
-              const handleChange = isPreviewMode
-                ? (e: React.ChangeEvent<HTMLInputElement>) => setValue(id, e.target.value)
-                : registerResult?.onChange;
-              const handleBlur = isPreviewMode
-                ? undefined
-                : (event: React.FocusEvent<HTMLInputElement>) => {
-                    registerResult?.onBlur(event);
-                    handleFieldBlur(id);
-                  };
               return (
                 <label key={i} className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
                     value={optValue}
                     checked={isChecked}
-                    name={registerResult?.name ?? id}
-                    ref={registerResult?.ref}
+                    {...(isPreviewMode ? { name: id } : register(id, { required }))}
                     className="w-4 h-4 focus:ring-2 transition-colors"
                     style={{
                       accentColor: styling?.primaryColor || 'var(--accent)',
                       '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
                     } as React.CSSProperties}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
+                    onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+                    onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                     aria-label={optValue}
                   />
                   <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
@@ -1254,26 +1243,15 @@ export default function FormRenderer({
                       {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, colIdx) => {
                         const optValue = getOptionValue(opt);
                         const isChecked = selectedValue === optValue;
-                        const registerResult = isPreviewMode ? undefined : register(rowId, { required: required && rowIdx === 0 });
-                        const handleChange = isPreviewMode
-                          ? (e: React.ChangeEvent<HTMLInputElement>) => setValue(rowId, e.target.value)
-                          : registerResult?.onChange;
-                        const handleBlur = isPreviewMode
-                          ? undefined
-                          : (event: React.FocusEvent<HTMLInputElement>) => {
-                              registerResult?.onBlur(event);
-                              handleFieldBlur(rowId);
-                            };
                         return (
                           <td key={colIdx} className="border px-4 py-2 text-center" style={{ borderColor: 'var(--card-border)' }}>
                             <input
                               type="radio"
                               value={optValue}
                               checked={isChecked}
-                              name={registerResult?.name ?? rowId}
-                              ref={registerResult?.ref}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
+                              {...(isPreviewMode ? { name: rowId } : register(rowId, { required: required && rowIdx === 0 }))}
+                              onChange={isPreviewMode ? (e) => setValue(rowId, e.target.value) : undefined}
+                              onBlur={() => isPreviewMode ? undefined : handleFieldBlur(rowId)}
                               className="w-4 h-4 focus:ring-2 transition-colors"
                               style={{
                                 accentColor: styling?.primaryColor || 'var(--accent)',
