@@ -10,6 +10,7 @@ import InlineFileUpload from "@/components/InlineFileUpload";
 import InlineDocumentScanner from "@/components/InlineDocumentScanner";
 import InlineJSONImport from "@/components/InlineJSONImport";
 import InlineURLScraper from "@/components/InlineURLScraper";
+import { ArrowRight, CheckCircle2, Mic, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -332,6 +333,47 @@ export default function Home() {
     { label: "Event RSVP", query: "event registration and rsvp" },
   ];
 
+  const heroHighlights = [
+    {
+      title: "Generate complete forms in seconds",
+      description: "Use natural language prompts and let AI structure the perfect layout.",
+      icon: Sparkles,
+    },
+    {
+      title: "Talk instead of typing",
+      description: "Capture requirements hands-free with live voice input and auto-submit cues.",
+      icon: Mic,
+    },
+    {
+      title: "Bring your existing assets",
+      description: "Upload documents, spreadsheets, or JSON to transform them into polished forms.",
+      icon: UploadCloud,
+    },
+  ];
+
+  const featureCards = [
+    {
+      title: "AI-first workflow",
+      description: "Combine prompt-based generation with manual fine-tuning for complete control.",
+      icon: Sparkles,
+    },
+    {
+      title: "Secure sharing",
+      description: "Publish confidently with built-in sharing tools and access controls.",
+      icon: ShieldCheck,
+    },
+    {
+      title: "Voice to form",
+      description: "Turn conversations into forms instantly with our multi-language voice capture.",
+      icon: Mic,
+    },
+    {
+      title: "Import anything",
+      description: "Scan documents or drop files to auto-detect fields and validation rules.",
+      icon: UploadCloud,
+    },
+  ];
+
   // Show form editor if form exists
   if (showForm) {
     return (
@@ -553,71 +595,152 @@ export default function Home() {
 
   // Show initial search interface
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Hero Section */}
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
       <main className="flex-1">
-        {/* Hero Content */}
-        <section className="relative overflow-hidden pt-16 sm:pt-24 md:pt-32 pb-16 sm:pb-20 md:pb-24 px-4 sm:px-6">
-          <div className="max-w-5xl mx-auto">
-            {/* Hero Text */}
-            <div className="text-center mb-12 sm:mb-14 md:mb-16 animate-fade-in">
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-extralight mb-6 sm:mb-8 tracking-tighter text-black">
-                Build Forms
-                <br />
-                <span className="font-black">Instantly</span>
-              </h1>
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-3 sm:mb-4 font-light text-gray-600 max-w-2xl mx-auto px-4">
-                Describe what you need, and we&apos;ll build it
-              </p>
-              <p className="text-base sm:text-lg max-w-xl mx-auto text-gray-500 px-4">
-                Create beautiful, functional forms in seconds with AI. No coding required.
-              </p>
+        <section className="pt-20 pb-16 sm:pb-20 md:pb-24">
+          <div className="max-w-6xl mx-auto grid items-center gap-12 px-4 sm:px-6 lg:px-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,420px)]">
+            <div className="space-y-8">
+              <div
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                style={{
+                  background: 'var(--card-bg)',
+                  borderColor: 'var(--card-border)',
+                  color: 'var(--foreground-muted)',
+                }}
+              >
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                <span>AI Form Builder</span>
+              </div>
+              <div className="space-y-6">
+                <h1
+                  className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight"
+                  style={{ color: 'var(--foreground)' }}
+                >
+                  Design high-converting forms in minutes
+                </h1>
+                <p className="text-lg sm:text-xl text-gray-600 max-w-xl">
+                  Combine AI suggestions, drag-and-drop controls, and instant previews to ship polished forms without manual setup.
+                </p>
+              </div>
+              <ul className="space-y-4">
+                {heroHighlights.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.title} className="flex items-start gap-3">
+                      <span className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                          {item.title}
+                        </p>
+                        <p className="text-sm text-gray-600">{item.description}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  onClick={() => {
+                    const input = document.getElementById('landing-prompt-input') as HTMLInputElement | null;
+                    if (input) input.focus();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  style={{ background: 'var(--accent)', color: 'var(--accent-dark)' }}
+                >
+                  Start creating
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    const section = document.getElementById('features');
+                    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+                  style={{ borderColor: 'var(--card-border)', color: 'var(--foreground)' }}
+                >
+                  Explore features
+                </button>
+              </div>
+              <div className="pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Popular templates</p>
+                <div className="flex flex-wrap gap-2">
+                  {quickActions.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => {
+                        setQuery(action.query);
+                        generateForm(action.query);
+                      }}
+                      disabled={loading}
+                      className="rounded-full border px-4 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{
+                        borderColor: 'var(--card-border)',
+                        background: 'var(--card-bg)',
+                        color: 'var(--foreground)',
+                      }}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-
-            {/* Main Input Card */}
-            <div className="max-w-3xl mx-auto mb-12 sm:mb-14 md:mb-16 animate-scale-in">
-              <div className="bg-white border-2 border-black rounded-xl sm:rounded-2xl shadow-[4px_4px_0_0_rgba(0,0,0,1)] sm:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] sm:hover:shadow-[12px_12px_0_0_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 sm:hover:-translate-x-1 sm:hover:-translate-y-1">
-                <div className="p-4 sm:p-6 md:p-8">
-                  {/* Creation Method Selector */}
+            <div className="relative">
+              <div
+                className="relative overflow-hidden rounded-3xl border shadow-xl"
+                style={{
+                  background: 'var(--card-bg)',
+                  borderColor: 'var(--card-border)',
+                  boxShadow: 'var(--card-shadow)',
+                }}
+              >
+                <div className="absolute -top-24 right-6 hidden h-40 w-40 rotate-12 rounded-full bg-blue-100 opacity-40 blur-3xl sm:block" />
+                <div className="p-6 sm:p-8">
+                  <div className="mb-6">
+                    <h3 className="text-base font-semibold" style={{ color: 'var(--foreground)' }}>
+                      Describe your form
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Pick a creation method or start with a quick prompt. We&apos;ll handle the structure.
+                    </p>
+                  </div>
                   <CreationMethodSelector
                     selectedMethod={creationMethod}
                     onMethodChange={setCreationMethod}
                     disabled={loading}
                   />
-                  
-                  {/* Show different UI based on creation method */}
-                  {creationMethod === "prompt" && (
-                    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
+                  {creationMethod === 'prompt' && (
+                    <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                       <div className="relative">
                         <input
+                          id="landing-prompt-input"
                           type="text"
                           value={query}
                           onChange={(e) => setQuery(e.target.value)}
                           placeholder="Create a contact form with name, email, and message..."
-                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100 text-gray-900 placeholder-gray-400 transition-all"
-                          autoFocus
+                          className="w-full rounded-lg border px-4 py-3 text-sm sm:text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                           disabled={loading}
+                          autoFocus
                         />
                       </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row justify-end gap-2">
+                      <div className="flex flex-col justify-end gap-2 sm:flex-row">
                         <button
                           type="button"
                           onClick={handleVoiceClick}
                           disabled={loading || !isSupported}
-                          className="px-4 py-2 sm:py-2 border border-gray-300 rounded-lg font-medium text-sm sm:text-base text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ borderColor: 'var(--card-border)' }}
                         >
                           {isListening ? (
                             <>
-                              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                               <span>Stop</span>
                             </>
                           ) : (
                             <>
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                              </svg>
+                              <Mic className="h-4 w-4" />
                               <span>Voice</span>
                             </>
                           )}
@@ -625,52 +748,55 @@ export default function Home() {
                         <button
                           type="submit"
                           disabled={!query.trim() || loading}
-                          className="px-4 sm:px-6 py-2 sm:py-2 bg-gray-900 text-white rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ background: 'var(--accent)', color: 'var(--accent-dark)' }}
                         >
                           {loading && (
-                            <div className="relative w-4 h-4">
-                              <div className="absolute inset-0 border-2 border-white border-opacity-25 rounded-full"></div>
-                              <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="relative h-4 w-4">
+                              <div className="absolute inset-0 rounded-full border-2 border-white/40" />
+                              <div className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin" />
                             </div>
                           )}
-                          {loading ? "Creating..." : "Create Form"}
+                          {loading ? 'Creating...' : 'Create form'}
                         </button>
                       </div>
                     </form>
                   )}
-                  
-                  {creationMethod === "file" && (
-                    <InlineFileUpload
-                      onFileSelect={handleFileUpload}
-                      onCancel={() => setCreationMethod("prompt")}
-                      disabled={loading}
-                    />
+                  {creationMethod === 'file' && (
+                    <div className="mt-6">
+                      <InlineFileUpload
+                        onFileSelect={handleFileUpload}
+                        onCancel={() => setCreationMethod('prompt')}
+                        disabled={loading}
+                      />
+                    </div>
                   )}
-                  
-                  {creationMethod === "scan" && (
-                    <InlineDocumentScanner
-                      onFileSelect={handleDocumentScan}
-                      onCancel={() => setCreationMethod("prompt")}
-                      disabled={loading}
-                    />
+                  {creationMethod === 'scan' && (
+                    <div className="mt-6">
+                      <InlineDocumentScanner
+                        onFileSelect={handleDocumentScan}
+                        onCancel={() => setCreationMethod('prompt')}
+                        disabled={loading}
+                      />
+                    </div>
                   )}
-                  
-                  {creationMethod === "json" && (
-                    <InlineJSONImport
-                      onImport={handleJSONImport}
-                      onCancel={() => setCreationMethod("prompt")}
-                      disabled={loading}
-                    />
+                  {creationMethod === 'json' && (
+                    <div className="mt-6">
+                      <InlineJSONImport
+                        onImport={handleJSONImport}
+                        onCancel={() => setCreationMethod('prompt')}
+                        disabled={loading}
+                      />
+                    </div>
                   )}
-
-                  {creationMethod === "url" && (
-                    <div className="space-y-4">
+                  {creationMethod === 'url' && (
+                    <div className="mt-6 space-y-4">
                       <p className="text-sm text-gray-600">
                         Paste a website URL and our AI will analyze the content to generate an appropriate form.
                       </p>
                       <InlineURLScraper
                         onURLSubmit={handleURLScrape}
-                        onCancel={() => setCreationMethod("prompt")}
+                        onCancel={() => setCreationMethod('prompt')}
                         disabled={loading}
                       />
                     </div>
@@ -678,200 +804,140 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
-            {/* Voice Status Indicator */}
-            {isListening && (
-              <div className="max-w-3xl mx-auto mb-8 animate-slide-in">
-                <div className="bg-black text-white rounded-xl px-6 py-4 border-2 border-black">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-sm font-medium">
-                        {autoSubmitCountdown !== null && autoSubmitCountdown > 0 
-                          ? `Auto-submitting in ${autoSubmitCountdown}s...` 
-                          : 'Listening...'}
-                      </span>
-                    </div>
-                  </div>
-                  {autoSubmitCountdown !== null && autoSubmitCountdown > 0 && (
-                    <p className="text-xs mt-2 text-gray-300">
-                      Keep talking to cancel auto-submit
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="text-center mb-12 sm:mb-20">
-              <p className="text-xs sm:text-sm mb-4 sm:mb-6 font-medium text-gray-500 uppercase tracking-wider">
-                Popular Templates
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 px-4">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.label}
-                    onClick={() => {
-                      setQuery(action.query);
-                      generateForm(action.query);
-                    }}
-                    disabled={loading}
-                    className="px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 border-2 border-black rounded-full text-xs sm:text-sm font-medium text-black bg-white hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gray-50">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12 sm:mb-16 md:mb-20">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight mb-4 sm:mb-6 text-black tracking-tight">
-                Everything you need
+        {isListening && (
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto mb-8 max-w-3xl animate-slide-in">
+              <div
+                className="flex items-center gap-3 rounded-2xl border px-5 py-4"
+                style={{ borderColor: 'var(--card-border)', background: 'var(--card-bg)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                    {autoSubmitCountdown !== null && autoSubmitCountdown > 0
+                      ? `Auto-submitting in ${autoSubmitCountdown}s...`
+                      : 'Listening...'}
+                  </span>
+                </div>
+                {autoSubmitCountdown !== null && autoSubmitCountdown > 0 && (
+                  <p className="text-xs text-gray-500">Keep talking to cancel auto-submit.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <section id="features" className="bg-gray-50 py-16 sm:py-24">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-14 text-center sm:mb-20">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-gray-900">
+                Everything you need to move fast
               </h2>
-              <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-gray-600 px-4">
-                Powerful features that make form creation effortless
+              <p className="mt-4 text-base text-gray-600 sm:text-lg">
+                Powerful tooling that keeps your team focused on insights instead of formatting.
               </p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Feature 1 */}
-              <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
-                <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-black">
-                  AI-Powered
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Describe your form in natural language and watch it come to life instantly
-                </p>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
-                <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-black">
-                  Voice Input
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Speak your form requirements and let voice recognition do the work
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
-                <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-black">
-                  Import & Scan
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Upload files, scan documents, or import JSON to create forms from existing data
-                </p>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
-                <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-black">
-                  Live Preview
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  See your form come together in real-time as you build it
-                </p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
-                <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-black">
-                  Customizable
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Edit fields, change types, and customize your form to match your needs
-                </p>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="bg-white border-2 border-black rounded-2xl p-8 text-center hover:shadow-[8px_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-x-1 hover:-translate-y-1">
-                <div className="w-14 h-14 mx-auto mb-6 rounded-full flex items-center justify-center bg-black">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-black">
-                  Share Instantly
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Publish and share your form with a single click
-                </p>
-              </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8">
+              {featureCards.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.title}
+                    className="flex h-full flex-col justify-between rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                    style={{ borderColor: 'var(--card-border)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
+                    </div>
+                    <p className="mt-4 text-sm text-gray-600">{feature.description}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-white">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight mb-6 sm:mb-8 text-black tracking-tight">
-              Ready to build?
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl mb-8 sm:mb-12 max-w-2xl mx-auto text-gray-600 px-4">
-              Get started in seconds. No account required.
-            </p>
-            <div className="flex justify-center gap-4 px-4">
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <div className="space-y-6">
+              <h2
+                className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight"
+                style={{ color: 'var(--foreground)' }}
+              >
+                Ready to launch your next form?
+              </h2>
+              <p className="text-base text-gray-600 sm:text-lg">
+                Start from a prompt, upload existing assets, or talk through your idea. You&apos;ll get a shareable form in minutes.
+              </p>
+            </div>
+            <ul className="mx-auto mb-10 mt-8 space-y-3 text-left text-sm text-gray-600">
+              <li className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                Works with prompts, documents, URLs, and JSON imports.
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                Instant previews show exactly what respondents will see.
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                Publish and share with one click—no extra tooling required.
+              </li>
+            </ul>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
               <button
                 onClick={() => {
-                  const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+                  const input = document.getElementById('landing-prompt-input') as HTMLInputElement | null;
                   if (input) input.focus();
                 }}
-                className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-black text-white rounded-xl font-bold text-base sm:text-lg hover:bg-gray-800 transition-all shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] sm:shadow-[6px_6px_0_0_rgba(0,0,0,0.2)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,0.2)] sm:hover:shadow-[8px_8px_0_0_rgba(0,0,0,0.2)] hover:-translate-x-0.5 hover:-translate-y-0.5 sm:hover:-translate-x-1 sm:hover:-translate-y-1 w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-md"
+                style={{ background: 'var(--accent)', color: 'var(--accent-dark)' }}
               >
-                Start Creating
+                Start for free
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+                style={{ borderColor: 'var(--card-border)', color: 'var(--foreground)' }}
+              >
+                Watch it in action
               </button>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t-2 border-black bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 text-xs sm:text-sm">
-            <div className="flex gap-4 sm:gap-6">
-              <a href="#" className="text-gray-600 hover:text-black transition-colors font-medium">About</a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors font-medium">Help</a>
+      <footer className="border-t" style={{ borderColor: 'var(--divider)', background: 'var(--card-bg)' }}>
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-6 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 font-semibold" style={{ color: 'var(--foreground)' }}>
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              Forms
             </div>
-            <div className="text-sm text-gray-500 font-medium">
-              © {new Date().getFullYear()} Forms. All rights reserved.
+            <div className="flex flex-wrap items-center gap-4">
+              <a href="#" className="hover:text-gray-700">
+                About
+              </a>
+              <a href="#" className="hover:text-gray-700">
+                Help
+              </a>
+              <a href="#" className="hover:text-gray-700">
+                Privacy
+              </a>
+              <a href="#" className="hover:text-gray-700">
+                Terms
+              </a>
             </div>
-            <div className="flex gap-6">
-              <a href="#" className="text-gray-600 hover:text-black transition-colors font-medium">Privacy</a>
-              <a href="#" className="text-gray-600 hover:text-black transition-colors font-medium">Terms</a>
-            </div>
+            <p>© {new Date().getFullYear()} Forms. All rights reserved.</p>
           </div>
         </div>
       </footer>
