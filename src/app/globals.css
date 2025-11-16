@@ -350,3 +350,12 @@ select:focus {
 }
 
 /* Duplicate animations removed - kept first definitions above */
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
