@@ -3,6 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 function UserMenu() {
   const { data: session } = useSession();
@@ -51,22 +52,33 @@ function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+        className="flex items-center gap-2 px-2 py-2 rounded-full transition-all"
         style={{
           background: 'var(--card-bg)',
           border: '1px solid var(--card-border)',
         }}
+        aria-label={session.user?.name ? `Open menu for ${session.user.name}` : 'Open user menu'}
       >
-        <div
-          className="w-8 h-8 rounded-full flex items-center justify-center font-medium"
-          style={{
-            background: 'var(--accent-light)',
-            color: 'var(--foreground)',
-          }}
-        >
-          {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase()}
-        </div>
-        <span style={{ color: 'var(--foreground)' }}>
+        {session.user?.image ? (
+          <Image
+            src={session.user.image}
+            alt={session.user?.name || session.user?.email || 'User avatar'}
+            width={32}
+            height={32}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center font-medium"
+            style={{
+              background: 'var(--accent-light)',
+              color: 'var(--foreground)',
+            }}
+          >
+            {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <span className="sr-only">
           {session.user?.name || session.user?.email}
         </span>
         <svg

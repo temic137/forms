@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import FormRenderer from "./renderer";
 import ShareButton from "@/components/ShareButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import type { FormStyling } from "@/types/form";
+import type { CSSProperties } from "react";
 
 type Props = { params: Promise<{ formId: string }> };
 
@@ -25,13 +27,33 @@ export default async function PublicFormPage({ params }: Props) {
   
   if (!form) return notFound();
 
+  const styling = (form.styling as FormStyling | null) ?? null;
+  const cssVariables = styling
+    ? ({
+        "--form-primary-color": styling.primaryColor,
+        "--form-bg-color": styling.backgroundColor,
+        "--form-button-color": styling.buttonColor,
+        "--form-button-text-color": styling.buttonTextColor,
+        "--form-button-radius": `${styling.buttonRadius}px`,
+      } as CSSProperties)
+    : undefined;
+
+  const resolvedBackground = styling?.backgroundColor || "var(--background)";
+  const cardBackground = styling?.backgroundColor && styling.backgroundColor !== "#f3f4f6"
+    ? styling.backgroundColor
+    : "var(--card-bg)";
+
   return (
-    <div className="min-h-screen py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8" style={{ background: 'var(--background)' }}>
+    <div
+      className="min-h-screen py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8"
+      style={{ background: resolvedBackground, ...(cssVariables ?? {}) }}
+    >
       <div className="max-w-2xl mx-auto">
         <div 
           className="border p-4 sm:p-6 md:p-8"
           style={{
-            background: 'var(--card-bg)',
+            ...(cssVariables ?? {}),
+            background: cardBackground,
             borderColor: 'var(--card-border)',
             borderRadius: 'var(--card-radius-lg)',
             boxShadow: 'var(--card-shadow)'
