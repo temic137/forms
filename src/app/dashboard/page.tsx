@@ -92,34 +92,28 @@ export default function DashboardPage() {
 
   // Restore editing state if returning from preview
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status !== "authenticated" || showBuilder) return;
+
+    const storedPreviewData = sessionStorage.getItem('formPreviewData');
+    if (!storedPreviewData) return;
+
+    try {
+      const previewData = JSON.parse(storedPreviewData);
+      setPreviewTitle(previewData.title || "Untitled Form");
+      setPreviewFields(Array.isArray(previewData.fields) ? previewData.fields : []);
+      setPreviewStyling(previewData.styling || undefined);
+      setPreviewNotifications(previewData.notifications || undefined);
+      setPreviewMultiStepConfig(previewData.multiStepConfig || undefined);
       const storedEditingFormId = sessionStorage.getItem('formPreviewEditingFormId');
-      const storedPreviewData = sessionStorage.getItem('formPreviewData');
-
-      if (storedEditingFormId && storedPreviewData && !editingFormId && !showBuilder) {
-        // Restore the preview/builder state from sessionStorage
-        try {
-          const previewData = JSON.parse(storedPreviewData);
-          setPreviewTitle(previewData.title || "Untitled Form");
-          setPreviewFields(Array.isArray(previewData.fields) ? previewData.fields : []);
-          setPreviewStyling(previewData.styling || undefined);
-          setPreviewNotifications(previewData.notifications || undefined);
-          setPreviewMultiStepConfig(previewData.multiStepConfig || undefined);
-          setShowBuilder(true);
-          setEditingFormId(storedEditingFormId === 'preview' ? null : storedEditingFormId);
-
-          // Clean up sessionStorage
-          sessionStorage.removeItem('formPreviewEditingFormId');
-          sessionStorage.removeItem('formPreviewData');
-        } catch (error) {
-          console.error('Error restoring preview state:', error);
-          sessionStorage.removeItem('formPreviewEditingFormId');
-          sessionStorage.removeItem('formPreviewData');
-        }
-      }
+      setEditingFormId(storedEditingFormId && storedEditingFormId !== 'new' ? storedEditingFormId : null);
+      setShowBuilder(true);
+    } catch (error) {
+      console.error('Error restoring preview state:', error);
+    } finally {
+      sessionStorage.removeItem('formPreviewEditingFormId');
+      sessionStorage.removeItem('formPreviewData');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, showBuilder]);
 
   const fetchForms = async () => {
     try {
@@ -599,6 +593,7 @@ export default function DashboardPage() {
           styling={previewStyling}
           notifications={previewNotifications}
           multiStepConfig={previewMultiStepConfig}
+          currentFormId={editingFormId}
           onFormTitleChange={setPreviewTitle}
           onFieldsChange={setPreviewFields}
           onStylingChange={setPreviewStyling}

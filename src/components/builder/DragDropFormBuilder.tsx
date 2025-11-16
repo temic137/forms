@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DndContext, DragEndEvent, DragOverlay, DragOverEvent, closestCenter, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverlay, DragOverEvent, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { Field, FieldType, FormStyling, NotificationConfig, MultiStepConfig, FormStep } from "@/types/form";
 import FieldPalette, { fieldTemplates } from "./FieldPalette";
 import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
-import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X } from "lucide-react";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 
@@ -19,6 +19,7 @@ interface DragDropFormBuilderProps {
   styling?: FormStyling;
   notifications?: NotificationConfig;
   multiStepConfig?: MultiStepConfig;
+  currentFormId?: string | null;
   onFormTitleChange: (title: string) => void;
   onFieldsChange: (fields: Field[]) => void;
   onStylingChange: (styling: FormStyling | undefined) => void;
@@ -43,18 +44,26 @@ export default function DragDropFormBuilder({
   onSave,
   onCancel,
   saving = false,
+  currentFormId,
 }: DragDropFormBuilderProps) {
   const router = useRouter();
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showFieldPalette, setShowFieldPalette] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
   const [hoveredDropIndex, setHoveredDropIndex] = useState<number | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 4,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 120,
+        tolerance: 8,
       },
     })
   );
@@ -469,6 +478,11 @@ export default function DragDropFormBuilder({
       multiStepConfig: multiStepConfig,
     };
     sessionStorage.setItem('formPreviewData', JSON.stringify(previewData));
+    if (currentFormId) {
+      sessionStorage.setItem('formPreviewEditingFormId', currentFormId);
+    } else {
+      sessionStorage.setItem('formPreviewEditingFormId', 'new');
+    }
     router.push('/builder/preview');
   };
 
@@ -507,138 +521,356 @@ export default function DragDropFormBuilder({
 
       {/* Main Canvas */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Top Bar - Simplified Header */}
-        <div className="border-b border-gray-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
-          {/* Back Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onCancel();
-            }}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative shrink-0"
-            title="Back to Dashboard"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-
-          {/* Form Title */}
-          <div className="flex-1 min-w-0">
-            <input
-              type="text"
-              value={formTitle}
-              onChange={(e) => onFormTitleChange(e.target.value)}
-              className="text-base sm:text-lg font-semibold w-full px-2 py-1.5 border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-900 placeholder:text-gray-400"
-              placeholder="Form title"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Mobile Menu Button - Show Field Palette */}
+        {/* Top Bar */}
+        <div className="border-b border-gray-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3">
+          {/* Mobile Header */}
+          <div className="flex items-center gap-2 sm:hidden">
             <button
-              onClick={() => setShowFieldPalette(true)}
-              className="lg:hidden p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-              title="Add Fields"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCancel();
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              title="Back to Dashboard"
             >
-              <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            
-            {/* Multi-Page Toggle */}
-            <button
-              onClick={handleToggleMultiPage}
-              className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors font-medium flex items-center gap-1 sm:gap-1.5 ${
-                multiStepConfig?.enabled
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-              title={multiStepConfig?.enabled ? "Disable Multi-Page" : "Enable Multi-Page"}
-            >
-              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Multi-Page</span>
-              {multiStepConfig?.enabled && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500 rounded">
-                  {multiStepConfig.steps.length}
-                </span>
-              )}
+              <ArrowLeft className="h-4 w-4" />
             </button>
 
-            {/* Add Page Button (only show if multi-page enabled) */}
-            {multiStepConfig?.enabled && (
-              <>
-                <button
-                  onClick={handleAddPage}
-                  className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
-                  title="Add Page"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Page</span>
-                </button>
-                <div className="hidden sm:block w-px h-6 bg-gray-200" />
-              </>
-            )}
+            <div className="flex-1 min-w-0">
+              <input
+                type="text"
+                value={formTitle}
+                onChange={(e) => onFormTitleChange(e.target.value)}
+                className="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                placeholder="Form title"
+              />
+            </div>
 
-            {/* Preview Button */}
             <button
-              onClick={handlePreview}
-              className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
-              title="Preview Form"
-            >
-              <Eye className="w-4 h-4" />
-              <span>Preview</span>
-            </button>
-
-            {/* Divider */}
-            <div className="hidden sm:block w-px h-6 bg-gray-200" />
-
-            {/* Settings Button */}
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`p-1.5 sm:p-2 rounded-md transition-colors ${
-                showSettings
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-              title="Settings"
-            >
-              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </button>
-
-            {/* Divider */}
-            <div className="hidden sm:block w-px h-6 bg-gray-200" />
-
-            {/* Cancel Button */}
-            <button
-              onClick={onCancel}
-              className="hidden sm:block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium"
-            >
-              Cancel
-            </button>
-
-            {/* Save Button */}
-            <button
-              onClick={onSave}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!saving) {
+                  onSave();
+                }
+              }}
               disabled={saving}
-              className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="flex items-center gap-1.5 rounded-md bg-black px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <>
-                  <div className="relative w-3.5 h-3.5">
-                    <div className="absolute inset-0 border-2 border-white border-opacity-25 rounded-full"></div>
-                    <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="relative h-4 w-4">
+                    <div className="absolute inset-0 rounded-full border-2 border-white border-opacity-25"></div>
+                    <div className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
                   </div>
-                  <span className="hidden sm:inline">Saving</span>
+                  <span>Saving</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-3.5 h-3.5" />
-                  <span className="\hidden sm:inline\">Save</span>
+                  <Save className="h-4 w-4" />
+                  <span>Save</span>
                 </>
               )}
             </button>
+
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowMobileActions(true);
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              title="More actions"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden sm:flex w-full items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCancel();
+              }}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative shrink-0"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex-1 min-w-0">
+              <input
+                type="text"
+                value={formTitle}
+                onChange={(e) => onFormTitleChange(e.target.value)}
+                className="text-base sm:text-lg font-semibold w-full px-2 py-1.5 border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-900 placeholder:text-gray-400"
+                placeholder="Form title"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                onClick={() => setShowFieldPalette(true)}
+                className="lg:hidden p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                title="Add Fields"
+              >
+                <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              <button
+                onClick={handleToggleMultiPage}
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors font-medium flex items-center gap-1 sm:gap-1.5 ${
+                  multiStepConfig?.enabled
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+                title={multiStepConfig?.enabled ? "Disable Multi-Page" : "Enable Multi-Page"}
+              >
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Multi-Page</span>
+                {multiStepConfig?.enabled && (
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500 rounded">
+                    {multiStepConfig.steps.length}
+                  </span>
+                )}
+              </button>
+
+              {multiStepConfig?.enabled && (
+                <>
+                  <button
+                    onClick={handleAddPage}
+                    className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
+                    title="Add Page"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Page</span>
+                  </button>
+                  <div className="hidden sm:block w-px h-6 bg-gray-200" />
+                </>
+              )}
+
+              <button
+                onClick={handlePreview}
+                className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
+                title="Preview Form"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Preview</span>
+              </button>
+
+              <div className="hidden sm:block w-px h-6 bg-gray-200" />
+
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-1.5 sm:p-2 rounded-md transition-colors ${
+                  showSettings
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+                title="Settings"
+              >
+                <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+
+              <div className="hidden sm:block w-px h-6 bg-gray-200" />
+
+              <button
+                onClick={onCancel}
+                className="hidden sm:block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={onSave}
+                disabled={saving}
+                className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {saving ? (
+                  <>
+                    <div className="relative w-3.5 h-3.5">
+                      <div className="absolute inset-0 border-2 border-white border-opacity-25 rounded-full"></div>
+                      <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <span className="hidden sm:inline">Saving</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Save</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
+
+        {showMobileActions && (
+          <div className="sm:hidden fixed inset-0 z-50">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setShowMobileActions(false)}
+            />
+            <div
+              className="absolute inset-x-0 bottom-0 space-y-3 rounded-t-2xl bg-white p-4 pb-6 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-900">Quick actions</span>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileActions(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800"
+                  title="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileActions(false);
+                    setShowFieldPalette(true);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                    <Menu className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Add fields</p>
+                    <p className="text-xs text-gray-500">Open the field library</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileActions(false);
+                    handlePreview();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                    <Eye className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Preview form</p>
+                    <p className="text-xs text-gray-500">Open a live preview</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileActions(false);
+                    handleToggleMultiPage();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                    <FileText className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Multi-page mode</p>
+                    <p className="text-xs text-gray-500">
+                      {multiStepConfig?.enabled ? "Currently enabled" : "Currently disabled"}
+                    </p>
+                  </div>
+                </button>
+
+                {multiStepConfig?.enabled && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileActions(false);
+                      handleAddPage();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                      <Plus className="h-4 w-4" />
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Add page</p>
+                      <p className="text-xs text-gray-500">Insert a new step</p>
+                    </div>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileActions(false);
+                    setShowSettings((prev) => !prev);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                    <Settings className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Form settings</p>
+                    <p className="text-xs text-gray-500">
+                      {showSettings ? "Hide settings panel" : "Show settings panel"}
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileActions(false);
+                    onCancel();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                    <ArrowLeft className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Back to dashboard</p>
+                    <p className="text-xs text-gray-500">Leave without saving</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!saving) {
+                      onSave();
+                    }
+                    setShowMobileActions(false);
+                  }}
+                  disabled={saving}
+                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-black text-white">
+                    {saving ? (
+                      <div className="relative h-4 w-4">
+                        <div className="absolute inset-0 rounded-full border-2 border-white border-opacity-25"></div>
+                        <div className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      </div>
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Save changes</p>
+                    <p className="text-xs text-gray-500">Apply your latest edits</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Canvas Area */}
         <div 

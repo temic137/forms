@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
@@ -26,7 +26,7 @@ interface Submission {
   }>;
 }
 
-export default function SubmissionsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SubmissionsPage({ params }: { params: Promise<{ formId: string }> }) {
   const { status } = useSession();
   const router = useRouter();
   const [formId, setFormId] = useState<string>("");
@@ -44,7 +44,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ id: stri
   }, [formId]);
 
   useEffect(() => {
-    params.then((p) => setFormId(p.id));
+    params.then((p) => setFormId(p.formId));
   }, [params]);
 
   useEffect(() => {
@@ -53,14 +53,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ id: stri
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === "authenticated" && formId) {
-      fetchSubmissions();
-      fetchAnalytics();
-    }
-  }, [status, formId]);
-
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     try {
       const response = await fetch(`/api/forms/${formId}/submissions`);
       if (response.ok) {
@@ -76,9 +69,9 @@ export default function SubmissionsPage({ params }: { params: Promise<{ id: stri
     } finally {
       setLoading(false);
     }
-  };
+  }, [formId, router]);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await fetch(`/api/forms/${formId}/analytics`);
       if (response.ok) {
@@ -88,7 +81,14 @@ export default function SubmissionsPage({ params }: { params: Promise<{ id: stri
     } catch (error) {
       console.error("Error fetching analytics:", error);
     }
-  };
+  }, [formId]);
+
+  useEffect(() => {
+    if (status === "authenticated" && formId) {
+      fetchSubmissions();
+      fetchAnalytics();
+    }
+  }, [status, formId, fetchSubmissions, fetchAnalytics]);
 
   const exportToCSV = () => {
     if (submissions.length === 0) return;

@@ -22,8 +22,10 @@ export default function BrowserCompatibilityWarning({
 
   return (
     <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg" role="alert">
-      <div className="flex items-start gap-3">
-        <WarningIcon />
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+        <div className="flex-shrink-0">
+          <WarningIcon />
+        </div>
         
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-semibold text-amber-900 mb-1">
@@ -92,7 +94,7 @@ export default function BrowserCompatibilityWarning({
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-amber-400 hover:text-amber-600 transition-colors"
+            className="absolute top-2 right-2 sm:relative sm:top-auto sm:right-auto text-amber-400 hover:text-amber-600 transition-colors"
             aria-label="Dismiss warning"
           >
             <CloseIcon />

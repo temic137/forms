@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Field, MultiStepConfig } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
@@ -404,7 +404,7 @@ export default function FormRenderer({
   conversationalMode?: boolean;
   isPreview?: boolean;
 }) {
-  const { register, handleSubmit, formState, watch, setValue, trigger } = useForm();
+  const { register, handleSubmit, formState, watch, setValue, trigger, control } = useForm();
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [tempSubmissionId] = useState(() => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -1412,17 +1412,31 @@ export default function FormRenderer({
 
         {/* Rating & Ranking */}
         {type === "star-rating" && (
-          <StarRatingField
-            id={id}
-            value={formValues[id] as number | undefined}
-            onSelect={(rating) => {
-              setValue(id, rating);
-              // Only trigger validation blur if not in preview mode
-              if (!isPreviewMode) {
-                handleFieldBlur(id);
-              }
-            }}
-            isPreviewMode={isPreviewMode}
+          <Controller
+            name={id}
+            control={control}
+            defaultValue={formValues[id] ?? 0}
+            rules={required ? { validate: (val) => !!val || "This field is required" } : undefined}
+            render={({ field }) => (
+              <StarRatingField
+                id={id}
+                value={
+                  typeof field.value === "number"
+                    ? field.value
+                    : field.value
+                    ? Number(field.value)
+                    : undefined
+                }
+                onSelect={(rating) => {
+                  field.onChange(rating);
+                  if (!isPreviewMode) {
+                    field.onBlur();
+                    handleFieldBlur(id);
+                  }
+                }}
+                isPreviewMode={isPreviewMode}
+              />
+            )}
           />
         )}
 

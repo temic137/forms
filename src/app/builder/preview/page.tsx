@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import FormRenderer from "@/app/f/[id]/renderer";
+import FormRenderer from "@/app/f/[formId]/renderer";
 import { Field, FormStyling, MultiStepConfig } from "@/types/form";
 import { ArrowLeft } from "lucide-react";
 
@@ -33,11 +33,7 @@ export default function FormPreviewPage() {
   }, []);
 
   const handleBack = () => {
-    // Store the editing form ID in sessionStorage to restore editing state
-    if (previewData) {
-      sessionStorage.setItem('formPreviewEditingFormId', 'preview'); // Use a flag to indicate we came from preview
-    }
-    router.push('/dashboard'); // Go back to dashboard, which will restore the builder state
+    router.push('/dashboard');
   };
 
   if (loading) {

@@ -1,13 +1,13 @@
-import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import FormRenderer from "./renderer";
 import ShareButton from "@/components/ShareButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ formId: string }> };
 
 export default async function PublicFormPage({ params }: Props) {
-  const { id: paramId } = await params;
+  const { formId: paramId } = await params;
   const id = String(paramId || "").trim();
   if (!id) return notFound();
   
