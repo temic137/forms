@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Field } from "@/types/form";
-import FormRenderer from "@/app/f/[id]/renderer";
+import FormRenderer from "@/app/f/[formId]/renderer";
 import { Card, CardHeader, CardTitle, CardContent, CardSection } from "@/components/ui/Card";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import CreationMethodSelector, { CreationMethodInline } from "@/components/CreationMethodSelector";
