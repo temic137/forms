@@ -2,6 +2,7 @@
 
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import type { ChangeEvent } from "react";
 import { Field, MultiStepConfig } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
 import { validateField } from "@/lib/validation";
@@ -832,7 +833,7 @@ export default function FormRenderer({
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
             placeholder={placeholder}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -857,7 +858,7 @@ export default function FormRenderer({
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
             placeholder={placeholder}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLTextAreaElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -882,7 +883,7 @@ export default function FormRenderer({
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
             placeholder={placeholder || "your@email.com"}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -906,7 +907,7 @@ export default function FormRenderer({
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
             placeholder={placeholder || "+1 (555) 000-0000"}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -930,7 +931,7 @@ export default function FormRenderer({
                 color: 'var(--foreground)',
               } as React.CSSProperties}
               {...(isPreviewMode ? { name: `${id}_street`, value: formValues[`${id}_street`] || '' } : register(`${id}_street`, { required }))}
-              onChange={isPreviewMode ? (e) => setValue(`${id}_street`, e.target.value) : undefined}
+              {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_street`, event.target.value) } : {})}
               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             />
             <div className="grid grid-cols-2 gap-2">
@@ -947,7 +948,7 @@ export default function FormRenderer({
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
                 {...(isPreviewMode ? { name: `${id}_city`, value: formValues[`${id}_city`] || '' } : register(`${id}_city`, { required }))}
-                onChange={isPreviewMode ? (e) => setValue(`${id}_city`, e.target.value) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_city`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
               <input
@@ -963,7 +964,7 @@ export default function FormRenderer({
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
                 {...(isPreviewMode ? { name: `${id}_state`, value: formValues[`${id}_state`] || '' } : register(`${id}_state`, { required }))}
-                onChange={isPreviewMode ? (e) => setValue(`${id}_state`, e.target.value) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_state`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
             </div>
@@ -981,7 +982,7 @@ export default function FormRenderer({
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
                 {...(isPreviewMode ? { name: `${id}_zip`, value: formValues[`${id}_zip`] || '' } : register(`${id}_zip`, { required }))}
-                onChange={isPreviewMode ? (e) => setValue(`${id}_zip`, e.target.value) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_zip`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
               <input
@@ -997,7 +998,7 @@ export default function FormRenderer({
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
                 {...(isPreviewMode ? { name: `${id}_country`, value: formValues[`${id}_country`] || '' } : register(`${id}_country`, { required }))}
-                onChange={isPreviewMode ? (e) => setValue(`${id}_country`, e.target.value) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_country`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
             </div>
@@ -1026,7 +1027,7 @@ export default function FormRenderer({
               accentColor: styling?.primaryColor || 'var(--accent)',
               '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
             } as React.CSSProperties}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
           />
           <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
@@ -1050,7 +1051,7 @@ export default function FormRenderer({
               color: 'var(--foreground)',
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id } : register(id, { required }))}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLSelectElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -1091,12 +1092,14 @@ export default function FormRenderer({
                       accentColor: styling?.primaryColor || 'var(--accent)',
                       '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
                     } as React.CSSProperties}
-                    onChange={isPreviewMode ? (e) => {
-                      const newSelectedValues = e.target.checked
-                        ? [...selectedValues, optValue]
-                        : selectedValues.filter((v: string) => v !== optValue);
-                      setValue(id, newSelectedValues);
-                    } : undefined}
+                    {...(isPreviewMode ? {
+                      onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                        const newSelectedValues = event.target.checked
+                          ? [...selectedValues, optValue]
+                          : selectedValues.filter((v: string) => v !== optValue);
+                        setValue(id, newSelectedValues);
+                      },
+                    } : {})}
                     onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                   />
                   <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
@@ -1118,7 +1121,7 @@ export default function FormRenderer({
                 accentColor: styling?.primaryColor || 'var(--accent)',
                 '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
               } as React.CSSProperties}
-              onChange={isPreviewMode ? (e) => setValue(id, e.target.checked) : undefined}
+              {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.checked) } : {})}
               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               aria-describedby={helpText ? helpTextId : undefined}
               aria-invalid={hasError ? "true" : "false"}
@@ -1139,7 +1142,7 @@ export default function FormRenderer({
                 checked={Boolean(formValues[id])}
                 {...(isPreviewMode ? { name: id } : register(id, { required }))}
                 className="sr-only peer"
-                onChange={isPreviewMode ? (e) => setValue(id, e.target.checked) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.checked) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                 style={{
                   '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
@@ -1247,7 +1250,7 @@ export default function FormRenderer({
                               value={optValue}
                               checked={isChecked}
                               {...(isPreviewMode ? { name: rowId } : register(rowId, { required: required && rowIdx === 0 }))}
-                              onChange={isPreviewMode ? (e) => setValue(rowId, e.target.value) : undefined}
+                              {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(rowId, event.target.value) } : {})}
                               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(rowId)}
                               className="w-4 h-4 focus:ring-2 transition-colors"
                               style={{
@@ -1283,7 +1286,7 @@ export default function FormRenderer({
               color: 'var(--foreground)',
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id } : register(id, { required }))}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -1307,7 +1310,7 @@ export default function FormRenderer({
               color: 'var(--foreground)',
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id } : register(id, { required }))}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -1331,7 +1334,7 @@ export default function FormRenderer({
               color: 'var(--foreground)',
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id } : register(id, { required }))}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -1364,7 +1367,7 @@ export default function FormRenderer({
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
                 {...(isPreviewMode ? { name: `${id}_start` } : register(`${id}_start`, { required }))}
-                onChange={isPreviewMode ? (e) => setValue(`${id}_start`, e.target.value) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_start`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                 aria-describedby={helpText ? helpTextId : undefined}
                 aria-invalid={hasError ? "true" : "false"}
@@ -1394,7 +1397,7 @@ export default function FormRenderer({
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
                 {...(isPreviewMode ? { name: `${id}_end` } : register(`${id}_end`, { required }))}
-                onChange={isPreviewMode ? (e) => setValue(`${id}_end`, e.target.value) : undefined}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_end`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                 aria-describedby={helpText ? helpTextId : undefined}
                 aria-invalid={hasError ? "true" : "false"}
@@ -1508,7 +1511,7 @@ export default function FormRenderer({
             } as React.CSSProperties}
             {...(isPreviewMode ? { name: id } : register(id, { required, valueAsNumber: true }))}
             placeholder={placeholder || "0"}
-            onChange={isPreviewMode ? (e) => setValue(id, e.target.value ? parseFloat(e.target.value) : undefined) : undefined}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value ? parseFloat(event.target.value) : undefined) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
             aria-invalid={hasError ? "true" : "false"}
@@ -1536,7 +1539,7 @@ export default function FormRenderer({
               } as React.CSSProperties}
               {...(isPreviewMode ? { name: id } : register(id, { required, valueAsNumber: true }))}
               placeholder="0.00"
-              onChange={isPreviewMode ? (e) => setValue(id, e.target.value ? parseFloat(e.target.value) : undefined) : undefined}
+              {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value ? parseFloat(event.target.value) : undefined) } : {})}
               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               aria-describedby={helpText ? helpTextId : undefined}
               aria-invalid={hasError ? "true" : "false"}
