@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Forms - AI Form Builder",
-    description: "Create beautiful forms instantly with AI assistance",
+    description: "Beautiful forms, zero drag-and-drop hell. Just chat with the AI and watch it appear.",
     images: [
       {
         url: '/Preview.png',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "Forms - AI Form Builder",
-    description: "Create beautiful forms instantly with AI assistance",
+    description: "Beautiful forms, zero drag-and-drop hell. Just chat with the AI and watch it appear.",
     images: ['/Preview.png'],
   },
 };
