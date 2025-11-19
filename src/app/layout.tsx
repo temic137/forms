@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -23,6 +24,25 @@ export const metadata: Metadata = {
       { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
     apple: '/favicon.svg',
+  },
+  openGraph: {
+    title: "Forms - AI Form Builder",
+    description: "Create beautiful forms instantly with AI assistance",
+    images: [
+      {
+        url: '/Preview.png',
+        width: 1200,
+        height: 630,
+        alt: 'Forms - AI Form Builder Preview',
+      }
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Forms - AI Form Builder",
+    description: "Create beautiful forms instantly with AI assistance",
+    images: ['/Preview.png'],
   },
 };
 
