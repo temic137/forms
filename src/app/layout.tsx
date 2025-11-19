@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Forms - AI Form Builder",
-  description: "Create beautiful forms instantly with AI assistance",
+  description: "Beautiful forms, zero drag-and-drop hell. Just chat with the AI and watch it appear.",
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
