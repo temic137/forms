@@ -50,3 +50,7 @@ build.log
 
 # firebase admin sdk keys (security)
 *-firebase-adminsdk-*.json
+
+# next-sitemap generated files (regenerated on build)
+public/sitemap*.xml
+public/robots.txt
