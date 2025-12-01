@@ -5,8 +5,51 @@ import ShareButton from "@/components/ShareButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import type { FormStyling } from "@/types/form";
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 
 type Props = { params: Promise<{ formId: string }> };
+
+// Generate dynamic metadata for SEO
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { formId: paramId } = await params;
+  const id = String(paramId || "").trim();
+  
+  if (!id) {
+    return {
+      title: "Form Not Found",
+    };
+  }
+
+  const form = await prisma.form.findUnique({
+    where: { id },
+    select: { title: true },
+  });
+
+  if (!form) {
+    return {
+      title: "Form Not Found",
+    };
+  }
+
+  return {
+    title: form.title,
+    description: `Fill out the ${form.title} form. Created with Forms - AI Form Builder.`,
+    robots: {
+      index: true,
+      follow: true,
+    },
+    openGraph: {
+      title: form.title,
+      description: `Fill out the ${form.title} form. Created with Forms - AI Form Builder.`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: form.title,
+      description: `Fill out the ${form.title} form.`,
+    },
+  };
+}
 
 export default async function PublicFormPage({ params }: Props) {
   const { formId: paramId } = await params;

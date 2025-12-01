@@ -1,0 +1,16 @@
+{
+  "name": "Forms - AI Form Builder",
+  "short_name": "Forms",
+  "description": "Beautiful forms, zero drag-and-drop hell. Just chat with the AI and watch it appear.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
