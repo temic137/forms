@@ -29,14 +29,6 @@ export const websiteSchema: WithContext<WebSite> = {
   description:
     "Beautiful forms, zero drag-and-drop hell. Just chat with the AI and watch it appear. Create high-converting forms in minutes with AI-powered form generation.",
   url: siteUrl,
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: `${siteUrl}/search?q={search_term_string}`,
-    },
-    "query-input": "required name=search_term_string",
-  } as unknown as WebSite["potentialAction"],
 };
 
 /**
@@ -82,6 +74,7 @@ export function generateBreadcrumbSchema(
 
 /**
  * Generate SoftwareApplication schema for the form builder
+ * Note: Only add aggregateRating if you have a real rating system
  */
 export const softwareApplicationSchema = {
   "@context": "https://schema.org",
@@ -95,10 +88,5 @@ export const softwareApplicationSchema = {
     "@type": "Offer",
     price: "0",
     priceCurrency: "USD",
-  },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "150",
   },
 };
