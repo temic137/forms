@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import pdf from "pdf-parse";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require("pdf-parse");
 
 export const runtime = "nodejs";
 

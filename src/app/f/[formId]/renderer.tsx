@@ -106,6 +106,7 @@ function StarRatingField({
   );
 }
 
+// ...existing code...
 // Slider Field Component
 function SliderField({
   id,
@@ -122,6 +123,7 @@ function SliderField({
   required: boolean;
   register?: (name: string, rules?: Record<string, unknown>) => unknown;
 }) {
+// ...existing code...
   const sliderValue = value ?? 50;
 
   return (
@@ -151,6 +153,7 @@ function SliderField({
   );
 }
 
+// ...existing code...
 // Opinion Scale Field Component
 function OpinionScaleField({
   id,
@@ -165,6 +168,7 @@ function OpinionScaleField({
   isPreviewMode: boolean;
   styling?: import("@/types/form").FormStyling;
 }) {
+// ...existing code...
   const selectedValue = value;
 
   return (
@@ -250,6 +254,7 @@ function SortableRankingItem({
   );
 }
 
+// ...existing code...
 // Ranking field component with drag-and-drop
 function RankingField({
   fieldId,
@@ -268,6 +273,7 @@ function RankingField({
   isPreviewMode: boolean;
   styling?: import("@/types/form").FormStyling;
 }) {
+// ...existing code...
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -401,6 +407,7 @@ function RankingField({
   );
 }
 
+// ...existing code...
 export default function FormRenderer({
   formId,
   fields: initialFields,
@@ -436,6 +443,7 @@ export default function FormRenderer({
   submissionId?: string;
   editToken?: string;
 }) {
+// ...existing code...
   const { register, handleSubmit, formState, watch, setValue, trigger, control, reset } = useForm({
     defaultValues: defaultValues || {},
   });
