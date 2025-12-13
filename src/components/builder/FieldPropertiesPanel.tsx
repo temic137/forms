@@ -1,14 +1,15 @@
 "use client";
 
-import { Field, FieldType } from "@/types/form";
+import { Field, FieldType, QuizConfig } from "@/types/form";
 
 interface FieldPropertiesPanelProps {
   field: Field | null;
   onUpdate: (updates: Partial<Field>) => void;
   onClose: () => void;
+  quizModeEnabled?: boolean;
 }
 
-export default function FieldPropertiesPanel({ field, onUpdate, onClose }: FieldPropertiesPanelProps) {
+export default function FieldPropertiesPanel({ field, onUpdate, onClose, quizModeEnabled = false }: FieldPropertiesPanelProps) {
   if (!field) {
     return (
       <div className="w-80 h-full border-l border-gray-200 bg-gray-50 p-6">
@@ -29,6 +30,20 @@ export default function FieldPropertiesPanel({ field, onUpdate, onClose }: Field
   const isDisplayOnly = [
     "display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video"
   ].includes(field.type);
+
+  // Field types that support quiz answers
+  const supportsQuizAnswer = !isDisplayOnly && ![
+    "file", "file-uploader", "signature", "voice-recording", "captcha", "image", "video"
+  ].includes(field.type);
+
+  const updateQuizConfig = (updates: Partial<QuizConfig>) => {
+    onUpdate({
+      quizConfig: {
+        ...field.quizConfig,
+        ...updates,
+      },
+    });
+  };
 
   return (
     <div className="w-80 h-full overflow-y-auto border-l border-gray-200 bg-gray-50">
@@ -162,6 +177,110 @@ export default function FieldPropertiesPanel({ field, onUpdate, onClose }: Field
           </div>
         )}
 
+        {/* Choice Matrix Specific */}
+        {field.type === "choice-matrix" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rows
+            </label>
+            <div className="space-y-2 mb-4">
+              {(field.matrixRows || []).map((row, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={row}
+                    onChange={(e) => {
+                      const newRows = [...(field.matrixRows || [])];
+                      newRows[index] = e.target.value;
+                      onUpdate({ matrixRows: newRows });
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={`Row ${index + 1}`}
+                  />
+                  <button
+                    onClick={() => {
+                      const newRows = (field.matrixRows || []).filter((_, i) => i !== index);
+                      onUpdate({ matrixRows: newRows });
+                    }}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remove row"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  const newRows = [...(field.matrixRows || []), `Row ${(field.matrixRows || []).length + 1}`];
+                  onUpdate({ matrixRows: newRows });
+                }}
+                className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                + Add Row
+              </button>
+            </div>
+
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Columns
+            </label>
+            <div className="space-y-2 mb-4">
+              {(field.options || []).map((option, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => {
+                      const newOptions = [...(field.options || [])];
+                      newOptions[index] = e.target.value;
+                      onUpdate({ options: newOptions });
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={`Column ${index + 1}`}
+                  />
+                  <button
+                    onClick={() => {
+                      const newOptions = (field.options || []).filter((_, i) => i !== index);
+                      onUpdate({ options: newOptions });
+                    }}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remove column"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  const newOptions = [...(field.options || []), `Column ${(field.options || []).length + 1}`];
+                  onUpdate({ options: newOptions });
+                }}
+                className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                + Add Column
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={field.allowMultipleSelection || false}
+                  onChange={(e) => onUpdate({ allowMultipleSelection: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Allow Multiple Selection</div>
+                  <div className="text-xs text-gray-500">Users can select multiple options per row (Checkbox Grid)</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Validation Section */}
         {!isDisplayOnly && (
           <div className="pt-6 border-t border-gray-200">
@@ -238,6 +357,163 @@ export default function FieldPropertiesPanel({ field, onUpdate, onClose }: Field
             </div>
           </div>
         </div>
+
+        {/* Quiz Configuration Section */}
+        {quizModeEnabled && supportsQuizAnswer && (
+          <div className="pt-6 border-t border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h4 className="text-sm font-semibold text-gray-900">Quiz Settings</h4>
+            </div>
+            
+            {/* Points */}
+            <div className="mb-4">
+              <label className="block text-sm text-gray-700 mb-2">Points</label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={field.quizConfig?.points || 1}
+                onChange={(e) => updateQuizConfig({ points: parseInt(e.target.value) || 1 })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Points awarded for correct answer</p>
+            </div>
+
+            {/* Correct Answer - Text Fields */}
+            {["short-answer", "long-answer", "text", "textarea", "email", "url", "tel"].includes(field.type) && (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-700 mb-2">Correct Answer</label>
+                <div className="flex gap-2 mb-2">
+                  <select
+                    value={field.quizConfig?.matchType || "exact"}
+                    onChange={(e) => updateQuizConfig({ matchType: e.target.value as "exact" | "contains" })}
+                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                  >
+                    <option value="exact">Exact Match</option>
+                    <option value="contains">Contains</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={(field.quizConfig?.correctAnswer as string) || ""}
+                    onChange={(e) => updateQuizConfig({ correctAnswer: e.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder={field.quizConfig?.matchType === "contains" ? "Required text" : "Exact answer"}
+                  />
+                </div>
+                <label className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={field.quizConfig?.caseSensitive || false}
+                    onChange={(e) => updateQuizConfig({ caseSensitive: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  Case sensitive
+                </label>
+              </div>
+            )}
+
+            {/* Correct Answer - Number Fields */}
+            {["number", "currency"].includes(field.type) && (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-700 mb-2">Correct Answer</label>
+                <input
+                  type="number"
+                  value={(field.quizConfig?.correctAnswer as number) || ""}
+                  onChange={(e) => updateQuizConfig({ correctAnswer: parseFloat(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter correct number"
+                />
+              </div>
+            )}
+
+            {/* Correct Answer - Choice Fields (Single) */}
+            {["multiple-choice", "choices", "radio", "dropdown", "select"].includes(field.type) && (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-700 mb-2">Correct Answer</label>
+                <select
+                  value={(field.quizConfig?.correctAnswer as string) || ""}
+                  onChange={(e) => updateQuizConfig({ correctAnswer: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select correct option</option>
+                  {(field.options || []).map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Correct Answer - Choice Fields (Multiple) */}
+            {["checkboxes", "multiselect"].includes(field.type) && (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-700 mb-2">Correct Answers</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                  {(field.options || []).map((option, index) => {
+                    const correctAnswers = (field.quizConfig?.correctAnswer as string[]) || [];
+                    const isChecked = correctAnswers.includes(option);
+                    
+                    return (
+                      <label key={index} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const current = correctAnswers.filter(a => a !== option);
+                            const updated = e.target.checked ? [...current, option] : current;
+                            updateQuizConfig({ correctAnswer: updated });
+                          }}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        {option}
+                      </label>
+                    );
+                  })}
+                </div>
+                <label className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={field.quizConfig?.acceptPartialCredit || false}
+                    onChange={(e) => updateQuizConfig({ acceptPartialCredit: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  Accept partial credit
+                </label>
+              </div>
+            )}
+
+            {/* Correct Answer - Date Fields */}
+            {["date", "date-picker"].includes(field.type) && (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-700 mb-2">Correct Date</label>
+                <input
+                  type="date"
+                  value={(field.quizConfig?.correctAnswer as string) || ""}
+                  onChange={(e) => updateQuizConfig({ correctAnswer: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
+            {/* Explanation */}
+            <div className="mb-4">
+              <label className="block text-sm text-gray-700 mb-2">Explanation (Optional)</label>
+              <textarea
+                value={field.quizConfig?.explanation || ""}
+                onChange={(e) => updateQuizConfig({ explanation: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Explain why this is the correct answer"
+              />
+              <p className="text-xs text-gray-500 mt-1">Shown to users after submission</p>
+            </div>
+          </div>
+        )}
 
         {/* Advanced Section */}
         <div className="pt-6 border-t border-gray-200">

@@ -37,6 +37,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         id: true,
         createdAt: true,
         answersJson: true,
+        score: true,
         files: {
           select: {
             size: true,
@@ -242,6 +243,41 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
       else if (recentAvg < previousAvg * 0.8) trendDirection = 'declining';
     }
 
+    // ===== QUIZ ANALYTICS =====
+    let quizAnalytics: any = undefined;
+    const scoredSubmissions = submissions.filter(s => s.score && typeof s.score === 'object');
+    
+    if (scoredSubmissions.length > 0) {
+      const scores = scoredSubmissions.map(s => (s.score as any).percentage || 0);
+      const passedCount = scoredSubmissions.filter(s => (s.score as any).passed).length;
+      
+      const scoreDistribution: Record<string, number> = {};
+      // Initialize buckets
+      for (let i = 0; i < 100; i += 10) {
+        scoreDistribution[`${i}-${i + 10}%`] = 0;
+      }
+      
+      scores.forEach(score => {
+        const rangeStart = Math.min(Math.floor(score / 10) * 10, 90);
+        const bucket = `${rangeStart}-${rangeStart + 10}%`;
+        scoreDistribution[bucket] = (scoreDistribution[bucket] || 0) + 1;
+      });
+
+      const sumScores = scores.reduce((a, b) => a + b, 0);
+      const sortedScores = [...scores].sort((a, b) => a - b);
+
+      quizAnalytics = {
+        averageScore: Math.round(sumScores / scores.length),
+        medianScore: sortedScores.length % 2 === 0 
+          ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2 
+          : sortedScores[Math.floor(sortedScores.length / 2)],
+        passRate: Math.round((passedCount / scoredSubmissions.length) * 100),
+        topScore: sortedScores[sortedScores.length - 1],
+        lowScore: sortedScores[0],
+        scoreDistribution
+      };
+    }
+
     // ===== RETURN ENHANCED ANALYTICS =====
     return NextResponse.json({
       // Basic metrics
@@ -274,6 +310,9 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         totalFields: fields.length,
         requiredFields: requiredFields.length,
       },
+
+      // Quiz analytics
+      quizAnalytics,
     });
   } catch (error) {
     console.error("Error fetching analytics:", error);

@@ -10,18 +10,19 @@ export interface FieldTemplate {
   icon: string;
   defaultLabel: string;
   category: string;
+  recommended?: boolean;
 }
 
 export const fieldTemplates: FieldTemplate[] = [
   // Text
-  { type: "short-answer", label: "Short Answer", icon: "📝", defaultLabel: "Your answer", category: "Text" },
+  { type: "short-answer", label: "Short Answer", icon: "📝", defaultLabel: "Your answer", category: "Text", recommended: true },
   { type: "long-answer", label: "Long Answer", icon: "📄", defaultLabel: "Your detailed answer", category: "Text" },
   { type: "text", label: "Text", icon: "✍️", defaultLabel: "Text input", category: "Text" },
   
   // Choices
-  { type: "multiple-choice", label: "Multiple Choice", icon: "⭕", defaultLabel: "Select one option", category: "Choices" },
+  { type: "multiple-choice", label: "Multiple Choice", icon: "⭕", defaultLabel: "Select one option", category: "Choices", recommended: true },
   { type: "choices", label: "Choices", icon: "🔘", defaultLabel: "Pick an option", category: "Choices" },
-  { type: "dropdown", label: "Dropdown", icon: "📋", defaultLabel: "Select from dropdown", category: "Choices" },
+  { type: "dropdown", label: "Dropdown", icon: "📋", defaultLabel: "Select from dropdown", category: "Choices", recommended: true },
   { type: "picture-choice", label: "Picture Choice", icon: "🖼️", defaultLabel: "Choose a picture", category: "Choices" },
   { type: "multiselect", label: "Multiselect", icon: "☑️", defaultLabel: "Select multiple", category: "Choices" },
   { type: "checkbox", label: "Checkbox", icon: "✅", defaultLabel: "Check if yes", category: "Choices" },
@@ -30,7 +31,7 @@ export const fieldTemplates: FieldTemplate[] = [
   { type: "choice-matrix", label: "Choice Matrix", icon: "📊", defaultLabel: "Matrix selection", category: "Choices" },
   
   // Contact Info
-  { type: "email", label: "Email", icon: "📧", defaultLabel: "Email address", category: "Contact Info" },
+  { type: "email", label: "Email", icon: "📧", defaultLabel: "Email address", category: "Contact Info", recommended: true },
   { type: "phone", label: "Phone Number", icon: "📱", defaultLabel: "Phone number", category: "Contact Info" },
   { type: "address", label: "Address", icon: "🏠", defaultLabel: "Full address", category: "Contact Info" },
   
@@ -168,6 +169,32 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                 />
               </div>
             </div>
+
+            {/* Recommended Fields */}
+            {!searchQuery && (
+              <div className="mb-4">
+                <h3 className="px-1 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Recommended
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {fieldTemplates.filter(f => f.recommended).map(field => (
+                    <button
+                      key={`rec-${field.type}`}
+                      onClick={() => onFieldSelect(field.type)}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-center group"
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("fieldType", field.type);
+                        e.dataTransfer.effectAllowed = "copy";
+                      }}
+                    >
+                      <span className="text-2xl mb-1">{field.icon}</span>
+                      <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700">{field.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Field Categories */}
             <div className="space-y-2">

@@ -3,9 +3,10 @@
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { ChangeEvent } from "react";
-import { Field, MultiStepConfig } from "@/types/form";
+import { Field, MultiStepConfig, QuizModeConfig } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
 import { validateField } from "@/lib/validation";
+import { QuizScore } from "@/lib/scoring";
 import MultiStepRenderer from "@/components/MultiStepRenderer";
 import FileUpload from "@/components/FileUpload";
 import ConversationalForm from "@/components/ConversationalForm";
@@ -54,6 +55,15 @@ function getOptionValue(opt: string | { id?: string; label?: string } | unknown)
   return String(opt);
 }
 
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
 // Star Rating Field Component
 function StarRatingField({
   id,
@@ -74,7 +84,7 @@ function StarRatingField({
         <button
           key={star}
           type="button"
-          className={`text-3xl transition-colors focus:outline-none ${
+          className={`transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-full p-1 ${
             star <= selectedRating
               ? 'text-yellow-400'
               : 'text-gray-300 hover:text-yellow-400'
@@ -82,7 +92,14 @@ function StarRatingField({
           onClick={() => onSelect(star)}
           aria-label={`Rate ${star} out of 5 stars`}
         >
-          ⭐
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            className="w-8 h-8"
+          >
+            <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 4.646 1.251 5.318c.277 1.162-1.074 2.056-1.987 1.488L12 18.771l-4.695 2.636c-.913.568-2.264-.326-1.987-1.488l1.251-5.318-4.117-4.646c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+          </svg>
         </button>
       ))}
     </div>
@@ -386,14 +403,21 @@ function RankingField({
 
 export default function FormRenderer({
   formId,
-  fields,
+  fields: initialFields,
   onSubmit: onSubmitOverride,
   submitLabel,
   multiStepConfig,
   styling,
   formTitle,
   conversationalMode,
+  quizMode,
   isPreview = false,
+  limitOneResponse,
+  saveAndEdit,
+  defaultValues,
+  isEditMode,
+  submissionId,
+  editToken,
 }: {
   formId: string;
   fields: Field[];
@@ -403,12 +427,54 @@ export default function FormRenderer({
   styling?: import("@/types/form").FormStyling;
   formTitle?: string;
   conversationalMode?: boolean;
+  quizMode?: QuizModeConfig;
+  limitOneResponse?: boolean;
+  saveAndEdit?: boolean;
   isPreview?: boolean;
+  defaultValues?: Record<string, unknown>;
+  isEditMode?: boolean;
+  submissionId?: string;
+  editToken?: string;
 }) {
-  const { register, handleSubmit, formState, watch, setValue, trigger, control } = useForm();
+  const { register, handleSubmit, formState, watch, setValue, trigger, control, reset } = useForm({
+    defaultValues: defaultValues || {},
+  });
+  
+  const [respondentId, setRespondentId] = useState<string>("");
+  const [alreadyResponded, setAlreadyResponded] = useState(false);
+
+  useEffect(() => {
+    // Generate or get respondentId
+    if (typeof window !== 'undefined') {
+      let rid = localStorage.getItem("form_respondent_id");
+      if (!rid) {
+        rid = crypto.randomUUID();
+        localStorage.setItem("form_respondent_id", rid);
+      }
+      setRespondentId(rid);
+
+      if (limitOneResponse && !isPreview) {
+        // Check if already submitted
+        fetch(`/api/forms/${formId}/check-submission?respondentId=${rid}`)
+          .then(res => res.json())
+          .then(data => {
+              if (data.submitted) setAlreadyResponded(true);
+          })
+          .catch(err => console.error("Failed to check submission", err));
+      }
+    }
+  }, [formId, limitOneResponse, isPreview]);
+  const [fields] = useState(() => {
+    if (quizMode?.shuffleQuestions) {
+      return shuffleArray([...initialFields]);
+    }
+    return initialFields;
+  });
+
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [tempSubmissionId] = useState(() => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [quizScore, setQuizScore] = useState<QuizScore | null>(null);
 
   
   // Memoize CSS variables to avoid recalculation
@@ -567,12 +633,30 @@ export default function FormRenderer({
         setStatus("idle");
         return;
       }
-      const res = await fetch(`/api/forms/${formId}/submit`, {
-        method: "POST",
+      
+      const url = isEditMode && submissionId 
+        ? `/api/forms/${formId}/submit?submissionId=${submissionId}`
+        : `/api/forms/${formId}/submit`;
+        
+      const method = isEditMode ? "PUT" : "POST";
+      const body = isEditMode 
+        ? { ...values, editToken } 
+        : { ...values, respondentId };
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Failed to submit");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to submit");
+      }
+      
+      const data = await res.json();
+      if (data.score) {
+        setQuizScore(data.score);
+      }
       setStatus("done");
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Failed";
@@ -582,6 +666,27 @@ export default function FormRenderer({
   }
 
   // Render conversational form if enabled
+  if (alreadyResponded) {
+    return (
+      <div className="text-center py-12">
+        <div 
+          className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
+          style={{ background: 'var(--accent-light)' }}
+        >
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--accent)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+          You have already responded
+        </h3>
+        <p style={{ color: 'var(--foreground-muted)' }}>
+          This form is limited to one response per person.
+        </p>
+      </div>
+    );
+  }
+
   if (conversationalMode) {
     return (
       <ConversationalForm
@@ -616,6 +721,80 @@ export default function FormRenderer({
         <p style={{ color: 'var(--foreground-muted)' }}>
           Your response has been recorded.
         </p>
+
+        {quizScore && (
+          <div className="mt-8 max-w-md mx-auto">
+            <div 
+              className="rounded-lg p-6 border"
+              style={{ 
+                background: 'var(--card-bg)',
+                borderColor: 'var(--card-border)'
+              }}
+            >
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div 
+                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    quizScore.passed ? 'bg-green-100' : 'bg-yellow-100'
+                  }`}
+                >
+                  <span className={`text-2xl font-bold ${
+                    quizScore.passed ? 'text-green-600' : 'text-yellow-600'
+                  }`}>
+                    {quizScore.percentage.toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+              
+              <h4 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                Your Score
+              </h4>
+              
+              <div className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                <p>
+                  <span className="font-medium">Points:</span> {quizScore.earnedPoints.toFixed(1)} / {quizScore.totalPoints}
+                </p>
+                <p>
+                  <span className="font-medium">Result:</span>{' '}
+                  <span className={quizScore.passed ? 'text-green-600 font-semibold' : 'text-yellow-600 font-semibold'}>
+                    {quizScore.passed ? 'Passed ✓' : 'Not Passed'}
+                  </span>
+                </p>
+              </div>
+
+              {quizScore.questionScores && quizScore.questionScores.length > 0 && (
+                <div className="mt-6 pt-6 border-t" style={{ borderColor: 'var(--card-border)' }}>
+                  <h5 className="font-semibold mb-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    Question Breakdown
+                  </h5>
+                  <div className="space-y-3 text-left">
+                    {quizScore.questionScores.map((q, idx) => (
+                      <div key={q.fieldId} className="text-sm">
+                        <div className="flex items-start gap-2">
+                          <span className={`mt-0.5 ${q.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                            {q.isCorrect ? '✓' : '✗'}
+                          </span>
+                          <div className="flex-1">
+                            <p className="font-medium" style={{ color: 'var(--foreground)' }}>
+                              {q.fieldLabel}
+                            </p>
+                            <p style={{ color: 'var(--foreground-muted)' }}>
+                              {q.pointsEarned.toFixed(1)} / {q.pointsPossible} points
+                            </p>
+                            {q.explanation && (
+                              <p className="mt-1 text-xs italic" style={{ color: 'var(--foreground-muted)' }}>
+                                {q.explanation}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -713,9 +892,9 @@ export default function FormRenderer({
           )}
           {type === "image" && (
             <div className="rounded-lg overflow-hidden">
-              {helpText || placeholder ? (
+              {f.imageUrl || helpText || placeholder ? (
                 <img
-                  src={helpText || placeholder}
+                  src={f.imageUrl || helpText || placeholder}
                   alt={label || "Image"}
                   className="w-full h-auto max-h-96 object-contain"
                   onError={(e) => {
@@ -1184,9 +1363,9 @@ export default function FormRenderer({
                   disabled={!isPreviewMode}
                 >
                   <div className="aspect-square bg-gray-100 rounded flex items-center justify-center mb-2">
-                    {typeof opt === 'object' && opt !== null && 'image' in opt && (opt as { image?: string }).image ? (
+                    {f.optionImages?.[i] || (typeof opt === 'object' && opt !== null && 'image' in opt && (opt as { image?: string }).image) ? (
                       <img
-                        src={(opt as { image: string }).image}
+                        src={f.optionImages?.[i] || (opt as { image: string }).image}
                         alt={optValue}
                         className="w-full h-full object-cover rounded"
                         onError={(e) => {
@@ -1242,22 +1421,50 @@ export default function FormRenderer({
                       <td className="border px-4 py-2 font-medium" style={{ borderColor: 'var(--card-border)' }}>{row}</td>
                       {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, colIdx) => {
                         const optValue = getOptionValue(opt);
-                        const isChecked = selectedValue === optValue;
+                        const isChecked = f.allowMultipleSelection
+                          ? Array.isArray(selectedValue) && selectedValue.includes(optValue)
+                          : selectedValue === optValue;
+                        
                         return (
                           <td key={colIdx} className="border px-4 py-2 text-center" style={{ borderColor: 'var(--card-border)' }}>
                             <input
-                              type="radio"
+                              type={f.allowMultipleSelection ? "checkbox" : "radio"}
                               value={optValue}
                               checked={isChecked}
-                              {...(isPreviewMode ? { name: rowId } : register(rowId, { required: required && rowIdx === 0 }))}
-                              {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(rowId, event.target.value) } : {})}
+                              {...(isPreviewMode ? { 
+                                name: rowId,
+                                onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                                  if (f.allowMultipleSelection) {
+                                    const currentValues = Array.isArray(selectedValue) ? selectedValue : [];
+                                    const newValues = event.target.checked
+                                      ? [...currentValues, optValue]
+                                      : currentValues.filter((v: string) => v !== optValue);
+                                    setValue(rowId, newValues);
+                                  } else {
+                                    setValue(rowId, event.target.value);
+                                  }
+                                }
+                              } : {
+                                ...register(rowId, { required: required && rowIdx === 0 }),
+                                onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                                  if (f.allowMultipleSelection) {
+                                    const currentValues = Array.isArray(selectedValue) ? selectedValue : [];
+                                    const newValues = event.target.checked
+                                      ? [...currentValues, optValue]
+                                      : currentValues.filter((v: string) => v !== optValue);
+                                    setValue(rowId, newValues);
+                                  } else {
+                                    register(rowId).onChange(event);
+                                  }
+                                }
+                              })}
                               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(rowId)}
                               className="w-4 h-4 focus:ring-2 transition-colors"
                               style={{
                                 accentColor: styling?.primaryColor || 'var(--accent)',
                                 '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
                               } as React.CSSProperties}
-                              disabled={!isPreviewMode}
+                              disabled={!isPreviewMode && false} // React Hook Form handles disabled state
                             />
                           </td>
                         );

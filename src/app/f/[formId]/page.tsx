@@ -22,6 +22,9 @@ export default async function PublicFormPage({ params }: Props) {
       multiStepConfig: true, 
       styling: true,
       conversationalMode: true,
+      quizMode: true,
+      limitOneResponse: true,
+      saveAndEdit: true,
     },
   });
   
@@ -88,6 +91,9 @@ export default async function PublicFormPage({ params }: Props) {
                 styling={form.styling as unknown as import("@/types/form").FormStyling | undefined}
                 formTitle={form.title}
                 conversationalMode={form.conversationalMode || false}
+                quizMode={form.quizMode as unknown as import("@/types/form").QuizModeConfig | undefined}
+                limitOneResponse={form.limitOneResponse || false}
+                saveAndEdit={form.saveAndEdit || false}
               />
             </div>
           </ErrorBoundary>

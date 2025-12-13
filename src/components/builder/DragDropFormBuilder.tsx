@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DndContext, DragEndEvent, DragOverlay, DragOverEvent, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { Field, FieldType, FormStyling, NotificationConfig, MultiStepConfig, FormStep } from "@/types/form";
+import { Field, FieldType, FormStyling, NotificationConfig, MultiStepConfig, FormStep, QuizModeConfig } from "@/types/form";
 import FieldPalette, { fieldTemplates } from "./FieldPalette";
 import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
-import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical } from "lucide-react";
+import QuizSettings from "./QuizSettings";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
+import ShareCollaboratorButton from "./ShareCollaboratorButton";
+import BuilderOnboarding from "./BuilderOnboarding";
 
 interface DragDropFormBuilderProps {
   formTitle: string;
@@ -19,12 +22,18 @@ interface DragDropFormBuilderProps {
   styling?: FormStyling;
   notifications?: NotificationConfig;
   multiStepConfig?: MultiStepConfig;
+  quizMode?: QuizModeConfig;
+  limitOneResponse?: boolean;
+  saveAndEdit?: boolean;
   currentFormId?: string | null;
   onFormTitleChange: (title: string) => void;
   onFieldsChange: (fields: Field[]) => void;
   onStylingChange: (styling: FormStyling | undefined) => void;
   onNotificationsChange: (notifications: NotificationConfig | undefined) => void;
   onMultiStepConfigChange: (config: MultiStepConfig | undefined) => void;
+  onQuizModeChange?: (config: QuizModeConfig | undefined) => void;
+  onLimitOneResponseChange?: (enabled: boolean) => void;
+  onSaveAndEditChange?: (enabled: boolean) => void;
   onSave: () => void;
   onCancel: () => void;
   saving?: boolean;
@@ -36,11 +45,17 @@ export default function DragDropFormBuilder({
   styling,
   notifications,
   multiStepConfig,
+  quizMode,
+  limitOneResponse,
+  saveAndEdit,
   onFormTitleChange,
   onFieldsChange,
   onStylingChange,
   onNotificationsChange,
   onMultiStepConfigChange,
+  onQuizModeChange,
+  onLimitOneResponseChange,
+  onSaveAndEditChange,
   onSave,
   onCancel,
   saving = false,
@@ -53,6 +68,19 @@ export default function DragDropFormBuilder({
   const [showFieldPalette, setShowFieldPalette] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [hoveredDropIndex, setHoveredDropIndex] = useState<number | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem("hasSeenBuilderOnboarding");
+    if (!hasSeen) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem("hasSeenBuilderOnboarding", "true");
+    setShowOnboarding(false);
+  };
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -488,6 +516,7 @@ export default function DragDropFormBuilder({
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
+      <BuilderOnboarding isOpen={showOnboarding} onClose={handleCloseOnboarding} />
       {/* Left Sidebar - Field Palette & Theme Settings */}
       {/* Mobile backdrop */}
       {showFieldPalette && (
@@ -661,6 +690,24 @@ export default function DragDropFormBuilder({
               >
                 <Eye className="w-4 h-4" />
                 <span>Preview</span>
+              </button>
+
+              <div className="hidden sm:block w-px h-6 bg-gray-200" />
+
+              {currentFormId && (
+                <>
+                  <ShareCollaboratorButton formId={currentFormId} />
+                  <div className="hidden sm:block w-px h-6 bg-gray-200" />
+                </>
+              )}
+
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
+                title="Help & Tour"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>Help</span>
               </button>
 
               <div className="hidden sm:block w-px h-6 bg-gray-200" />
@@ -888,36 +935,36 @@ export default function DragDropFormBuilder({
             >
               {fields.length === 0 ? (
                 <div
-                  className="border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center bg-white shadow-sm"
+                  className="border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center bg-white shadow-sm hover:border-blue-400 transition-colors"
                   onDrop={handleDropZoneDrop}
                   onDragOver={handleDropZoneDragOver}
                 >
                   <div className="max-w-md mx-auto">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-50 flex items-center justify-center">
-                      <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-50 flex items-center justify-center animate-pulse">
+                      <Plus className="w-12 h-12 text-blue-500" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Start building your form</h3>
-                    <p className="text-gray-600 mb-8 text-sm">Drag fields from the left panel or click on a field type to add it</p>
-                    <div className="flex flex-wrap gap-2 justify-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Start Building Your Form</h3>
+                    <p className="text-gray-600 mb-8 text-base">
+                      Drag fields from the left sidebar or click the buttons below to get started quickly.
+                    </p>
+                    <div className="flex flex-wrap gap-3 justify-center">
                       <button
                         onClick={() => handleFieldSelect("short-answer")}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                        className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        + Short Answer
+                        <span>📝</span> Short Answer
                       </button>
                       <button
                         onClick={() => handleFieldSelect("multiple-choice")}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                        className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        + Multiple Choice
+                        <span>⭕</span> Multiple Choice
                       </button>
                       <button
                         onClick={() => handleFieldSelect("email")}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                        className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm flex items-center gap-2"
                       >
-                        + Email
+                        <span>📧</span> Email
                       </button>
                     </div>
                   </div>
@@ -967,6 +1014,7 @@ export default function DragDropFormBuilder({
                                     index={globalIndex}
                                     isSelected={selectedFieldId === field.id}
                                     styling={styling}
+                                    isQuizMode={quizMode?.enabled}
                                     onSelect={() => setSelectedFieldId(field.id)}
                                     onDelete={() => handleFieldDelete(field.id)}
                                     onDuplicate={() => handleFieldDuplicate(field.id)}
@@ -1034,6 +1082,7 @@ export default function DragDropFormBuilder({
                           index={index}
                           isSelected={selectedFieldId === field.id}
                           styling={styling}
+                          isQuizMode={quizMode?.enabled}
                           onSelect={() => setSelectedFieldId(field.id)}
                           onDelete={() => handleFieldDelete(field.id)}
                           onDuplicate={() => handleFieldDuplicate(field.id)}
@@ -1108,6 +1157,14 @@ export default function DragDropFormBuilder({
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                {/* Quiz Mode Settings */}
+                {onQuizModeChange && (
+                  <QuizSettings
+                    config={quizMode}
+                    onChange={onQuizModeChange}
+                  />
+                )}
+
                 {/* Multi-page settings - simple checkboxes */}
                 {multiStepConfig?.enabled && (
                   <div className="border-t border-gray-200 pt-6 space-y-3">
@@ -1136,6 +1193,36 @@ export default function DragDropFormBuilder({
                     </label>
                   </div>
                 )}
+                
+                {/* Submission Settings */}
+                {(onLimitOneResponseChange || onSaveAndEditChange) && (
+                  <div className="border-t border-gray-200 pt-6 space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Submission Settings</h3>
+                    {onLimitOneResponseChange && (
+                      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={limitOneResponse || false}
+                          onChange={(e) => onLimitOneResponseChange(e.target.checked)}
+                          className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
+                        />
+                        Limit to 1 Response per person
+                      </label>
+                    )}
+                    {onSaveAndEditChange && (
+                      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={saveAndEdit || false}
+                          onChange={(e) => onSaveAndEditChange(e.target.checked)}
+                          className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
+                        />
+                        Allow editing after submission (via email link)
+                      </label>
+                    )}
+                  </div>
+                )}
+
                 <NotificationSettings
                   config={notifications}
                   onChange={onNotificationsChange}

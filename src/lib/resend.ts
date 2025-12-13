@@ -14,9 +14,8 @@ function getResend(): Resend {
       const stubResend = {
         emails: {
           send: async () => {
-            throw new Error(
-              "RESEND_API_KEY is not set. Please add it to your Vercel environment variables."
-            );
+            console.warn("RESEND_API_KEY is not set. Email would have been sent.");
+            return { id: "stub-id", error: null };
           },
         },
       } as unknown as Resend;
@@ -212,6 +211,170 @@ export function generateSubmissionEmailHtml(data: {
       </div>
     </div>
     ` : ''}
+
+    <div class="footer">
+      This is an automated notification from your form builder.<br>
+      Please do not reply to this email.
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+// Email template for edit link
+export function generateEditLinkEmailHtml(formTitle: string, editLink: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Your Response</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .header {
+      margin-bottom: 30px;
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      color: #1f2937;
+      font-size: 24px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 20px 0;
+    }
+    .cta-button:hover {
+      background-color: #2563eb;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Edit Your Response</h1>
+      <p>You can edit your submission for <strong>${formTitle}</strong> by clicking the button below:</p>
+    </div>
+
+    <a href="${editLink}" class="cta-button">Edit Response</a>
+
+    <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+      Or copy and paste this link into your browser:<br>
+      <a href="${editLink}" style="color: #3b82f6; word-break: break-all;">${editLink}</a>
+    </p>
+
+    <div class="footer">
+      This is an automated notification from your form builder.<br>
+      Please do not reply to this email.
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+// Email template for collaborator invite
+export function generateCollaboratorInviteEmailHtml(formTitle: string, inviteLink: string, inviterName?: string | null): string {
+  const inviterText = inviterName ? `${inviterName} has invited you` : "You have been invited";
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaboration Invitation</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .header {
+      margin-bottom: 30px;
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      color: #1f2937;
+      font-size: 24px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 20px 0;
+    }
+    .cta-button:hover {
+      background-color: #2563eb;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Join to Collaborate</h1>
+      <p>${inviterText} to edit the form <strong>${formTitle}</strong>.</p>
+    </div>
+
+    <a href="${inviteLink}" class="cta-button">Open Form</a>
+
+    <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+      Or copy and paste this link into your browser:<br>
+      <a href="${inviteLink}" style="color: #3b82f6; word-break: break-all;">${inviteLink}</a>
+    </p>
 
     <div class="footer">
       This is an automated notification from your form builder.<br>

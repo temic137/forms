@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { SpeechRecognitionService } from '@/lib/speechRecognition';
-import { VoiceError, SpeechAlternative } from '@/types/voice';
+import { VoiceError } from '@/types/voice';
 import { debounce } from '@/lib/debounce';
 import { performanceMonitor } from '@/lib/performanceMonitor';
 import { voiceAnalytics } from '@/lib/voiceAnalytics';
-import { processTranscript, analyzeTranscriptQuality } from '@/lib/transcriptProcessor';
-import { createAdaptiveSilenceDetector } from '@/lib/adaptiveSilenceDetector';
 
 /**
  * Configuration options for the useVoiceInput hook
@@ -68,66 +66,64 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
   const [error, setError] = useState<VoiceError | null>(null);
   const [language, setLanguage] = useState(initialLanguage);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [isSupported, setIsSupported] = useState(false);
 
   // Refs to maintain transcript state and avoid stale closures
   const finalTranscriptRef = useRef(initialTranscript);
   
-  // IMPROVED: Adaptive silence detector (smarter than fixed timeout!)
-  const silenceDetector = useMemo(() => createAdaptiveSilenceDetector(), []);
+  // No-speech timeout handling (Requirement 10.2: auto-pause after 10 seconds)
+  const noSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSpeechTimeRef = useRef<number>(0);
   
   // Initialize service once using useMemo
   const service = useMemo(() => new SpeechRecognitionService(), []);
-
-  useEffect(() => {
-    setIsSupported(service.isSupported());
-  }, [service]);
+  const isSupported = useMemo(() => service.isSupported(), [service]);
 
   /**
    * Cleanup on unmount
    */
   useEffect(() => {
     return () => {
-      // Stop adaptive silence detector
-      silenceDetector.stop();
+      // Clear no-speech timeout
+      if (noSpeechTimeoutRef.current) {
+        clearTimeout(noSpeechTimeoutRef.current);
+      }
       
       // Cleanup on unmount
       service.dispose();
     };
-  }, [service, silenceDetector]);
+  }, [service]);
 
   /**
-   * IMPROVED: Adaptive silence detection (learns your speech patterns!)
-   * No more cutting you off mid-conversation!
+   * Reset no-speech timeout
    */
-  const startAdaptiveSilenceDetection = useCallback(() => {
-    silenceDetector.startDetection(() => {
-      // Only pause if user is truly done (not just pausing between thoughts)
-      if (!silenceDetector.isActivelySpeaking()) {
-        console.log('Adaptive silence detected - user done speaking');
-        console.log('Detection status:', silenceDetector.getStatus());
-        
-        service.stop();
-        
-        const noSpeechError: VoiceError = {
-          type: 'no-speech',
-          message: 'Detected silence - recording paused. Click to continue if needed.',
-          recoverable: true,
-        };
-        
-        setError(noSpeechError);
-        setIsListening(false);
-        
-        if (onErrorCallback) {
-          onErrorCallback(noSpeechError);
-        }
-      } else {
-        console.log('Still speaking, extending detection...');
-        // Still speaking, extend detection
-        startAdaptiveSilenceDetection();
+  const resetNoSpeechTimeout = useCallback(() => {
+    // Clear existing timeout
+    if (noSpeechTimeoutRef.current) {
+      clearTimeout(noSpeechTimeoutRef.current);
+    }
+    
+    // Update last speech time
+    lastSpeechTimeRef.current = Date.now();
+    
+    // Set new timeout for 10 seconds
+    noSpeechTimeoutRef.current = setTimeout(() => {
+      // Auto-pause if no speech detected for 10 seconds
+      service.stop();
+      
+      const noSpeechError: VoiceError = {
+        type: 'no-speech',
+        message: 'No speech detected for 10 seconds. Recording paused automatically.',
+        recoverable: true,
+      };
+      
+      setError(noSpeechError);
+      setIsListening(false);
+      
+      if (onErrorCallback) {
+        onErrorCallback(noSpeechError);
       }
-    });
-  }, [service, silenceDetector, onErrorCallback]);
+    }, 10000); // 10 seconds
+  }, [service, onErrorCallback]);
 
   /**
    * Debounced interim transcript update for performance optimization
@@ -140,39 +136,20 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
 
   /**
    * Handle transcript accumulation from speech recognition results
-   * Optimized with debouncing for interim results and intelligent post-processing
+   * Optimized with debouncing for interim results
    */
-  const handleResult = useCallback((
-    newTranscript: string, 
-    isFinal: boolean,
-    confidence?: number,
-    alternatives?: SpeechAlternative[]
-  ) => {
-    // IMPROVED: Notify adaptive silence detector of speech
-    silenceDetector.onSpeechDetected();
+  const handleResult = useCallback((newTranscript: string, isFinal: boolean) => {
+    // Reset no-speech timeout on any speech detection
+    resetNoSpeechTimeout();
     
     if (isFinal) {
       // Track transcription latency (Requirement 12.2: < 1s)
       performanceMonitor.mark('transcription-latency');
       
-      // IMPROVED: Process transcript with intelligent corrections
-      const processed = processTranscript(newTranscript, alternatives, confidence);
-      
-      // Log corrections for debugging
-      if (processed.corrections.length > 0) {
-        console.log('Applied transcript corrections:', processed.corrections);
-      }
-      
-      // Analyze quality and log suggestions
-      const quality = analyzeTranscriptQuality(processed.processed, processed.confidence);
-      if (quality.suggestions.length > 0) {
-        console.log('Transcript quality:', quality.quality, 'Suggestions:', quality.suggestions);
-      }
-      
       // Append final result to accumulated transcript
       const updatedTranscript = finalTranscriptRef.current 
-        ? `${finalTranscriptRef.current} ${processed.processed}`.trim()
-        : processed.processed;
+        ? `${finalTranscriptRef.current} ${newTranscript}`.trim()
+        : newTranscript;
       
       finalTranscriptRef.current = updatedTranscript;
       setTranscript(updatedTranscript);
@@ -188,9 +165,6 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
       if (latency) {
         voiceAnalytics.trackPerformance('transcription-latency', latency);
       }
-      
-      // Track transcript quality in analytics
-      voiceAnalytics.trackPerformance('transcript-confidence', processed.confidence);
 
       // Notify parent component of transcript change
       if (onTranscriptChange) {
@@ -201,7 +175,7 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
       // This prevents excessive updates during rapid speech recognition
       debouncedSetInterimTranscript(newTranscript);
     }
-  }, [onTranscriptChange, silenceDetector, debouncedSetInterimTranscript]);
+  }, [onTranscriptChange, resetNoSpeechTimeout, debouncedSetInterimTranscript]);
 
   /**
    * Handle speech recognition errors
@@ -238,21 +212,16 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     setIsListening(true);
     setError(null);
     
-    // IMPROVED: Start adaptive silence detection (learns your patterns!)
-    silenceDetector.reset();
-    startAdaptiveSilenceDetection();
-  }, [silenceDetector, startAdaptiveSilenceDetection]);
+    // Start no-speech timeout when listening begins
+    resetNoSpeechTimeout();
+  }, [resetNoSpeechTimeout]);
 
   /**
    * Handle audio level updates
-   * IMPROVED: Feed to adaptive silence detector
    */
   const handleAudioLevel = useCallback((level: number) => {
     setAudioLevel(level);
-    
-    // Feed audio level to adaptive silence detector
-    silenceDetector.onAudioLevel(level);
-  }, [silenceDetector]);
+  }, []);
 
   /**
    * Initialize or reinitialize the service with current configuration
@@ -334,11 +303,14 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
    * Stop listening for speech input
    */
   const stopListening = useCallback(() => {
-    // Stop adaptive silence detector
-    silenceDetector.stop();
+    // Clear no-speech timeout
+    if (noSpeechTimeoutRef.current) {
+      clearTimeout(noSpeechTimeoutRef.current);
+      noSpeechTimeoutRef.current = null;
+    }
     
     service.stop();
-  }, [service, silenceDetector]);
+  }, [service]);
 
   /**
    * Reset transcript to empty state

@@ -12,11 +12,13 @@ import { TimeSeriesChart } from "@/components/analytics/TimeSeriesChart";
 import { BarChart } from "@/components/analytics/BarChart";
 import { FieldAnalyticsCard } from "@/components/analytics/FieldAnalyticsCard";
 import ShareButton from "@/components/ShareButton";
+import { QuizScore } from "@/lib/scoring";
 // import IntegrationButton from "@/components/IntegrationButton";
 
 interface Submission {
   id: string;
   answersJson: Record<string, unknown>;
+  score?: QuizScore | null;
   createdAt: string;
   files: Array<{
     id: string;
@@ -227,6 +229,55 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         {/* Analytics Content */}
         {analytics && activeTab === 'overview' && (
           <div className="space-y-8 mb-8">
+            {/* Quiz Performance (if available) */}
+            {analytics.quizAnalytics && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+                  Quiz Performance
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <AnalyticsCard
+                    title="Average Score"
+                    value={`${analytics.quizAnalytics.averageScore}%`}
+                    icon={
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    }
+                    subtitle={`Median: ${analytics.quizAnalytics.medianScore}%`}
+                  />
+                  <AnalyticsCard
+                    title="Pass Rate"
+                    value={`${analytics.quizAnalytics.passRate}%`}
+                    icon={
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    }
+                    subtitle="Students passed"
+                  />
+                  <AnalyticsCard
+                    title="Highest Score"
+                    value={`${analytics.quizAnalytics.topScore}%`}
+                    icon={
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    }
+                    subtitle={`Lowest: ${analytics.quizAnalytics.lowScore}%`}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-6">
+                  <BarChart
+                    title="Score Distribution"
+                    data={analytics.quizAnalytics.scoreDistribution}
+                    color="var(--accent)"
+                    height={300}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <AnalyticsCard
@@ -527,7 +578,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               >
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <div 
                         className="font-medium mb-1"
                         style={{ color: 'var(--foreground)' }}
@@ -537,6 +588,20 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                       <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
                         {new Date(submission.createdAt).toLocaleString()}
                       </div>
+                      {submission.score && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span 
+                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${
+                              submission.score.passed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                          >
+                            {submission.score.percentage.toFixed(0)}%
+                          </span>
+                          <span style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>
+                            {submission.score.earnedPoints.toFixed(1)} / {submission.score.totalPoints} points
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <svg
                       className="w-5 h-5"
@@ -584,6 +649,36 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                   <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
                     Submitted: {new Date(selectedSubmission.createdAt).toLocaleString()}
                   </div>
+                  {selectedSubmission.score && (
+                    <div 
+                      className="mt-4 p-4 rounded-lg"
+                      style={{
+                        background: selectedSubmission.score.passed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                        border: `1px solid ${selectedSubmission.score.passed ? 'rgba(34, 197, 94, 0.3)' : 'rgba(234, 179, 8, 0.3)'}`,
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                          Quiz Score
+                        </span>
+                        <span 
+                          className="text-2xl font-bold"
+                          style={{ color: selectedSubmission.score.passed ? '#22c55e' : '#eab308' }}
+                        >
+                          {selectedSubmission.score.percentage.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="text-sm space-y-1" style={{ color: 'var(--foreground-muted)' }}>
+                        <div>Points: {selectedSubmission.score.earnedPoints.toFixed(1)} / {selectedSubmission.score.totalPoints}</div>
+                        <div>
+                          Status:{' '}
+                          <span className="font-semibold" style={{ color: selectedSubmission.score.passed ? '#22c55e' : '#eab308' }}>
+                            {selectedSubmission.score.passed ? 'Passed ✓' : 'Not Passed'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">

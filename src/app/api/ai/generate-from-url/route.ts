@@ -75,89 +75,87 @@ async function scrapeWebsiteContent(url: string): Promise<string> {
 
 // Enhanced prompt for URL-based form generation
 function buildURLSystemPrompt(): string {
-  return `You are an expert form designer that can analyze website content and create intelligent forms based on the context and purpose of the website.
+  return `You are an expert form designer that analyzes websites and creates forms that SERVE THE WEBSITE'S VISITORS.
 
-CRITICAL RULES:
-1. Analyze the website content to understand its PURPOSE and what kind of form would be most appropriate
-2. Return ONLY valid JSON with no additional text or markdown
-3. Extract relevant information from the content to inform field selection
-4. Consider the website's audience and context when designing the form
+CRITICAL UNDERSTANDING:
+You are NOT creating a form about the website itself.
+You are NOT creating a form asking users about their form preferences.
+You ARE creating a form that the website owner would use to collect information from their visitors.
 
-JSON STRUCTURE:
+EXAMPLE OF WHAT NOT TO DO:
+❌ "What is the primary purpose of your form?" - This asks about forms, not the website's service
+❌ "What industry does your company operate in?" - Generic, not related to the website
+❌ "Are you interested in integrating with [product]?" - Meta question about the product
+❌ "What is your expected timeline for implementing?" - About implementation, not the service
+
+EXAMPLE OF WHAT TO DO:
+If the website is about "Xavier AI - an AI assistant service":
+✅ Create a form that helps visitors GET IN TOUCH or REQUEST A DEMO of Xavier AI
+✅ Ask about their USE CASE for AI, their COMPANY, their NEEDS
+✅ Focus on what PROBLEMS they want Xavier AI to solve
+
+WEBSITE TYPE → FORM PURPOSE:
+- AI/Software product → Demo request, trial signup, or contact sales
+- Agency/Services → Request a quote, book consultation
+- Restaurant → Make a reservation
+- E-commerce → Customer support, product inquiry
+- Portfolio → Contact/hire me form
+- Blog/Content → Newsletter signup, feedback
+- SaaS → Free trial signup, pricing inquiry
+
+JSON STRUCTURE (return ONLY this, no markdown):
 {
-  "title": "Form title based on website content and purpose",
+  "title": "Form title that reflects the ACTION users take",
   "fields": [
     {
-      "id": "semantic_snake_case_id",
-      "label": "User-friendly label",
+      "id": "snake_case_id",
+      "label": "Clear question",
       "type": "text|email|textarea|number|date|select|radio|checkbox|tel|url",
       "required": true|false,
-      "placeholder": "Helpful placeholder text (optional)",
-      "options": ["option1", "option2"] // Only for select/radio/checkbox types,
-      "validation": {
-        "min": number,
-        "max": number,
-        "pattern": "regex",
-        "minLength": number,
-        "maxLength": number
-      }
+      "placeholder": "Helpful example",
+      "helpText": "Why we ask this (optional)",
+      "options": ["option1", "option2"]
     }
   ]
-}
-
-WEBSITE ANALYSIS INTELLIGENCE:
-- **Business/Contact pages**: Contact forms (name, email, phone, message)
-- **Product pages**: Inquiry forms, demo requests, quote requests
-- **Service pages**: Consultation forms, booking forms, service requests
-- **Event pages**: Registration forms, RSVP forms
-- **Educational pages**: Enrollment forms, information request forms
-- **E-commerce**: Customer inquiry forms, support forms
-
-CONTENT-BASED FIELD SELECTION:
-- If content mentions "contact us" → contact form
-- If content mentions "book", "reserve", "schedule" → booking form
-- If content mentions "subscribe", "newsletter" → subscription form
-- If content mentions "apply", "application" → application form
-- If content mentions "feedback", "review" → feedback form
-
-SMART FORM DESIGN PRINCIPLES:
-1. **Context-appropriate fields**: Only include fields relevant to the website's purpose
-2. **Progressive disclosure**: Start with essential fields, add optional ones
-3. **Website-aware placeholders**: Use examples from the website content
-4. **Purpose-driven validation**: Apply appropriate validation based on form type
-5. **Clear call-to-action**: Form title should reflect the website's purpose
-
-EXAMPLES:
-
-Website about "Photography Services":
-- Title: "Book a Photography Session"
-- Fields: name, email, phone, service type (dropdown), preferred date, special requests
-
-Website about "Software Company":
-- Title: "Contact Our Sales Team"
-- Fields: name, email, company, message about their needs
-
-Website about "Restaurant":
-- Title: "Make a Reservation"
-- Fields: name, phone, email, party size, preferred date/time, special requests
-
-Remember: The form should serve the website's purpose and feel natural for that context.`;
+}`;
 }
 
 function buildURLUserPrompt(content: string): string {
-  return `Analyze this website content and create an appropriate form:
-
-WEBSITE CONTENT:
+  return `WEBSITE CONTENT:
 ${content}
 
-Based on the website's content, purpose, and target audience:
+YOUR TASK:
+1. Identify what this website/company DOES or OFFERS
+2. Create a form that helps VISITORS interact with that service
+3. The form should collect information the website owner needs from potential customers/users
 
-1. What is the PRIMARY PURPOSE of this website?
-2. What type of user interaction would be most valuable?
-3. What information should the form collect?
-4. What would be an appropriate form title?
+WRONG APPROACH:
+- Don't ask users about "what type of form they want"
+- Don't ask about "integration preferences" or "implementation timeline"
+- Don't create a generic contact form if the website has a specific purpose
 
-Generate a complete, professional form JSON that fits the website's context and purpose.`;
+RIGHT APPROACH:
+- If it's an AI product → ask about their AI needs, use cases, company info
+- If it's a service → ask about their project, requirements, budget
+- If it's e-commerce → ask about product questions, support needs
+- Make the form RELEVANT to what the website actually offers
+
+EXAMPLE - For an AI assistant website like "Xavier AI":
+{
+  "title": "Request a Demo of Xavier AI",
+  "fields": [
+    {"id": "name", "label": "Your Name", "type": "text", "required": true},
+    {"id": "email", "label": "Work Email", "type": "email", "required": true},
+    {"id": "company", "label": "Company Name", "type": "text", "required": true},
+    {"id": "role", "label": "Your Role", "type": "select", "options": ["Executive", "Manager", "Developer", "Other"], "required": false},
+    {"id": "use_case", "label": "What would you like to use Xavier AI for?", "type": "textarea", "placeholder": "e.g., Customer support automation, content generation, data analysis...", "required": true},
+    {"id": "team_size", "label": "Team Size", "type": "select", "options": ["1-10", "11-50", "51-200", "200+"], "required": false},
+    {"id": "current_tools", "label": "What tools do you currently use for this?", "type": "textarea", "required": false},
+    {"id": "timeline", "label": "When are you looking to implement an AI solution?", "type": "radio", "options": ["Immediately", "1-3 months", "3-6 months", "Just exploring"], "required": true}
+  ]
+}
+
+Now analyze the website content and create an appropriate form. Return ONLY valid JSON.`;
 }
 
 export async function POST(req: Request) {
@@ -234,4 +232,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
+
 

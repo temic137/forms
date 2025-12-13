@@ -19,6 +19,11 @@ type Field = {
     maxLength?: number;
   };
   reasoning?: string; // Why this field was included
+  quizConfig?: {
+    correctAnswer?: string | string[] | number | boolean;
+    points?: number;
+    explanation?: string;
+  };
 };
 
 type ContextAnalysis = {
@@ -26,62 +31,126 @@ type ContextAnalysis = {
   audience: string;
   domain: string;
   formType: string;
+  isQuiz: boolean; // New: Detect if this is a quiz/test
   keyEntities: string[];
   tone: string;
   complexity: "simple" | "moderate" | "complex";
   essentialFields: string[];
   optionalFields: string[];
-  insightfulFields: string[]; // Fields that provide unique value and insights
-  strategicQuestions: string[]; // Questions that reveal deeper understanding
-  decisionPoints: string[]; // Information needed for decision-making
-  analysisNeeds: string[]; // Data points that enable meaningful analysis
+  insightfulFields: string[];
+  strategicQuestions: string[];
+  decisionPoints: string[];
+  analysisNeeds: string[];
   reasoning: string;
   confidence: number;
 };
 
 // Stage 1: Context Analysis - Deep understanding of intent and meaning
 function buildContextAnalysisPrompt(): string {
-  return `You are an expert strategic analyst specializing in identifying the MOST VALUABLE and INSIGHTFUL information. Your task is to deeply analyze form requests to determine what information would provide the greatest strategic value, actionable insights, and meaningful understanding.
+  return `You are an elite strategic analyst and form architect with expertise in behavioral psychology, data science, and user experience. Your mission is to deeply analyze requests and architect forms that capture TRANSFORMATIVE INSIGHTS - information that drives decisions, reveals patterns, and creates genuine value.
 
 CRITICAL ANALYSIS PRINCIPLES:
-1. **Strategic Value First**: Focus on information that provides ACTIONABLE INSIGHTS, not just basic data collection
-2. **Depth Over Breadth**: Prioritize meaningful questions that reveal deeper understanding over surface-level requirements
-3. **Decision-Making Focus**: Identify what information would help make better decisions or understand patterns
-4. **Analysis Enabling**: Determine data points that enable meaningful analysis, segmentation, and insights
-5. **Context Detection**: Identify domain (healthcare, business, education, etc.) and form type
-6. **Audience Awareness**: Determine who will fill out this form and what would be most valuable to know about them
-7. **Tone Recognition**: Understand the communication style (professional, casual, medical, legal, etc.)
-8. **Insightful Questioning**: Think beyond "what is required" to "what would be most insightful to know"
+
+1. **STRATEGIC INTELLIGENCE**: Every field must serve a strategic purpose:
+   - What decisions will this data inform?
+   - What patterns could we discover?
+   - What actions will this enable?
+   - What problems will this solve?
+
+2. **BEHAVIORAL DEPTH**: Go beyond surface questions:
+   - What motivates the respondent?
+   - What pain points exist?
+   - What unstated needs are present?
+   - What friction points can we identify?
+
+3. **QUIZ/TEST EXCELLENCE**: For knowledge assessments:
+   - Questions must TEST ACTUAL KNOWLEDGE, not opinions
+   - Include varying difficulty levels (easy, medium, hard)
+   - Use Bloom's Taxonomy: Remember, Understand, Apply, Analyze, Evaluate, Create
+   - Avoid trivial questions - challenge the respondent
+   - Include distractor options that are plausible but incorrect
+   - Test critical thinking, not just memorization
+
+4. **SURVEY/QUESTIONNAIRE SOPHISTICATION**:
+   - Use validated question structures (Likert scales, semantic differentials)
+   - Avoid leading or biased questions
+   - Include questions that reveal correlations
+   - Design for statistical analysis capability
+   - Consider survey fatigue - prioritize high-value questions
+
+5. **FORM INTELLIGENCE**:
+   - Capture qualifying information
+   - Enable segmentation and personalization
+   - Gather predictive indicators
+   - Include open-ended questions for qualitative insights
+
+6. **CONTEXT MASTERY**:
+   - Detect domain nuances (healthcare vs wellness, B2B vs B2C)
+   - Understand regulatory requirements
+   - Recognize cultural considerations
+   - Identify industry-specific best practices
 
 KEY THINKING FRAMEWORK:
-- **Basic Fields**: What is minimally required (name, email, etc.) - INCLUDE but don't stop here
-- **Meaningful Fields**: What provides context, understanding, or actionable data - PRIORITIZE these
-- **Strategic Questions**: What would reveal motivations, preferences, pain points, or opportunities
-- **Decision Enablers**: What information would help make better decisions or improve outcomes
-- **Analysis Drivers**: What data points would enable segmentation, trend analysis, or pattern recognition
+
+**FOR ALL CONTENT TYPES:**
+- **Foundation Layer**: Essential identifiers (name, email) - necessary but not sufficient
+- **Intelligence Layer**: Data that enables smart decisions and personalization
+- **Insight Layer**: Questions that reveal hidden patterns, motivations, and opportunities
+- **Action Layer**: Information that directly enables next steps and conversions
+- **Analysis Layer**: Data points for segmentation, A/B testing, and trend analysis
+
+**FOR QUIZZES AND TESTS (CRITICAL):**
+- Questions MUST test ACTUAL SUBJECT KNOWLEDGE
+- Include questions at multiple cognitive levels:
+  * Recall: "What is...?" "Name the..." "List the..."
+  * Understanding: "Explain why..." "What happens when...?"
+  * Application: "Given this scenario, what would...?"
+  * Analysis: "Compare and contrast..." "What is the relationship between...?"
+  * Evaluation: "Which approach is most effective for...?"
+- NEVER ask meta-questions like "Why do you want to learn this?" or "What challenges you about this topic?"
+- Create questions that a domain expert would consider legitimate
+- Include trick questions with plausible wrong answers
+- Vary question difficulty within the quiz
+
+**FOR SURVEYS AND QUESTIONNAIRES:**
+- Use established measurement scales (NPS, CSAT, Likert 5-7 point)
+- Include reverse-coded questions to detect response bias
+- Ask about behaviors, not just attitudes (behaviors predict better)
+- Include temporal questions (frequency, recency, duration)
+- Design for cross-tabulation and correlation analysis
+
+**FOR DATA COLLECTION FORMS:**
+- Capture qualifying criteria early
+- Include hidden segmentation fields
+- Ask about decision-making authority and timeline
+- Gather competitive intelligence where appropriate
 
 Return ONLY valid JSON with this structure:
 {
-  "purpose": "Clear explanation of what this form accomplishes and what insights it should provide",
-  "audience": "Who will use this form (customers, employees, patients, students, etc.)",
-  "domain": "healthcare|education|business|government|finance|legal|retail|ecommerce|nonprofit|general",
-  "formType": "registration|contact|survey|application|booking|feedback|order|assessment|other",
-  "keyEntities": ["important", "concepts", "mentioned", "or", "implied"],
-  "tone": "professional|casual|formal|medical|legal|friendly|academic",
-  "complexity": "simple|moderate|complex",
+  "purpose": "Clear explanation of what this form accomplishes and the STRATEGIC VALUE it provides",
+  "audience": "Detailed description of target audience including their expertise level, needs, and context",
+  "domain": "healthcare|education|business|government|finance|legal|retail|ecommerce|nonprofit|technology|science|general",
+  "formType": "registration|contact|survey|application|booking|feedback|order|assessment|quiz|questionnaire|research|evaluation|other",
+  "isQuiz": true|false, // true for ANY knowledge assessment, trivia, test, or exam
+  "keyEntities": ["important", "concepts", "mentioned", "or", "implied", "including", "technical", "terms"],
+  "tone": "professional|casual|formal|medical|legal|friendly|academic|scientific|conversational",
+  "complexity": "simple|moderate|complex|expert",
+  "difficultyLevel": "beginner|intermediate|advanced|expert", // For quizzes - determines question difficulty
   "essentialFields": ["basic", "required", "fields"],
   "optionalFields": ["nice-to-have", "additional", "fields"],
-  "insightfulFields": ["fields", "that", "provide", "unique", "value", "and", "deep", "insights"],
-  "strategicQuestions": ["questions", "that", "reveal", "motivations", "preferences", "pain", "points"],
-  "decisionPoints": ["information", "needed", "for", "decision-making", "or", "action"],
-  "analysisNeeds": ["data", "points", "that", "enable", "analysis", "segmentation", "trends"],
-  "reasoning": "Detailed explanation of why these fields provide strategic value and meaningful insights",
+  "insightfulFields": ["fields", "that", "provide", "unique", "strategic", "value", "and", "enable", "deep", "analysis"],
+  "strategicQuestions": ["questions", "that", "reveal", "motivations", "pain", "points", "decision", "criteria", "opportunities"],
+  "decisionPoints": ["information", "that", "enables", "scoring", "segmentation", "routing", "or", "personalization"],
+  "analysisNeeds": ["data", "for", "trends", "correlations", "benchmarks", "predictions"],
+  "quizTopics": ["specific", "knowledge", "areas", "to", "test"], // For quizzes only
+  "surveyDimensions": ["constructs", "or", "factors", "to", "measure"], // For surveys only
+  "reasoning": "Detailed strategic explanation of how this design maximizes insight capture and actionable value",
   "confidence": 0.0-1.0
 }
 
 DOMAIN DETECTION GUIDE:
 - healthcare/medical: Mentions of patient, doctor, medical, health, symptoms, diagnosis
-- education: Mentions of student, teacher, school, course, assignment, grade
+- education: Mentions of student, teacher, school, course, assignment, grade, quiz, test
 - business: Mentions of company, client, project, service, invoice, contract
 - government: Mentions of citizen, permit, license, official, legal requirement
 - finance: Mentions of payment, account, transaction, financial, budget
@@ -90,6 +159,7 @@ DOMAIN DETECTION GUIDE:
 - nonprofit: Mentions of donation, volunteer, cause, membership, event
 
 FORM TYPE DETECTION:
+- quiz: Knowledge tests, trivia, exams, graded assessments
 - registration: Creating accounts, signing up
 - contact: Getting in touch, inquiries
 - survey: Gathering opinions, feedback, research
@@ -97,18 +167,24 @@ FORM TYPE DETECTION:
 - booking: Reservations, appointments, scheduling
 - feedback: Post-interaction reviews, ratings
 - order: Purchases, transactions
-- assessment: Evaluations, tests, screenings`;
+- assessment: Evaluations, screenings (can be quiz-like or survey-like)
+- questionnaire: Structured data collection with specific research objectives`;
 }
 
 // Stage 2: Form Generation - Create form based on rich context
 function buildFormGenerationPrompt(contextAnalysis: ContextAnalysis, brief: string): string {
-  return `You are an expert form designer and data strategist with deep understanding of UX best practices, accessibility, and INSIGHTFUL data collection. Your goal is to create a form that captures the MOST MEANINGFUL and ACTIONABLE information.
+  const isQuiz = contextAnalysis.isQuiz || contextAnalysis.formType === "quiz";
+  const isSurvey = contextAnalysis.formType === "survey" || contextAnalysis.formType === "questionnaire" || contextAnalysis.formType === "feedback";
+  
+  return `You are a world-class form architect, psychometrician, and data strategist. Your expertise spans UX design, behavioral psychology, survey methodology, and educational assessment. Your mission is to create forms that capture TRANSFORMATIVE information - data that reveals patterns, drives decisions, and creates genuine value.
 
 CONTEXT ANALYSIS:
 - Purpose: ${contextAnalysis.purpose}
 - Audience: ${contextAnalysis.audience}
 - Domain: ${contextAnalysis.domain}
 - Form Type: ${contextAnalysis.formType}
+- Is Quiz/Test: ${isQuiz ? "YES - GENERATE CHALLENGING KNOWLEDGE ASSESSMENT" : "NO"}
+- Is Survey/Questionnaire: ${isSurvey ? "YES - DESIGN FOR STATISTICAL ANALYSIS" : "NO"}
 - Tone: ${contextAnalysis.tone}
 - Complexity: ${contextAnalysis.complexity}
 - Essential Fields: ${contextAnalysis.essentialFields.join(", ")}
@@ -123,21 +199,119 @@ ORIGINAL REQUEST:
 "${brief}"
 
 YOUR CRITICAL TASK:
-Generate a form that captures the MOST MEANINGFUL and INSIGHTFUL information. This is NOT just about collecting required fields - it's about gathering data that provides:
-1. **ACTIONABLE INSIGHTS** - Information that enables better decisions and actions
-2. **STRATEGIC VALUE** - Data points that reveal motivations, preferences, pain points, opportunities
-3. **ANALYSIS CAPABILITY** - Fields that enable segmentation, trend analysis, and pattern recognition
-4. **DEEPER UNDERSTANDING** - Questions that go beyond surface-level to reveal what truly matters
+Create a form that goes FAR BEYOND basic data collection. Every question must serve a strategic purpose:
+1. **TRANSFORMATIVE INSIGHTS** - Information that changes understanding and enables breakthroughs
+2. **PREDICTIVE VALUE** - Data points that indicate future behaviors, needs, or outcomes
+3. **SEGMENTATION POWER** - Enable meaningful grouping for personalized experiences
+4. **CORRELATION DISCOVERY** - Questions designed to reveal hidden relationships
+5. **ACTIONABLE INTELLIGENCE** - Every response must inform a potential action
 
-FORM GENERATION PRIORITIES:
-1. **Include Essential Fields** - Basic requirements (name, email, etc.) - but don't stop here
-2. **PRIORITIZE Insightful Fields** - Focus heavily on fields that provide unique value and deep insights
-3. **Add Strategic Questions** - Include questions that reveal motivations, goals, challenges, preferences
-4. **Enable Decision-Making** - Include data points needed for better decisions or actions
-5. **Support Analysis** - Add fields that enable segmentation, personalization, and trend analysis
-6. **Reflect domain and tone** - Use appropriate terminology and structure
-7. **Order strategically** - Start with essential, progress to insightful, end with analysis-enabling
-8. **Provide rich context** - Add helpText that explains WHY each field matters and what insights it provides
+${isQuiz ? `
+═══════════════════════════════════════════════════════════════
+                    QUIZ GENERATION - EXPERT MODE
+═══════════════════════════════════════════════════════════════
+
+You are creating a PROFESSIONAL KNOWLEDGE ASSESSMENT. This must meet the standards of:
+- Educational testing (SAT, GRE quality)
+- Professional certification exams
+- Corporate training assessments
+- Academic examinations
+
+QUIZ DESIGN REQUIREMENTS:
+
+1. **QUESTION QUALITY STANDARDS**:
+   - Each question must test SPECIFIC, VERIFIABLE KNOWLEDGE
+   - Questions must be unambiguous with one clearly correct answer
+   - Avoid "all of the above" and "none of the above" unless strategically valuable
+   - Include questions at multiple cognitive levels (Bloom's Taxonomy):
+     * 20% Knowledge/Recall: Direct factual questions
+     * 30% Comprehension: Understanding concepts, explaining relationships
+     * 30% Application: Using knowledge in new situations
+     * 20% Analysis/Evaluation: Critical thinking, comparing, judging
+
+2. **DISTRACTOR DESIGN**:
+   - Wrong answers must be PLAUSIBLE, not obviously wrong
+   - Include common misconceptions as distractors
+   - Avoid patterns in correct answer positions
+   - Make all options grammatically consistent with the stem
+
+3. **QUESTION VARIETY**:
+   - Mix question types: multiple choice (radio), multi-select (checkbox), short answer (text)
+   - Include scenario-based questions that test application
+   - Add questions that require synthesis of multiple concepts
+
+4. **DIFFICULTY DISTRIBUTION**:
+   - 25% Easy (most test-takers should answer correctly)
+   - 50% Medium (discriminates between prepared and unprepared)
+   - 25% Hard (challenges even well-prepared respondents)
+
+5. **STRICT PROHIBITIONS - DO NOT GENERATE THESE**:
+   ❌ "What interests you about [topic]?"
+   ❌ "What challenges do you face with [topic]?"
+   ❌ "How would you rate your knowledge of [topic]?"
+   ❌ "Why are you taking this quiz?"
+   ❌ "What do you hope to learn about [topic]?"
+   ❌ "Describe your experience with [topic]"
+   ❌ Any opinion-based or self-reflection questions
+   ❌ Any meta-questions about the quiz itself
+
+6. **REQUIRED QUIZ CONFIG** for each question:
+   {
+     "quizConfig": {
+       "correctAnswer": "Exact matching option text OR array for checkbox",
+       "points": 1-10 based on difficulty,
+       "explanation": "Detailed explanation of why this is correct and why other options are wrong"
+     }
+   }
+
+` : ''}
+
+${isSurvey ? `
+═══════════════════════════════════════════════════════════════
+              SURVEY/QUESTIONNAIRE - RESEARCH GRADE
+═══════════════════════════════════════════════════════════════
+
+You are designing a SCIENTIFICALLY RIGOROUS survey instrument. Apply these principles:
+
+1. **MEASUREMENT SCIENCE**:
+   - Use validated scales where applicable (Likert, semantic differential, NPS)
+   - Ensure each question measures ONE construct clearly
+   - Include both positively and negatively worded items to detect response bias
+   - Design for reliable statistical analysis
+
+2. **QUESTION QUALITY**:
+   - Avoid double-barreled questions (asking two things at once)
+   - Use neutral, non-leading language
+   - Provide exhaustive and mutually exclusive response options
+   - Include "Not Applicable" or "Prefer not to say" where appropriate
+
+3. **INSIGHT-GENERATING QUESTIONS**:
+   - Ask about BEHAVIORS, not just attitudes (behaviors predict better)
+   - Include temporal dimensions: frequency, recency, duration
+   - Use comparative questions: "Compared to X, how do you rate Y?"
+   - Ask about specific instances: "Think about your last experience..."
+
+4. **ADVANCED SURVEY TECHNIQUES**:
+   - Include anchor questions for response validation
+   - Use skip logic to reduce respondent burden
+   - Balance positive and negative scale endpoints
+   - Consider question order effects
+
+5. **HIGH-VALUE QUESTION TYPES**:
+   - Net Promoter Score (NPS): "How likely are you to recommend...?" (0-10)
+   - Satisfaction: "How satisfied are you with...?" (5-point or 7-point)
+   - Importance-Performance: Rate importance AND satisfaction
+   - Open-ended strategically: "What ONE thing would you change?"
+   - Ranking: "Rank these factors by importance"
+   - MaxDiff: "Most/Least important from this set"
+
+6. **ANALYTICAL VALUE**:
+   - Design questions that enable cross-tabulation
+   - Include demographic segmentation variables
+   - Add questions that test hypotheses
+   - Create opportunity for correlation analysis
+
+` : ''}
 
 FIELD TYPE SELECTION INTELLIGENCE:
 - "email" → Email addresses (automatic validation)
@@ -154,6 +328,13 @@ FIELD TYPE SELECTION INTELLIGENCE:
 JSON STRUCTURE:
 {
   "title": "Clear, descriptive form title that reflects purpose and domain",
+  "quizMode": { // ONLY if this is a quiz
+    "enabled": true,
+    "showScoreImmediately": true,
+    "showCorrectAnswers": true,
+    "showExplanations": true,
+    "passingScore": 70
+  },
   "fields": [
     {
       "id": "semantic_snake_case_id",
@@ -170,11 +351,31 @@ JSON STRUCTURE:
         "minLength": number, // For text/textarea
         "maxLength": number
       },
-      "reasoning": "Explanation of the STRATEGIC VALUE and INSIGHTS this field provides - why it's meaningful, what it reveals, how it enables better decisions or analysis"
+      "reasoning": "Explanation of the STRATEGIC VALUE and INSIGHTS this field provides",
+      ${isQuiz ? `
+      "quizConfig": {
+        "correctAnswer": "Exact value of option matching the correct answer", // For checkbox, use array of strings
+        "points": 1, // Default 1
+        "explanation": "Why this is the correct answer"
+      }
+      ` : ""}
     }
   ]
 }
 
+${isQuiz ? `
+QUIZ FIELD EXAMPLES:
+{
+  "label": "What is the capital of France?",
+  "type": "radio",
+  "options": ["London", "Berlin", "Paris", "Madrid"],
+  "quizConfig": {
+    "correctAnswer": "Paris",
+    "points": 1,
+    "explanation": "Paris is the capital and most populous city of France."
+  }
+}
+` : `
 FIELD TYPE SELECTION INTELLIGENCE:
 - "email" → Email addresses (includes validation)
 - "tel" → Phone numbers
@@ -186,6 +387,7 @@ FIELD TYPE SELECTION INTELLIGENCE:
 - "select" → Single choice from many options (4+ options, or long option names)
 - "radio" → Single choice from few options (2-4 options, short names)
 - "checkbox" → Multiple selections OR single yes/no agreements
+`}
 
 DOMAIN-SPECIFIC FIELD PATTERNS:
 
@@ -380,6 +582,7 @@ export async function POST(req: Request) {
         audience: contextAnalysis.audience || "General users",
         domain: contextAnalysis.domain || "general",
         formType: contextAnalysis.formType || "general",
+        isQuiz: contextAnalysis.isQuiz || contextAnalysis.formType === "quiz" || contextAnalysis.formType === "assessment",
         keyEntities: Array.isArray(contextAnalysis.keyEntities) ? contextAnalysis.keyEntities : [],
         tone: contextAnalysis.tone || "professional",
         complexity: contextAnalysis.complexity || "moderate",
@@ -400,6 +603,7 @@ export async function POST(req: Request) {
         audience: "General users",
         domain: "general",
         formType: "general",
+        isQuiz: false,
         keyEntities: [],
         tone: "professional",
         complexity: "moderate",
@@ -453,7 +657,7 @@ PRIORITIZE fields that provide ACTIONABLE INSIGHTS and STRATEGIC VALUE. Every fi
 
     const formContent = formGenerationResponse.content || "{}";
     console.log(`Form generated using ${formGenerationResponse.provider} AI provider`);
-    const formData = JSON.parse(formContent) as { title: string; fields: Field[] };
+    const formData = JSON.parse(formContent) as { title: string; fields: Field[]; quizMode?: any };
     
     // Validate response structure
     if (!formData?.title || !Array.isArray(formData.fields) || formData.fields.length === 0) {
@@ -476,6 +680,12 @@ PRIORITIZE fields that provide ACTIONABLE INSIGHTS and STRATEGIC VALUE. Every fi
           : undefined,
         validation: field.validation,
         reasoning: field.reasoning,
+        // Normalize quizConfig - ensure points defaults to 1
+        quizConfig: field.quizConfig ? {
+          correctAnswer: field.quizConfig.correctAnswer || '',
+          points: field.quizConfig.points || 1, // Default to 1 point
+          explanation: field.quizConfig.explanation || ''
+        } : undefined,
       };
 
       // Add contextual helpText if missing for complex fields
@@ -486,10 +696,24 @@ PRIORITIZE fields that provide ACTIONABLE INSIGHTS and STRATEGIC VALUE. Every fi
       return processedField;
     });
 
+    // Detect if this is a quiz and auto-enable quiz mode
+    const hasQuizConfig = processedFields.some(f => f.quizConfig);
+    const isQuiz = contextAnalysis.isQuiz || hasQuizConfig || formData.quizMode?.enabled;
+    
+    // Build quiz mode configuration - auto-enable if quiz detected
+    const quizMode = isQuiz ? (formData.quizMode || {
+      enabled: true,
+      showScoreImmediately: true,
+      showCorrectAnswers: true,
+      showExplanations: true,
+      passingScore: 70
+    }) : undefined;
+
     // Return form with rich context metadata
     return NextResponse.json({
       title: formData.title,
       fields: processedFields,
+      ...(quizMode ? { quizMode } : {}), // Only include quizMode if it's a quiz
       context: {
         analysis: contextAnalysis,
         summary: `${contextAnalysis.purpose}. For ${contextAnalysis.audience} in the ${contextAnalysis.domain} domain.`,

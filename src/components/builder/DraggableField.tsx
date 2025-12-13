@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { Field, FormStyling } from "@/types/form";
+import { Field, FormStyling, QuizConfig } from "@/types/form";
 
 import FieldRenderer from "./FieldRenderer";
 
@@ -17,6 +17,7 @@ const OPTION_FIELD_TYPES = new Set([
   "radio",
   "select",
   "ranking",
+  "picture-choice",
 ]);
 
 const DISPLAY_ONLY_FIELD_TYPES = new Set([
@@ -39,6 +40,7 @@ interface DraggableFieldProps {
   index: number;
   isSelected: boolean;
   styling?: FormStyling;
+  isQuizMode?: boolean;
   onSelect: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -57,6 +59,7 @@ export default function DraggableField({
   index,
   isSelected,
   styling,
+  isQuizMode,
   onSelect,
   onDelete,
   onDuplicate,
@@ -148,7 +151,7 @@ export default function DraggableField({
       </div>
 
       <div className="pt-4">
-        <FieldEditor field={field} onUpdate={onUpdate} styling={styling} />
+        <FieldEditor field={field} onUpdate={onUpdate} styling={styling} isQuizMode={isQuizMode} />
       </div>
     </div>
   );
@@ -158,10 +161,12 @@ function FieldEditor({
   field,
   onUpdate,
   styling,
+  isQuizMode,
 }: {
   field: Field;
   onUpdate: (updates: Partial<Field>) => void;
   styling?: FormStyling;
+  isQuizMode?: boolean;
 }) {
   const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
   const hasOptions = useMemo(() => OPTION_FIELD_TYPES.has(field.type), [field.type]);
@@ -318,6 +323,61 @@ function FieldEditor({
     }
   };
 
+  const handleFieldImageUpload = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("formId", "builder-assets");
+      formData.append("submissionId", "field-image");
+      formData.append("fieldId", field.id);
+      formData.append("acceptedTypes", "images");
+
+      const response = await fetch("/api/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      const data = await response.json();
+      onUpdate({ imageUrl: data.url, helpText: data.url }); // Update both for compatibility
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image");
+    }
+  };
+
+  const handleImageUpload = async (index: number, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("formId", "builder-assets");
+      formData.append("submissionId", "options");
+      formData.append("fieldId", field.id);
+      formData.append("acceptedTypes", "images");
+
+      const response = await fetch("/api/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      const data = await response.json();
+      const currentImages = field.optionImages ? [...field.optionImages] : [];
+      
+      // Ensure array is long enough
+      const currentOptions = field.options && field.options.length > 0 ? field.options : resolvedOptions;
+      while (currentImages.length < currentOptions.length) currentImages.push("");
+      
+      currentImages[index] = data.url;
+      onUpdate({ optionImages: currentImages });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image");
+    }
+  };
+
   const handleOptionChange = (index: number, rawValue: string) => {
     const value = normalizeEditableValue(rawValue);
     const current =
@@ -332,7 +392,22 @@ function FieldEditor({
       field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
     const next = current.filter((_, idx) => idx !== index);
     if (next.length === 0) return;
-    persistOptions(next, Math.max(index - 1, 0));
+    
+    const updates: Partial<Field> = { options: next };
+    if (field.optionImages) {
+      updates.optionImages = field.optionImages.filter((_, idx) => idx !== index);
+    }
+    
+    onUpdate(updates);
+    
+    if (isBrowser) {
+      window.setTimeout(() => {
+        const target = optionRefs.current.get(
+          Math.min(Math.max(index - 1, 0), Math.max(next.length - 1, 0))
+        );
+        focusEditable(target || null);
+      }, 0);
+    }
   };
 
   const handleOptionInsertAfter = (index?: number) => {
@@ -340,7 +415,34 @@ function FieldEditor({
       field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
     const insertAt = typeof index === "number" ? index + 1 : current.length;
     current.splice(insertAt, 0, `Option ${current.length + 1}`);
-    persistOptions(current, insertAt);
+    
+    const updates: Partial<Field> = { options: current };
+    
+    if (field.type === "picture-choice") {
+       const currentImages = field.optionImages ? [...field.optionImages] : [];
+       // Pad images array if needed
+       while (currentImages.length < current.length - 1) currentImages.push("");
+       currentImages.splice(insertAt, 0, "");
+       updates.optionImages = currentImages;
+    }
+    
+    onUpdate(updates);
+    
+    if (isBrowser) {
+      window.setTimeout(() => {
+        const target = optionRefs.current.get(insertAt);
+        focusEditable(target || null);
+      }, 0);
+    }
+  };
+
+  const updateQuizConfig = (updates: Partial<QuizConfig>) => {
+    onUpdate({
+      quizConfig: {
+        ...field.quizConfig,
+        ...updates,
+      },
+    });
   };
 
   return (
@@ -445,6 +547,31 @@ function FieldEditor({
                     }
                   }}
                 />
+                
+                {field.type === "picture-choice" && field.optionImages?.[idx] && (
+                    <div className="h-8 w-8 relative rounded overflow-hidden border border-gray-200 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={field.optionImages[idx]} alt="Option" className="h-full w-full object-cover" />
+                    </div>
+                )}
+
+                {field.type === "picture-choice" && (
+                    <label className="cursor-pointer rounded-md border border-gray-200 p-1.5 text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Upload image">
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(idx, file);
+                            }}
+                        />
+                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </label>
+                )}
+
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
                     onClick={(e) => {
@@ -490,9 +617,223 @@ function FieldEditor({
         </div>
       )}
 
+      {field.type === "image" && (
+        <div className="space-y-2 mb-4">
+            <label className="block text-sm font-medium text-gray-700">Image</label>
+            <div className="flex items-center gap-4">
+                {field.imageUrl || field.helpText ? (
+                    <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                            src={field.imageUrl || field.helpText} 
+                            alt="Field image" 
+                            className="w-full h-auto object-contain"
+                        />
+                        <button
+                            onClick={() => onUpdate({ imageUrl: undefined, helpText: undefined })}
+                            className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition-colors"
+                            title="Remove image"
+                            type="button"
+                        >
+                            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg className="w-8 h-8 mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                            <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF</p>
+                        </div>
+                        <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFieldImageUpload(file);
+                            }}
+                        />
+                    </label>
+                )}
+            </div>
+        </div>
+      )}
+
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
         <FieldRenderer field={field} isPreview={false} styling={styling} />
       </div>
+
+      {/* Quiz Configuration Section */}
+      {isQuizMode && !isDisplayOnly && (
+        <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded bg-green-100 text-green-600">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Quiz Answer</h4>
+            </div>
+            
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-xs font-medium text-gray-500">Grade this field</span>
+              <div className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={field.quizConfig?.correctAnswer !== undefined && field.quizConfig?.correctAnswer !== null}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      updateQuizConfig({ correctAnswer: "", points: 1 });
+                    } else {
+                      // We need to pass undefined to remove the key, but Partial<QuizConfig> might not like explicit undefined if not typed optionally?
+                      // Actually in JS/TS passing undefined is fine for optional fields.
+                      // However, we need to make sure the backend/state handles it.
+                      // Let's set it to null or remove the config object?
+                      // Ideally we just clear the values.
+                      updateQuizConfig({ correctAnswer: undefined, points: 1, explanation: "" });
+                    }
+                  }}
+                />
+                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+              </div>
+            </label>
+          </div>
+          
+          {(field.quizConfig?.correctAnswer !== undefined && field.quizConfig?.correctAnswer !== null) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Points */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Points</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={field.quizConfig?.points || 1}
+                  onChange={(e) => updateQuizConfig({ points: parseInt(e.target.value) || 1 })}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Correct Answer */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Correct Answer</label>
+                
+                {/* Text Fields */}
+                {["short-answer", "long-answer", "text", "textarea", "email", "url", "tel"].includes(field.type) && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <select
+                        value={field.quizConfig?.matchType || "exact"}
+                        onChange={(e) => updateQuizConfig({ matchType: e.target.value as "exact" | "contains" })}
+                        className="w-32 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        <option value="exact">Exact Match</option>
+                        <option value="contains">Contains</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={(field.quizConfig?.correctAnswer as string) || ""}
+                        onChange={(e) => updateQuizConfig({ correctAnswer: e.target.value })}
+                        className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder={field.quizConfig?.matchType === "contains" ? "Enter text that must be included" : "Enter exact answer"}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={field.quizConfig?.caseSensitive || false}
+                          onChange={(e) => updateQuizConfig({ caseSensitive: e.target.checked })}
+                          className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        Case sensitive
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Number Fields */}
+                {["number", "currency"].includes(field.type) && (
+                  <input
+                    type="number"
+                    value={(field.quizConfig?.correctAnswer as number) || ""}
+                    onChange={(e) => updateQuizConfig({ correctAnswer: parseFloat(e.target.value) })}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter correct number"
+                  />
+                )}
+
+                {/* Single Choice */}
+                {["multiple-choice", "choices", "radio", "dropdown", "select"].includes(field.type) && (
+                  <select
+                    value={(field.quizConfig?.correctAnswer as string) || ""}
+                    onChange={(e) => updateQuizConfig({ correctAnswer: e.target.value })}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select correct option...</option>
+                    {(field.options || []).map((option, index) => (
+                      <option key={index} value={option}>{option}</option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Multiple Choice */}
+                {["checkboxes", "multiselect"].includes(field.type) && (
+                  <div className="space-y-1.5 border border-gray-200 rounded-md p-2 max-h-32 overflow-y-auto">
+                    {(field.options || []).map((option, index) => {
+                      const correctAnswers = (field.quizConfig?.correctAnswer as string[]) || [];
+                      return (
+                        <label key={index} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={correctAnswers.includes(option)}
+                            onChange={(e) => {
+                              const current = correctAnswers.filter(a => a !== option);
+                              const updated = e.target.checked ? [...current, option] : current;
+                              updateQuizConfig({ correctAnswer: updated });
+                            }}
+                            className="w-3.5 h-3.5 text-blue-600 rounded"
+                          />
+                          {option}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {/* Date */}
+                {["date", "date-picker"].includes(field.type) && (
+                  <input
+                    type="date"
+                    value={(field.quizConfig?.correctAnswer as string) || ""}
+                    onChange={(e) => updateQuizConfig({ correctAnswer: e.target.value })}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                )}
+              </div>
+
+              {/* Explanation */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Explanation</label>
+                <textarea
+                  value={field.quizConfig?.explanation || ""}
+                  onChange={(e) => updateQuizConfig({ explanation: e.target.value })}
+                  rows={2}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  placeholder="Explain why this is correct (shown after submission)"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

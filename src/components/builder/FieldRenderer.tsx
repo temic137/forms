@@ -192,16 +192,32 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
 
       case "picture-choice":
         return (
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="relative border-2 border-gray-300 rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-colors">
-                <div className="aspect-square bg-gray-100 rounded flex items-center justify-center">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, i) => (
+              <label key={i} className="relative cursor-pointer">
+                <input 
+                  type="radio" 
+                  name={field.id} 
+                  value={option}
+                  disabled={!isPreview}
+                  className="peer sr-only"
+                />
+                <div className="rounded-lg border-2 border-gray-200 p-3 transition-all hover:border-blue-300 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                    <div className="aspect-square bg-white rounded-md flex items-center justify-center overflow-hidden mb-3 relative border border-gray-100">
+                      {field.optionImages?.[i] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={field.optionImages[i]} alt={option} className="w-full h-full object-cover" />
+                      ) : (
+                        <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-700">{option}</span>
+                    </div>
                 </div>
-                <p className="text-sm text-center mt-2">Option {i}</p>
-              </div>
+              </label>
             ))}
           </div>
         );
@@ -213,24 +229,27 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
               <thead>
                 <tr>
                   <th className="border border-gray-300 px-4 py-2 bg-gray-50"></th>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-50">Option 1</th>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-50">Option 2</th>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-50">Option 3</th>
+                  {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, idx) => (
+                    <th key={idx} className="border border-gray-300 px-4 py-2 bg-gray-50 font-medium">
+                      {option}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {["Row 1", "Row 2", "Row 3"].map((row, idx) => (
-                  <tr key={idx}>
+                {(field.matrixRows || ["Row 1", "Row 2", "Row 3"]).map((row, rowIdx) => (
+                  <tr key={rowIdx}>
                     <td className="border border-gray-300 px-4 py-2 font-medium">{row}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      <input type="radio" name={`matrix-${idx}`} disabled={!isPreview} />
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      <input type="radio" name={`matrix-${idx}`} disabled={!isPreview} />
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      <input type="radio" name={`matrix-${idx}`} disabled={!isPreview} />
-                    </td>
+                    {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, colIdx) => (
+                      <td key={colIdx} className="border border-gray-300 px-4 py-2 text-center">
+                        <input
+                          type={field.allowMultipleSelection ? "checkbox" : "radio"}
+                          name={`matrix-${field.id}-${rowIdx}`}
+                          disabled={!isPreview}
+                          className="w-4 h-4"
+                        />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -287,8 +306,20 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         return (
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
-              <button key={star} className="text-3xl text-gray-300 hover:text-yellow-400 transition-colors" disabled={!isPreview}>
-                ⭐
+              <button 
+                key={star} 
+                className="text-gray-300 hover:text-yellow-400 transition-colors" 
+                disabled={!isPreview}
+                type="button"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24" 
+                  fill="currentColor" 
+                  className="w-8 h-8"
+                >
+                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 4.646 1.251 5.318c.277 1.162-1.074 2.056-1.987 1.488L12 18.771l-4.695 2.636c-.913.568-2.264-.326-1.987-1.488l1.251-5.318-4.117-4.646c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                </svg>
               </button>
             ))}
           </div>
@@ -414,6 +445,18 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         return <hr className="border-t-2 border-gray-300" />;
 
       case "image":
+        if (field.imageUrl || field.helpText) {
+          return (
+            <div className="rounded-lg overflow-hidden border border-gray-200">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={field.imageUrl || field.helpText}
+                alt={field.label || "Image"}
+                className="w-full h-auto max-h-96 object-contain"
+              />
+            </div>
+          );
+        }
         return (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useRef, useEffect, useMemo, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import {
   Share2,
@@ -13,6 +14,7 @@ import {
   X,
   Check,
   Link as LinkIcon,
+  ExternalLink,
 } from "lucide-react";
 
 interface ShareOption {
@@ -30,7 +32,27 @@ interface ShareGroup {
   options: ShareOption[];
 }
 
-export default function ShareButton({ url, label = "Share" }: { url?: string; label?: string }) {
+interface ShareButtonProps {
+  url?: string;
+  label?: string;
+  /** Visual style variant */
+  variant?: "default" | "subtle" | "icon-only";
+  /** Size of the button */
+  size?: "sm" | "md";
+  /** Form title for sharing context */
+  formTitle?: string;
+  /** Additional classes */
+  className?: string;
+}
+
+export default function ShareButton({ 
+  url, 
+  label = "Share", 
+  variant = "default",
+  size = "md",
+  formTitle,
+  className,
+}: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -38,9 +60,14 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [embedCopied, setEmbedCopied] = useState(false);
   const [menuPlacement, setMenuPlacement] = useState<"top" | "bottom">("bottom");
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useLayoutEffect(() => {
     if (!showMenu) return;
@@ -110,8 +137,11 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
 
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const menuNode = menuRef.current;
+      const dropdownNode = dropdownRef.current;
       if (!menuNode) return;
-      if (!menuNode.contains(event.target as Node)) {
+      
+      const target = event.target as Node;
+      if (!menuNode.contains(target) && (!dropdownNode || !dropdownNode.contains(target))) {
         setShowMenu(false);
       }
     };
@@ -160,11 +190,12 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
   }, [url]);
 
   const effectiveTitle = useMemo(() => {
+    if (formTitle) return formTitle;
     if (typeof document !== "undefined" && document.title) {
       return document.title;
     }
     return "Form";
-  }, []);
+  }, [formTitle]);
 
   const nativeShareAvailable = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
@@ -346,80 +377,152 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
     document.body.removeChild(link);
   };
 
+  // Button style variants
+  const buttonStyles = useMemo(() => {
+    const baseStyles = "transition-colors flex items-center justify-center gap-2 font-medium";
+    const sizeStyles = size === "sm" 
+      ? "px-2.5 py-1.5 text-xs rounded-md" 
+      : "px-4 py-2.5 text-sm rounded-lg";
+    
+    switch (variant) {
+      case "subtle":
+        return `${baseStyles} ${sizeStyles} border`;
+      case "icon-only":
+        return `${baseStyles} p-2.5 rounded-lg border`;
+      default:
+        return `${baseStyles} ${sizeStyles} bg-black dark:bg-white text-white dark:text-black`;
+    }
+  }, [variant, size]);
+
   return (
     <>
-      <div className="relative" ref={menuRef}>
+      <div className={`relative ${className || ""}`} ref={menuRef}>
         <button
           type="button"
           onClick={onQuickShare}
           ref={triggerRef}
-          className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors flex items-center gap-2"
+          className={buttonStyles}
+          style={
+            variant === "subtle" || variant === "icon-only" 
+              ? { borderColor: 'var(--card-border)', color: 'var(--foreground)' } 
+              : undefined
+          }
           aria-label="Share"
           aria-expanded={showMenu}
           aria-haspopup="menu"
           aria-controls="share-menu"
         >
-          <Share2 className="w-4 h-4" />
-          {copied ? "Link copied!" : label}
+          {copied ? (
+            <>
+              <Check className="w-4 h-4 text-green-600" />
+              {variant !== "icon-only" && <span className="text-green-600">Copied!</span>}
+            </>
+          ) : (
+            <>
+              <Share2 className="w-4 h-4" />
+              {variant !== "icon-only" && label}
+            </>
+          )}
         </button>
 
-        {showMenu && (
+        {showMenu && mounted && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-50 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-neutral-200 bg-white py-2 shadow-lg transition-opacity duration-100 scrollbar-hidden"
+            className="fixed z-50 w-72 max-w-[calc(100vw-2rem)] rounded-lg border shadow-lg transition-opacity duration-100 scrollbar-hidden"
+            style={{
+              background: 'var(--background)',
+              borderColor: 'var(--card-border)',
+            }}
             data-placement={menuPlacement}
             id="share-menu"
             role="menu"
           >
-            <div className="px-4 pb-3">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
-                Share link
-              </p>
-              <div className="mt-2 space-y-3 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3">
+            {/* Quick Copy Section */}
+            <div className="p-4 pb-3">
+              <div 
+                className="space-y-3 rounded-lg border px-3 py-3"
+                style={{ 
+                  background: 'var(--background-subtle)',
+                  borderColor: 'var(--card-border)',
+                }}
+              >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-neutral-500">
+                  <span 
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
+                    style={{ 
+                      background: 'var(--background)',
+                      color: 'var(--foreground-muted)',
+                    }}
+                  >
                     <LinkIcon className="w-4 h-4" />
                   </span>
                   <div className="flex flex-1 flex-col">
-                    <span className="text-xs font-medium text-neutral-600">Ready to share</span>
-                    <span className="text-[11px] text-neutral-500">
-                      Copy the link to send it anywhere.
+                    <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
+                      Share link
+                    </span>
+                    <span 
+                      className="text-[11px] truncate max-w-40" 
+                      style={{ color: 'var(--foreground-muted)' }}
+                      title={effectiveUrl}
+                    >
+                      {effectiveUrl.replace(/^https?:\/\//, '')}
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleCopyLink();
-                  }}
-                  disabled={!effectiveUrl}
-                  aria-label="Copy share link"
-                  className="inline-flex w-full items-center justify-center gap-1 rounded-md bg-black px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-                >
-                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copied ? "Copied" : "Copy"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleCopyLink();
+                    }}
+                    disabled={!effectiveUrl}
+                    aria-label="Copy share link"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      background: 'var(--accent)',
+                      color: 'white',
+                    }}
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? "Copied!" : "Copy link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (effectiveUrl) window.open(effectiveUrl, '_blank');
+                    }}
+                    disabled={!effectiveUrl}
+                    aria-label="Open form in new tab"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      borderColor: 'var(--card-border)',
+                      color: 'var(--foreground)',
+                    }}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Open
+                  </button>
+                </div>
               </div>
-              <p className="mt-2 text-[11px] text-neutral-400">
-                {menuPlacement === "top"
-                  ? "Menu anchored above the share button"
-                  : "Menu anchored below the share button"}
-              </p>
             </div>
 
-            <div className="space-y-3 border-t border-neutral-100 pt-3">
+            {/* Share Options */}
+            <div 
+              className="space-y-3 border-t pt-3 pb-2"
+              style={{ borderColor: 'var(--card-border)' }}
+            >
               {shareGroups.map((group) => {
                 const isGrid = group.layout === "grid";
                 return (
                   <div key={group.id} className="px-2">
                     <div className="px-2">
-                      <p className="text-xs font-semibold text-neutral-600">{group.title}</p>
+                      <p className="text-xs font-semibold" style={{ color: 'var(--foreground)' }}>{group.title}</p>
                       {group.subtitle && (
-                        <p className="text-[11px] text-neutral-500">{group.subtitle}</p>
+                        <p className="text-[11px]" style={{ color: 'var(--foreground-muted)' }}>{group.subtitle}</p>
                       )}
                     </div>
                     <div
-                      className={isGrid ? "mt-2 grid grid-cols-2 gap-2" : "mt-2 flex flex-col gap-2"}
+                      className={isGrid ? "mt-2 grid grid-cols-2 gap-1.5" : "mt-2 flex flex-col gap-1"}
                     >
                       {group.options.map((option) => (
                         <button
@@ -429,24 +532,25 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
                           }}
                           className={
                             isGrid
-                              ? "flex w-full flex-col items-center gap-2 rounded-md px-3 py-3 text-center text-sm text-neutral-700 transition-colors hover:bg-neutral-50"
-                              : "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-neutral-50"
+                              ? "flex w-full flex-col items-center gap-2 rounded-lg px-3 py-3 text-center text-sm transition-colors"
+                              : "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
                           }
+                          style={{ color: 'var(--foreground)' }}
                           role="menuitem"
                         >
                           <span
-                            className={
-                              isGrid
-                                ? "flex h-8 w-8 items-center justify-center rounded-md bg-neutral-100 text-neutral-600"
-                                : "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-600"
-                            }
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                            style={{ 
+                              background: 'var(--background-subtle)',
+                              color: 'var(--foreground-muted)',
+                            }}
                           >
                             {option.icon}
                           </span>
                           <span
                             className={
                               isGrid
-                                ? "text-center text-sm font-medium leading-tight text-neutral-700"
+                                ? "text-center text-sm font-medium leading-tight"
                                 : "text-left text-sm leading-tight"
                             }
                           >
@@ -459,65 +563,91 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
                 );
               })}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 
       {/* QR Code Modal */}
-      {showQR && (
+      {showQR && mounted && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+          <div 
+            className="rounded-xl p-6 max-w-sm w-full shadow-xl"
+            style={{ background: 'var(--background)' }}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">QR Code</h3>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>QR Code</h3>
               <button
                 onClick={() => setShowQR(false)}
-                className="text-neutral-500 hover:text-neutral-700"
+                className="p-1 rounded-lg transition-colors"
+                style={{ color: 'var(--foreground-muted)' }}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex flex-col items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrCodeUrl} alt="QR Code" className="w-64 h-64" />
-              <p className="text-sm text-neutral-600 text-center">
+              <div className="bg-white p-3 rounded-xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={qrCodeUrl} alt="QR Code" className="w-56 h-56" />
+              </div>
+              <p className="text-sm text-center" style={{ color: 'var(--foreground-muted)' }}>
                 Scan this QR code to access the form
               </p>
               <button
                 onClick={downloadQRCode}
-                className="w-full px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                style={{
+                  background: 'var(--accent)',
+                  color: 'white',
+                }}
               >
                 <Download className="w-4 h-4" />
                 Download QR Code
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Embed Code Modal */}
-      {showEmbed && (
+      {showEmbed && mounted && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+          <div 
+            className="rounded-xl p-6 max-w-2xl w-full shadow-xl"
+            style={{ background: 'var(--background)' }}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Embed Code</h3>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>Embed Code</h3>
               <button
                 onClick={() => setShowEmbed(false)}
-                className="text-neutral-500 hover:text-neutral-700"
+                className="p-1 rounded-lg transition-colors"
+                style={{ color: 'var(--foreground-muted)' }}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
                 Copy this code and paste it into your website&apos;s HTML:
               </p>
               <div className="relative">
-                <pre className="bg-neutral-50 p-4 rounded-lg text-sm overflow-x-auto">
+                <pre 
+                  className="p-4 rounded-lg text-sm overflow-x-auto"
+                  style={{ 
+                    background: 'var(--background-subtle)',
+                    color: 'var(--foreground)',
+                  }}
+                >
                   <code>{embedCode}</code>
                 </pre>
                 <button
                   onClick={handleCopyEmbed}
-                  className="absolute top-2 right-2 px-3 py-1 bg-black text-white rounded text-xs font-medium hover:bg-neutral-800 transition-colors flex items-center gap-1"
+                  className="absolute top-2 right-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1"
+                  style={{
+                    background: 'var(--accent)',
+                    color: 'white',
+                  }}
                 >
                   {embedCopied ? (
                     <>
@@ -532,9 +662,21 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
                   )}
                 </button>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-900 mb-2">Preview</h4>
-                <div className="bg-white rounded border border-neutral-200 overflow-hidden">
+              <div 
+                className="rounded-lg p-4 border"
+                style={{ 
+                  background: 'var(--background-subtle)',
+                  borderColor: 'var(--card-border)',
+                }}
+              >
+                <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>Preview</h4>
+                <div 
+                  className="rounded-lg border overflow-hidden"
+                  style={{ 
+                    background: 'var(--background)',
+                    borderColor: 'var(--card-border)',
+                  }}
+                >
                   <iframe
                     src={effectiveUrl}
                     className="w-full h-64"
@@ -544,10 +686,9 @@ export default function ShareButton({ url, label = "Share" }: { url?: string; la
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
 }
-
-

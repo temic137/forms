@@ -417,48 +417,99 @@ Provide an improved analysis that addresses these issues.`
   }
 
   private getPrimaryAnalysisPrompt(): string {
-    return `You are an expert form designer with deep understanding of UX, data collection, and domain knowledge.
+    return `You are an elite form architect combining expertise in psychometrics, UX design, behavioral psychology, and domain-specific knowledge. Your mission is to create forms that capture MAXIMUM STRATEGIC VALUE.
 
-Analyze content deeply and generate intelligent form configurations.
+═══════════════════════════════════════════════════════════════
+                    INTELLIGENCE FRAMEWORK
+═══════════════════════════════════════════════════════════════
 
-Return JSON with:
+ANALYZE CONTENT FOR:
+1. **Type Detection**: Quiz/Test, Survey/Questionnaire, or Data Collection Form
+2. **Strategic Purpose**: What decisions will this data inform?
+3. **Target Audience**: Who will fill this out? What's their expertise level?
+4. **Domain Context**: Industry-specific requirements and terminology
+5. **Insight Potential**: What patterns/correlations could be discovered?
+
+FOR QUIZZES/TESTS:
+- Generate ACTUAL KNOWLEDGE QUESTIONS (not opinion questions)
+- Include multiple difficulty levels
+- Use plausible distractors based on common misconceptions
+- Provide correct answers with educational explanations
+- Test across cognitive levels: recall, understanding, application, analysis
+
+FOR SURVEYS/QUESTIONNAIRES:
+- Use validated measurement scales (Likert, NPS, semantic differential)
+- Avoid double-barreled and leading questions
+- Include both attitude and behavior questions
+- Design for statistical analysis capability
+
+FOR DATA FORMS:
+- Capture qualifying information
+- Enable segmentation and routing
+- Add strategic optional fields (source, intent, timeline)
+
+═══════════════════════════════════════════════════════════════
+                    OUTPUT STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+Return JSON:
 {
   "understanding": {
-    "purpose": "what this accomplishes",
-    "audience": "who it's for",
-    "context": "broader context",
-    "keyTopics": ["main themes"],
-    "tone": "communication style"
+    "purpose": "Strategic explanation of form's value",
+    "audience": "Detailed target user description",
+    "context": "Broader situational context",
+    "keyTopics": ["main", "themes"],
+    "tone": "professional/casual/academic/medical",
+    "isQuiz": true/false,
+    "isSurvey": true/false
   },
   "questions": [
     {
-      "question": "actual question",
-      "fieldType": "appropriate type",
+      "question": "Well-crafted question text",
+      "fieldType": "optimal field type",
       "required": true/false,
-      "rationale": "why this question",
-      "placeholder": "helpful example",
-      "helpText": "additional guidance"
+      "rationale": "Strategic purpose",
+      "placeholder": "Helpful example",
+      "helpText": "Value-adding guidance",
+      "options": ["if applicable"],
+      "correctAnswer": "for quizzes only",
+      "explanation": "for quizzes only",
+      "difficultyLevel": "easy/medium/hard"
     }
   ],
   "metadata": {
     "confidence": 0.0-1.0,
     "complexity": "simple/moderate/complex",
-    "suggestions": ["improvements"]
+    "suggestions": ["improvements"],
+    "analyticalValue": "what insights this enables"
   }
 }`;
   }
 
   private getSecondOpinionPrompt(): string {
-    return `You are a senior form design consultant reviewing another expert's work.
+    return `You are a senior assessment designer and survey methodologist reviewing another expert's work.
 
-Provide an independent analysis and note where you agree or have different perspectives.
+YOUR REVIEW CRITERIA:
 
-Be constructive and focus on:
-- Missing opportunities
-- Better field types
-- Improved question wording
-- Flow optimization
-- User experience enhancements`;
+FOR QUIZZES:
+- Are questions testing ACTUAL knowledge or just opinions?
+- Are distractors plausible and based on real misconceptions?
+- Is difficulty level appropriately varied?
+- Are explanations educational and accurate?
+
+FOR SURVEYS:
+- Are measurement scales appropriate and validated?
+- Are questions free of bias and leading language?
+- Will data enable meaningful analysis?
+- Are response options exhaustive and mutually exclusive?
+
+FOR ALL FORMS:
+- Is the question flow logical?
+- Are field types optimal for data collection?
+- Is strategic value being captured?
+- Are there missing high-value fields?
+
+Provide specific, actionable improvements.`;
   }
 
   private buildAnalysisRequest(content: string, userContext?: string): string {
@@ -511,6 +562,15 @@ async function generateFormFromEnhancedAnalysis(
 ): Promise<any> {
   const groq = getGroqClient();
 
+  const isQuiz = analysis?.understanding?.isQuiz || 
+                 content.toLowerCase().includes('quiz') || 
+                 content.toLowerCase().includes('test') ||
+                 content.toLowerCase().includes('exam');
+
+  const isSurvey = analysis?.understanding?.isSurvey ||
+                   content.toLowerCase().includes('survey') ||
+                   content.toLowerCase().includes('questionnaire');
+
   // Use specialized model for final form generation
   const response = await groq.chat.completions.create({
     model: GROQ_MODELS.LLAMA_70B_SPECDEC, // Optimized for structured JSON
@@ -519,18 +579,59 @@ async function generateFormFromEnhancedAnalysis(
     messages: [
       {
         role: "system",
-        content: "Generate clean, user-friendly form JSON. Return only valid JSON with title and fields array."
+        content: `You are generating the final form JSON based on multi-model analysis.
+
+${isQuiz ? `
+QUIZ MODE ACTIVE:
+- Generate REAL knowledge questions, not opinion questions
+- Include quizConfig with correctAnswer, points, explanation for EVERY question
+- Use radio for single answer, checkbox for multiple correct answers
+- Include quizMode configuration in root
+- Vary question difficulty
+` : ''}
+
+${isSurvey ? `
+SURVEY MODE ACTIVE:
+- Use appropriate scales (Likert 5-7 point, NPS 0-10)
+- Include a mix of quantitative and qualitative questions
+- Add strategic segmentation fields
+` : ''}
+
+Return CLEAN, VALID JSON with:
+{
+  "title": "Strategic title",
+  ${isQuiz ? '"quizMode": { "enabled": true, "showScoreImmediately": true, "showCorrectAnswers": true, "showExplanations": true, "passingScore": 70 },' : ''}
+  "fields": [
+    {
+      "id": "semantic_id",
+      "label": "Question text",
+      "type": "appropriate_type",
+      "required": true/false,
+      "placeholder": "example",
+      "helpText": "guidance",
+      "options": ["if applicable"],
+      ${isQuiz ? '"quizConfig": { "correctAnswer": "answer", "points": 1-3, "explanation": "why" },' : ''}
+      "order": number
+    }
+  ]
+}`
       },
       {
         role: "user",
-        content: `Create form based on this analysis.
+        content: `Create the final form based on this analysis.
 
 ORIGINAL CONTENT: ${content}
 
 ANALYSIS:
 ${JSON.stringify(analysis, null, 2)}
 
-Generate form with proper field IDs, types, validation, and ordering.`
+Generate a complete form with:
+- Proper semantic field IDs
+- Optimal field types
+- Intelligent validation
+- Strategic ordering (essential → insightful → optional)
+- For quizzes: Include quizConfig for every question field
+- For surveys: Include appropriate measurement scales`
       }
     ]
   });
@@ -540,6 +641,8 @@ Generate form with proper field IDs, types, validation, and ordering.`
 
 // Export singleton
 export const multiModelAnalyzer = new MultiModelAnalyzer();
+
+
 
 
 

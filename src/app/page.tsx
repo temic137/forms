@@ -10,7 +10,7 @@ import InlineFileUpload from "@/components/InlineFileUpload";
 import InlineDocumentScanner from "@/components/InlineDocumentScanner";
 import InlineJSONImport from "@/components/InlineJSONImport";
 import InlineURLScraper from "@/components/InlineURLScraper";
-import { ArrowRight, CheckCircle2, Mic, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
+import { ArrowRight, CheckCircle2, Mic, ShieldCheck, Sparkles, UploadCloud, Globe, Trash2 } from "lucide-react";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -24,6 +24,11 @@ export default function Home() {
   
   // Creation method state
   const [creationMethod, setCreationMethod] = useState<CreationMethodInline>("prompt");
+
+  // Attachment state
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedUrl, setAttachedUrl] = useState<string>("");
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   // Voice input state
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -54,15 +59,55 @@ export default function Home() {
   async function generateForm(brief: string) {
     setLoading(true);
     try {
-      const res = await fetch("/api/ai/generate", {
+      let additionalContext = "";
+
+      // Process File
+      if (attachedFile) {
+        const formData = new FormData();
+        formData.append("file", attachedFile);
+        const res = await fetch("/api/utils/parse-file", {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) throw new Error("Failed to parse file");
+        const data = await res.json();
+        additionalContext += `\n\nContext from uploaded file (${attachedFile.name}):\n${data.text}`;
+      }
+
+      // Process URL
+      if (attachedUrl) {
+        const res = await fetch("/api/utils/scrape-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: attachedUrl }),
+        });
+        if (!res.ok) throw new Error("Failed to scrape URL");
+        const data = await res.json();
+        additionalContext += `\n\nContext from URL (${attachedUrl}):\n${data.content}`;
+      }
+
+      const fullContent = `
+User Request: Create a form.
+User Description: ${brief}
+${additionalContext}
+      `.trim();
+
+      const res = await fetch("/api/ai/generate-enhanced", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief }),
+        body: JSON.stringify({ 
+          content: fullContent,
+          sourceType: "text",
+          userContext: "The user wants to create a form.",
+          options: {
+            formComplexity: "moderate",
+          }
+        }),
       });
       
       if (!res.ok) throw new Error("Failed to generate form");
       
-      const data = await res.json() as { title: string; fields: Partial<Field>[] };
+      const data = await res.json();
       
       setTitle(data.title);
       const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
@@ -76,6 +121,9 @@ export default function Home() {
       }));
       setFields(normalizedFields);
       setShowForm(true);
+      setAttachedFile(null);
+      setAttachedUrl("");
+      setShowUrlInput(false);
     } catch {
       alert("Failed to generate form. Please try again.");
     } finally {
@@ -725,6 +773,73 @@ export default function Home() {
                           autoFocus
                         />
                       </div>
+
+                      {/* Attachments Area */}
+                      <div className="flex flex-wrap gap-2">
+                        {/* File Attachment Button */}
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="attach-file-landing"
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
+                            }}
+                            accept=".pdf,.txt,.csv,.json"
+                          />
+                          <label
+                            htmlFor="attach-file-landing"
+                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border cursor-pointer transition-colors ${
+                              attachedFile 
+                                ? "bg-blue-50 border-blue-200 text-blue-700" 
+                                : "hover:bg-gray-50 border-gray-200 text-gray-600"
+                            }`}
+                          >
+                            <UploadCloud className="w-3 h-3" />
+                            {attachedFile ? attachedFile.name : "Attach File"}
+                          </label>
+                        </div>
+
+                        {/* URL Attachment Button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowUrlInput(!showUrlInput)}
+                          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                            attachedUrl 
+                              ? "bg-blue-50 border-blue-200 text-blue-700" 
+                              : "hover:bg-gray-50 border-gray-200 text-gray-600"
+                          }`}
+                        >
+                          <Globe className="w-3 h-3" />
+                          {attachedUrl ? "URL Attached" : "Attach URL"}
+                        </button>
+                      </div>
+
+                      {/* URL Input Field */}
+                      {(showUrlInput || attachedUrl) && (
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={attachedUrl}
+                            onChange={(e) => setAttachedUrl(e.target.value)}
+                            placeholder="https://example.com"
+                            className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          {attachedUrl && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAttachedUrl("");
+                                setShowUrlInput(false);
+                              }}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex flex-col justify-end gap-2 sm:flex-row">
                         <button
                           type="button"

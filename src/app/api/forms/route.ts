@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
-    const { title, fields, multiStepConfig, styling, translations, notifications, conversationalMode } = body ?? {};
+    const { title, fields, multiStepConfig, styling, translations, notifications, conversationalMode, quizMode, limitOneResponse, saveAndEdit } = body ?? {};
     if (!title || !Array.isArray(fields)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
@@ -21,6 +21,9 @@ export async function POST(req: Request) {
         translations: translations || null,
         notifications: notifications || null,
         conversationalMode: conversationalMode || false,
+        quizMode: quizMode || null,
+        limitOneResponse: limitOneResponse || false,
+        saveAndEdit: saveAndEdit || false,
         userId: session?.user?.id || null,
       },
       select: { id: true },

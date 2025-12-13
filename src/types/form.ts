@@ -113,6 +113,16 @@ export interface FieldStyles {
   borderColor?: string;
 }
 
+// Quiz/Scoring Configuration
+export interface QuizConfig {
+  correctAnswer?: string | string[] | number | boolean; // Correct answer(s) for the field
+  points?: number; // Points awarded for correct answer
+  explanation?: string; // Explanation shown after submission
+  caseSensitive?: boolean; // For text answers
+  matchType?: "exact" | "contains"; // For text answers: exact match vs contains keywords
+  acceptPartialCredit?: boolean; // For multiple choice with multiple answers
+}
+
 // Field Interface
 export interface Field {
   id: string;
@@ -120,6 +130,7 @@ export interface Field {
   type: FieldType;
   required: boolean;
   options?: string[];
+  optionImages?: string[]; // Parallel array to options for picture-choice fields
   placeholder?: string;
   helpText?: string;
   validation?: ValidationRule[];
@@ -129,7 +140,10 @@ export interface Field {
   fileConfig?: FileUploadConfig;
   customStyles?: FieldStyles;
   color?: string; // New property for color editing
+  imageUrl?: string; // For image display fields
   matrixRows?: string[]; // For choice-matrix field type
+  allowMultipleSelection?: boolean; // For choice-matrix field type (checkbox grid behavior)
+  quizConfig?: QuizConfig; // Quiz/scoring configuration
 }
 
 // Multi-Step Form Types
@@ -223,6 +237,17 @@ export interface ErrorDisplay {
   type: "validation" | "server" | "network";
 }
 
+// Quiz Mode Configuration
+export interface QuizModeConfig {
+  enabled: boolean;
+  showScoreImmediately?: boolean; // Show score right after submission
+  showCorrectAnswers?: boolean; // Show which answers were correct/incorrect
+  showExplanations?: boolean; // Show explanations for answers
+  passingScore?: number; // Minimum score to pass (percentage)
+  allowRetakes?: boolean; // Allow users to retake the quiz
+  shuffleQuestions?: boolean; // Randomize question order
+}
+
 // Form Configuration
 export interface FormConfig {
   id: string;
@@ -233,6 +258,9 @@ export interface FormConfig {
   notifications?: NotificationConfig;
   templateId?: string;
   conversationalMode?: boolean;
+  quizMode?: QuizModeConfig;
+  limitOneResponse?: boolean;
+  saveAndEdit?: boolean;
 }
 
 // File Upload Response

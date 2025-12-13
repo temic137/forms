@@ -53,6 +53,15 @@ export interface EngagementMetrics {
   requiredFields: number;
 }
 
+export interface QuizAnalytics {
+  averageScore: number;
+  medianScore: number;
+  passRate: number;
+  topScore: number;
+  lowScore: number;
+  scoreDistribution: Record<string, number>;
+}
+
 export interface EnhancedAnalytics {
   // Basic metrics
   totalSubmissions: number;
@@ -69,7 +78,12 @@ export interface EnhancedAnalytics {
   
   // Engagement metrics
   engagementMetrics: EngagementMetrics;
+
+  // Quiz analytics
+  quizAnalytics?: QuizAnalytics;
 }
+
+
 
 
 
