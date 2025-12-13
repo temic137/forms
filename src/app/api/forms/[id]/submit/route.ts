@@ -6,6 +6,7 @@ import { sendNotifications, SubmissionData } from "@/lib/notifications";
 import { calculateQuizScore } from "@/lib/scoring";
 import { resend, generateEditLinkEmailHtml } from "@/lib/resend";
 import { randomUUID } from "crypto";
+import { Prisma } from "@prisma/client";
 
 interface FileMetadata {
   fieldId: string;
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       data: { 
         formId, 
         answersJson: body,
-        score: quizScore ? (quizScore as unknown as Record<string, unknown>) : null,
+        score: quizScore ? (quizScore as unknown as Prisma.InputJsonValue) : undefined,
         respondentId: respondentId ? String(respondentId) : null,
         editToken: editToken,
         respondentEmail: respondentEmail,
@@ -270,7 +271,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       where: { id: submission.id },
       data: {
         answersJson: answers,
-        score: quizScore ? (quizScore as unknown as Record<string, unknown>) : null,
+        score: quizScore ? (quizScore as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
       },
     });
 

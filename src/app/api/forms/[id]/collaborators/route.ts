@@ -88,7 +88,7 @@ export async function POST(
     // Plan said: "Ensure only the Owner or existing Editors can invite others"
     const form = await prisma.form.findUnique({
       where: { id },
-      select: { userId: true },
+      select: { userId: true, title: true },
     });
 
     if (!form) {

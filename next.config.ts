@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
     // Force the root to this project to avoid picking ancestor lockfiles
     root: __dirname,
   },
+  // Mark canvas-related packages as external to avoid build issues
+  serverExternalPackages: ["@napi-rs/canvas", "canvas"],
   images: {
     remotePatterns: [
       {

@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require("pdf-parse");
 
 export const runtime = "nodejs";
+
+// Lazy load pdf-parse to avoid build-time issues with canvas
+async function parsePdf(buffer: Buffer): Promise<string> {
+  try {
+    // Dynamic import to avoid build-time canvas dependency issues
+    const pdfParse = await import("pdf-parse");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = (pdfParse as any).default || pdfParse;
+    const data = await pdf(buffer);
+    return data.text;
+  } catch (error) {
+    console.error("PDF parsing error:", error);
+    throw new Error("Failed to parse PDF file");
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,8 +33,7 @@ export async function POST(req: NextRequest) {
     let text = "";
 
     if (file.type === "application/pdf") {
-      const data = await pdf(buffer);
-      text = data.text;
+      text = await parsePdf(buffer);
     } else if (
       file.type === "text/plain" ||
       file.type === "text/csv" ||

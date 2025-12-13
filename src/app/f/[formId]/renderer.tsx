@@ -546,7 +546,7 @@ export default function FormRenderer({
         }
         
         // Validate that end date is after start date
-        if (startValue && endValue && new Date(endValue) < new Date(startValue)) {
+        if (startValue && endValue && new Date(String(endValue)) < new Date(String(startValue))) {
           return "End date must be after start date";
         }
       }
@@ -563,7 +563,7 @@ export default function FormRenderer({
     
     // Apply custom validation rules
     if (field.validation && field.validation.length > 0) {
-      const error = validateField(value, field.validation);
+      const error = validateField(value as string | number | undefined, field.validation);
       if (error) return error;
     }
     
@@ -998,7 +998,7 @@ export default function FormRenderer({
             formId={formId}
             submissionId={tempSubmissionId}
             config={f.fileConfig || { acceptedTypes: "all", maxSizeMB: 10, multiple: false }}
-            value={formValues[id]}
+            value={formValues[id] as string[] | undefined}
             onChange={(urls) => isPreviewMode ? undefined : setValue(id, urls)}
             error={validationErrors[id]}
           />
@@ -1018,7 +1018,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
             placeholder={placeholder}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1043,7 +1043,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
             placeholder={placeholder}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLTextAreaElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1068,7 +1068,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
             placeholder={placeholder || "your@email.com"}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1092,7 +1092,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: formValues[id] || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
             placeholder={placeholder || "+1 (555) 000-0000"}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1117,7 +1117,7 @@ export default function FormRenderer({
                 borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                 color: 'var(--foreground)',
               } as React.CSSProperties}
-              {...(isPreviewMode ? { name: `${id}_street`, value: formValues[`${id}_street`] || '' } : register(`${id}_street`, { required }))}
+              {...(isPreviewMode ? { name: `${id}_street`, value: (formValues[`${id}_street`] as string) || '' } : register(`${id}_street`, { required }))}
               {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_street`, event.target.value) } : {})}
               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             />
@@ -1134,7 +1134,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_city`, value: formValues[`${id}_city`] || '' } : register(`${id}_city`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_city`, value: (formValues[`${id}_city`] as string) || '' } : register(`${id}_city`, { required }))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_city`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1150,7 +1150,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_state`, value: formValues[`${id}_state`] || '' } : register(`${id}_state`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_state`, value: (formValues[`${id}_state`] as string) || '' } : register(`${id}_state`, { required }))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_state`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1168,7 +1168,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_zip`, value: formValues[`${id}_zip`] || '' } : register(`${id}_zip`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_zip`, value: (formValues[`${id}_zip`] as string) || '' } : register(`${id}_zip`, { required }))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_zip`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1184,7 +1184,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_country`, value: formValues[`${id}_country`] || '' } : register(`${id}_country`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_country`, value: (formValues[`${id}_country`] as string) || '' } : register(`${id}_country`, { required }))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_country`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1227,7 +1227,7 @@ export default function FormRenderer({
         {(type === "dropdown" || type === "select") && (
           <select
             id={id}
-            value={formValues[id] || ''}
+            value={(formValues[id] as string) || ''}
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1373,7 +1373,7 @@ export default function FormRenderer({
                   <div className="aspect-square bg-gray-100 rounded flex items-center justify-center mb-2">
                     {f.optionImages?.[i] || (typeof opt === 'object' && opt !== null && 'image' in opt && (opt as { image?: string }).image) ? (
                       <img
-                        src={f.optionImages?.[i] || (opt as { image: string }).image}
+                        src={f.optionImages?.[i] || ((opt as unknown as { image: string }).image)}
                         alt={optValue}
                         className="w-full h-full object-cover rounded"
                         onError={(e) => {
@@ -1490,7 +1490,7 @@ export default function FormRenderer({
           <input
             id={id}
             type="date"
-            value={formValues[id] || ''}
+            value={(formValues[id] as string) || ''}
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1514,7 +1514,7 @@ export default function FormRenderer({
           <input
             id={id}
             type="time"
-            value={formValues[id] || ''}
+            value={(formValues[id] as string) || ''}
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1538,7 +1538,7 @@ export default function FormRenderer({
           <input
             id={id}
             type="datetime-local"
-            value={formValues[id] || ''}
+            value={(formValues[id] as string) || ''}
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1571,7 +1571,7 @@ export default function FormRenderer({
               <input
                 id={`${id}_start`}
                 type="date"
-                value={formValues[`${id}_start`] || ''}
+                value={(formValues[`${id}_start`] as string) || ''}
                 className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
                   hasError ? "border-red-500" : ""
                 }`}
@@ -1601,7 +1601,7 @@ export default function FormRenderer({
               <input
                 id={`${id}_end`}
                 type="date"
-                value={formValues[`${id}_end`] || ''}
+                value={(formValues[`${id}_end`] as string) || ''}
                 className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
                   hasError ? "border-red-500" : ""
                 }`}
@@ -1714,7 +1714,7 @@ export default function FormRenderer({
           <input
             id={id}
             type="number"
-            value={formValues[id] || ''}
+            value={(formValues[id] as string | number) || ''}
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1742,7 +1742,7 @@ export default function FormRenderer({
               id={id}
               type="number"
               step="0.01"
-              value={formValues[id] || ''}
+              value={(formValues[id] as string | number) || ''}
               className={`w-full pl-8 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
                 hasError ? "border-red-500" : ""
               }`}
