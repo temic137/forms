@@ -1,9 +1,10 @@
 import PusherClient from "pusher-js";
 
-export const pusherClient = new PusherClient(
-  process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  {
-    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-  }
-);
+// Only create the Pusher client if the required environment variables are present
+const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+export const pusherClient = key && cluster
+  ? new PusherClient(key, { cluster })
+  : null;
 

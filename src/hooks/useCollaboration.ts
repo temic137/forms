@@ -28,7 +28,9 @@ export function useCollaboration({
     });
 
     return () => {
-      pusherClient.unsubscribe(channelName);
+      if (pusherClient) {
+        pusherClient.unsubscribe(channelName);
+      }
     };
   }, [formId, enabled, user?.id, onUpdate]);
 }
