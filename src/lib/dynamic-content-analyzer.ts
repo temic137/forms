@@ -486,20 +486,33 @@ SURVEY DESIGN PRINCIPLES:
 3. Avoid leading, biased, or double-barreled questions
 4. Design for statistical analysis and cross-tabulation
 5. Include both quantitative and qualitative questions
+6. FIELD TYPES: Use 'radio' for single choice, 'checkboxes' for multiple choice (NOT 'checkbox')
 
 QUESTION TYPES TO USE:
-- Likert Scale (5 or 7 point): "Strongly Disagree" to "Strongly Agree"
-- Satisfaction Scale: "Very Dissatisfied" to "Very Satisfied"  
-- NPS (0-10): "How likely are you to recommend...?"
-- Frequency: "Never" to "Always" or "Daily/Weekly/Monthly/Yearly"
-- Importance: "Not at all important" to "Extremely important"
-- Open-ended: For rich qualitative insights
+- Likert Scale (5 or 7 point): "Strongly Disagree" to "Strongly Agree" (Type: radio)
+- Satisfaction Scale: "Very Dissatisfied" to "Very Satisfied" (Type: radio)
+- NPS (0-10): "How likely are you to recommend...?" (Type: radio)
+- Frequency: "Never" to "Always" (Type: radio)
+- Multiple Choice: "Select all that apply" (Type: checkboxes)
+- Open-ended: For rich qualitative insights (Type: textarea)
 
 AVOID THESE MISTAKES:
 ❌ Double-barreled: "How satisfied are you with our price and quality?"
 ❌ Leading: "Don't you agree that our service is excellent?"
 ❌ Vague: "How do you feel about things?"
-❌ Too many open-ended questions in a row
+❌ Using 'checkbox' for list selection (Use 'checkboxes')
+❌ Returning empty 'options' arrays for choice questions
+
+EXAMPLE FIELD OUTPUT:
+{
+  "id": "q1",
+  "label": "How likely are you to recommend us to a friend or colleague?",
+  "type": "radio",
+  "required": true,
+  "options": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+  "helpText": "0 is not likely at all, 10 is extremely likely",
+  "order": 1
+}
 
 Return ONLY valid JSON.`;
     
@@ -512,8 +525,8 @@ Create a survey with:
 - Mix of quantitative (scales, ratings) and qualitative (open-ended) questions
 - Use appropriate scale types (Likert, NPS, satisfaction, frequency)
 - Include at least one open-ended question for insights
-- Questions should enable meaningful analysis and cross-tabulation
-- Consider question order - start easy, put sensitive questions later
+- MANDATORY: Provide explicit 'options' array for ALL choice/radio/checkboxes questions
+- For "Select all that apply" questions, use type 'checkboxes' and provide meaningful options
 - Number fields from 1 to ${surveyQuestionCount}
 
 Return valid JSON with title and fields array containing exactly ${surveyQuestionCount} questions.`;

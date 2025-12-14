@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Field } from "@/types/form";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface Message {
   id: string;
@@ -298,14 +299,19 @@ export default function ConversationalForm({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-5 py-3 text-sm font-semibold rounded-xl shadow-md"
+              className="px-5 py-3 text-sm font-semibold rounded-xl shadow-md flex items-center justify-center gap-2"
               style={{
                 backgroundColor: styling?.buttonColor || primaryColor,
                 color: "white",
                 boxShadow: "0 12px 30px rgba(59, 130, 246, 0.28)",
               }}
             >
-              {isSubmitting ? "Submitting..." : "Submit responses"}
+              {isSubmitting ? (
+                <>
+                  <Spinner size="sm" variant="white" />
+                  <span>Submitting...</span>
+                </>
+              ) : "Submit responses"}
             </button>
             <button
               onClick={() => {

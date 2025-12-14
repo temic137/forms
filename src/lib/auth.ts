@@ -59,6 +59,34 @@ providers.push(
 
 providers.push(
   CredentialsProvider({
+    id: "anonymous",
+    name: "Anonymous",
+    credentials: {},
+    async authorize() {
+      try {
+        const user = await prisma.user.create({
+          data: {
+            isAnonymous: true,
+            name: "Guest User",
+          },
+        });
+        
+        return {
+          id: user.id,
+          name: user.name,
+          email: null,
+          image: null,
+        };
+      } catch (error) {
+        console.error("Error creating anonymous user:", error);
+        throw new Error("Could not create anonymous user");
+      }
+    },
+  })
+);
+
+providers.push(
+  CredentialsProvider({
     id: "firebase",
     name: "Firebase",
     credentials: {
@@ -203,14 +231,27 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: session.user.email || undefined },
-        });
-
-        if (dbUser) {
+        // Use token.sub (which holds the user ID) to fetch the user
+        // This is more reliable than email and works for anonymous users too
+        try {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore - augmenting session user with id
-          session.user.id = dbUser.id;
+          session.user.id = token.sub;
+
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+          });
+
+          if (dbUser) {
+            session.user.name = dbUser.name;
+            session.user.email = dbUser.email;
+            session.user.image = dbUser.image;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - adding isAnonymous to session
+            session.user.isAnonymous = dbUser.isAnonymous;
+          }
+        } catch (error) {
+          console.error("Error fetching user in session:", error);
         }
       }
       return session;
@@ -220,6 +261,7 @@ export const authOptions: NextAuthOptions = {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore - augmenting token with id
         token.id = (user as { id?: string }).id;
+        token.sub = (user as { id?: string }).id; // Ensure sub is set
       }
       return token;
     },

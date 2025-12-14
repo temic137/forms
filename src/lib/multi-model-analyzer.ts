@@ -20,11 +20,13 @@ export const GROQ_MODELS = {
   // Fast and efficient - use for simple tasks
   LLAMA_8B: 'llama-3.1-8b-instant',
   
-  // Alternative for different perspectives
-  MIXTRAL_8X7B: 'mixtral-8x7b-32768',
+  // New high-performance models
+  LLAMA_4_MAVERICK: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+  LLAMA_4_SCOUT: 'meta-llama/llama-4-scout-17b-16e-instruct',
+  QWEN_32B: 'qwen/qwen3-32b',
   
-  // Good for JSON and structured outputs
-  LLAMA_70B_SPECDEC: 'llama-3.3-70b-specdec',
+  // Use versatile for structured output (specdec removed as it's not in supported list)
+  LLAMA_70B_VERSATILE: 'llama-3.3-70b-versatile',
 } as const;
 
 export interface EnhancedAnalysis {
@@ -144,7 +146,7 @@ export class MultiModelAnalyzer {
       case 'simple':
         return GROQ_MODELS.LLAMA_8B; // Fast for simple tasks
       case 'moderate':
-        return GROQ_MODELS.LLAMA_70B_SPECDEC; // Optimized for structured output
+        return GROQ_MODELS.LLAMA_4_SCOUT; // High performance mid-size model
       case 'complex':
         return GROQ_MODELS.LLAMA_70B; // Most capable for complex analysis
     }
@@ -190,7 +192,7 @@ export class MultiModelAnalyzer {
     const groq = getGroqClient();
     
     // Use a different model for second opinion
-    const secondaryModel = GROQ_MODELS.MIXTRAL_8X7B;
+    const secondaryModel = GROQ_MODELS.QWEN_32B;
     
     console.log(`Getting second opinion from ${secondaryModel}`);
 
@@ -573,7 +575,7 @@ async function generateFormFromEnhancedAnalysis(
 
   // Use specialized model for final form generation
   const response = await groq.chat.completions.create({
-    model: GROQ_MODELS.LLAMA_70B_SPECDEC, // Optimized for structured JSON
+    model: GROQ_MODELS.LLAMA_70B_VERSATILE, // Optimized for structured JSON
     temperature: 0.25,
     response_format: { type: "json_object" },
     messages: [
@@ -592,9 +594,13 @@ QUIZ MODE ACTIVE:
 
 ${isSurvey ? `
 SURVEY MODE ACTIVE:
+- Surveys ARE forms. Generate fields for every question.
 - Use appropriate scales (Likert 5-7 point, NPS 0-10)
 - Include a mix of quantitative and qualitative questions
 - Add strategic segmentation fields
+- Use 'select' or 'radio' field types for scale-based questions
+- Use 'checkboxes' for multi-select questions (NOT 'checkbox')
+- MUST provide 'options' array for all choice questions
 ` : ''}
 
 Return CLEAN, VALID JSON with:
@@ -627,11 +633,11 @@ ${JSON.stringify(analysis, null, 2)}
 
 Generate a complete form with:
 - Proper semantic field IDs
-- Optimal field types
+- Optimal field types (use text, textarea, number, select, radio, checkbox, etc.)
 - Intelligent validation
 - Strategic ordering (essential → insightful → optional)
 - For quizzes: Include quizConfig for every question field
-- For surveys: Include appropriate measurement scales`
+- For surveys: Include appropriate measurement scales as fields`
       }
     ]
   });

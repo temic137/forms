@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 
@@ -65,6 +66,7 @@ export default function SignInPage() {
           <CardContent>
             <div className="space-y-4">
               <GoogleLoginButton />
+              
               <div className="flex items-center gap-2">
                 <div className="h-px flex-1" style={{ background: 'var(--card-border)' }} />
                 <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--foreground-muted)' }}>
@@ -138,7 +140,7 @@ export default function SignInPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-lg font-medium transition-all disabled:opacity-50"
+                className="w-full py-3 px-4 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center"
                 style={{
                   background: 'var(--accent)',
                   color: 'var(--accent-dark)',
@@ -150,7 +152,12 @@ export default function SignInPage() {
                   e.currentTarget.style.background = 'var(--accent)';
                 }}
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner size="sm" variant="white" />
+                    <span>Signing in...</span>
+                  </div>
+                ) : "Sign In"}
               </button>
 
               <div className="text-center mt-4">

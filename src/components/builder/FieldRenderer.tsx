@@ -471,6 +471,20 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         );
 
       case "checkbox":
+        // If options are provided, treat as multiple checkboxes
+        if (field.options && field.options.length > 0) {
+          return (
+            <div className="space-y-2">
+              {field.options.map((option, idx) => (
+                <label key={idx} className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />
+                  <span className="text-gray-700">{option}</span>
+                </label>
+              ))}
+            </div>
+          );
+        }
+        // Otherwise treat as single boolean checkbox
         return (
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />

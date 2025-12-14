@@ -16,6 +16,7 @@ import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 import ShareCollaboratorButton from "./ShareCollaboratorButton";
 import BuilderOnboarding from "./BuilderOnboarding";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface DragDropFormBuilderProps {
   formTitle: string;
@@ -601,10 +602,7 @@ export default function DragDropFormBuilder({
             >
               {saving ? (
                 <>
-                  <div className="relative h-4 w-4">
-                    <div className="absolute inset-0 rounded-full border-2 border-white border-opacity-25"></div>
-                    <div className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                  </div>
+                  <Spinner size="sm" variant="white" />
                   <span>Saving</span>
                 </>
               ) : (
@@ -751,10 +749,7 @@ export default function DragDropFormBuilder({
               >
                 {saving ? (
                   <>
-                    <div className="relative w-3.5 h-3.5">
-                      <div className="absolute inset-0 border-2 border-white border-opacity-25 rounded-full"></div>
-                      <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+                    <Spinner size="sm" variant="white" className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Saving</span>
                   </>
                 ) : (
@@ -912,10 +907,7 @@ export default function DragDropFormBuilder({
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-md bg-black text-white">
                     {saving ? (
-                      <div className="relative h-4 w-4">
-                        <div className="absolute inset-0 rounded-full border-2 border-white border-opacity-25"></div>
-                        <div className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                      </div>
+                      <Spinner size="sm" variant="white" />
                     ) : (
                       <Save className="h-4 w-4" />
                     )}

@@ -8,6 +8,7 @@ import { getVisibleFields } from "@/lib/conditionalLogic";
 import { validateField } from "@/lib/validation";
 import { QuizScore } from "@/lib/scoring";
 import MultiStepRenderer from "@/components/MultiStepRenderer";
+import { Spinner } from "@/components/ui/Spinner";
 import FileUpload from "@/components/FileUpload";
 import ConversationalForm from "@/components/ConversationalForm";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
@@ -1945,13 +1946,12 @@ export default function FormRenderer({
                 } as React.CSSProperties}
                 aria-label={status === "submitting" ? "Submitting form" : finalSubmitLabel}
               >
-                {status === "submitting" && (
-                  <div className="relative w-4 h-4">
-                    <div className="absolute inset-0 border-2 border-current border-opacity-25 rounded-full"></div>
-                    <div className="absolute inset-0 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                {status === "submitting" ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner size="sm" variant="current" />
+                    <span>Submitting...</span>
                   </div>
-                )}
-                {status === "submitting" ? "Submitting..." : finalSubmitLabel}
+                ) : finalSubmitLabel}
               </button>
             </div>
           </>

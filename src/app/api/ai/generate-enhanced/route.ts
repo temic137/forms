@@ -302,14 +302,21 @@ MEASUREMENT STANDARDS:
 3. Use neutral, non-leading wording
 4. Include anchors and scale labels
 5. Design for statistical analysis
+6. FIELD TYPES: Use 'radio' for single choice, 'checkboxes' for multiple choice
 
 HIGH-VALUE QUESTION TYPES:
-- NPS: "How likely to recommend?" (0-10)
-- Satisfaction: 5-point (Very Dissatisfied → Very Satisfied)
-- Agreement: 5-point (Strongly Disagree → Strongly Agree)
-- Frequency: (Never → Always)
-- Importance: (Not at all → Extremely)
-- Open-ended: "What ONE thing would you change?"
+- NPS: "How likely to recommend?" (0-10) (Type: radio)
+- Satisfaction: 5-point (Very Dissatisfied → Very Satisfied) (Type: radio)
+- Agreement: 5-point (Strongly Disagree → Strongly Agree) (Type: radio)
+- Frequency: (Never → Always) (Type: radio)
+- Importance: (Not at all → Extremely) (Type: radio)
+- Open-ended: "What ONE thing would you change?" (Type: textarea)
+- Multiple Choice: "Select all that apply" (Type: checkboxes)
+
+AVOID THESE MISTAKES:
+❌ Using 'checkbox' for list selection (Use 'checkboxes')
+❌ Returning empty 'options' arrays
+
 ` : ''}
 
 INTELLIGENT FIELD GENERATION:

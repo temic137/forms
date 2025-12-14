@@ -47,6 +47,7 @@ model User {
   password      String?
   emailVerified DateTime?
   image         String?
+  isAnonymous   Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]

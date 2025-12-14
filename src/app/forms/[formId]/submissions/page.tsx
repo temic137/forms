@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
 import { Field } from "@/types/form";
 import { EnhancedAnalytics } from "@/types/analytics";
@@ -137,10 +138,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         style={{ background: 'var(--background)' }}
       >
         <div className="flex items-center gap-3" style={{ color: 'var(--foreground-muted)' }}>
-          <div className="relative w-5 h-5">
-            <div className="absolute inset-0 border-2 border-current border-opacity-25 rounded-full"></div>
-            <div className="absolute inset-0 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-          </div>
+          <Spinner size="lg" variant="primary" />
           <span>Loading...</span>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 
@@ -215,7 +216,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-lg font-medium transition-all disabled:opacity-50"
+                className="w-full py-3 px-4 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center"
                 style={{
                   background: 'var(--accent)',
                   color: 'var(--accent-dark)',
@@ -227,7 +228,12 @@ export default function SignUpPage() {
                   e.currentTarget.style.background = 'var(--accent)';
                 }}
               >
-                {loading ? "Creating account..." : "Create Account"}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner size="sm" variant="white" />
+                    <span>Creating account...</span>
+                  </div>
+                ) : "Create Account"}
               </button>
 
               <div className="text-center mt-4">

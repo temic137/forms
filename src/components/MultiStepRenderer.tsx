@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from "react";
 import { MultiStepConfig, FormStep } from "@/types/form";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface MultiStepRendererProps {
   config: MultiStepConfig;
@@ -112,17 +113,27 @@ export default function MultiStepRenderer({
               type="button"
               onClick={handleNext}
               disabled={isValidating}
-              className="px-8 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-8 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
-              {isValidating ? "Validating..." : "Next →"}
+              {isValidating ? (
+                <>
+                  <Spinner size="sm" variant="white" />
+                  <span>Validating...</span>
+                </>
+              ) : "Next →"}
             </button>
           ) : (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-8 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-8 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
-              {isSubmitting ? "Submitting..." : submitLabel}
+              {isSubmitting ? (
+                <>
+                  <Spinner size="sm" variant="white" />
+                  <span>Submitting...</span>
+                </>
+              ) : submitLabel}
             </button>
           )}
         </div>

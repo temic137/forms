@@ -1,3 +1,5 @@
+import { Spinner } from "@/components/ui/Spinner";
+
 export function FormLoadingSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
@@ -44,10 +46,7 @@ export function BuilderLoadingSkeleton() {
 export function AILoadingSpinner({ message = "Processing..." }: { message?: string }) {
   return (
     <div className="flex items-center gap-3 py-4">
-      <div className="relative w-5 h-5">
-        <div className="absolute inset-0 border-2 border-gray-200 rounded-full"></div>
-        <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <Spinner size="md" variant="secondary" className="w-5 h-5" />
       <span className="text-sm text-gray-600">{message}</span>
     </div>
   );
@@ -56,10 +55,7 @@ export function AILoadingSpinner({ message = "Processing..." }: { message?: stri
 export function InlineLoadingSpinner() {
   return (
     <div className="inline-flex items-center gap-2">
-      <div className="relative w-4 h-4">
-        <div className="absolute inset-0 border-2 border-gray-200 rounded-full"></div>
-        <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <Spinner size="sm" variant="secondary" />
     </div>
   );
 }
