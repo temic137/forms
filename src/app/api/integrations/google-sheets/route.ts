@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     };
 
     // Check if user has connected their Google account (has OAuth tokens)
-    if (!config.accessToken && !process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    if (!config.accessToken) {
       return NextResponse.json(
         { error: "Please connect your Google account first. Click 'Connect Google Account' to authorize." },
         { status: 400 }
