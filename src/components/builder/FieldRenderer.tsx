@@ -1,12 +1,273 @@
 "use client";
 
 import { Field, FormStyling } from "@/types/form";
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 
 interface FieldRendererProps {
   field: Field;
   isPreview?: boolean;
   styling?: FormStyling;
+}
+
+// File Upload Field Component
+interface FileUploadFieldProps {
+  field: Field;
+  isPreview?: boolean;
+  styling?: FormStyling;
+}
+
+interface UploadedFile {
+  fileId: string;
+  filename: string;
+  originalName: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
+function FileUploadField({ field, isPreview = false, styling }: FileUploadFieldProps) {
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const fileConfig = field.fileConfig || { acceptedTypes: "all", maxSizeMB: 10, multiple: false };
+  
+  const getAcceptAttribute = () => {
+    switch (fileConfig.acceptedTypes) {
+      case "images":
+        return "image/jpeg,image/png,image/gif,image/webp,image/svg+xml";
+      case "documents":
+        return ".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv";
+      case "pdf":
+        return ".pdf,application/pdf";
+      case "pdf_image":
+        return "image/*,.pdf,application/pdf";
+      default:
+        return "*/*";
+    }
+  };
+  
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+  
+  const handleFiles = useCallback(async (files: FileList | null) => {
+    if (!files || files.length === 0 || !isPreview) return;
+    
+    setUploadError(null);
+    setIsUploading(true);
+    
+    const filesToUpload = fileConfig.multiple ? Array.from(files) : [files[0]];
+    
+    for (const file of filesToUpload) {
+      // Client-side validation
+      const maxSize = fileConfig.maxSizeMB * 1024 * 1024;
+      if (file.size > maxSize) {
+        setUploadError(`File "${file.name}" exceeds ${fileConfig.maxSizeMB}MB limit`);
+        continue;
+      }
+      
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("formId", "preview");
+        formData.append("submissionId", `temp-${Date.now()}`);
+        formData.append("fieldId", field.id);
+        formData.append("acceptedTypes", fileConfig.acceptedTypes);
+        formData.append("maxSizeMB", String(fileConfig.maxSizeMB));
+        
+        const response = await fetch("/api/uploads", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Upload failed");
+        }
+        
+        const result = await response.json();
+        
+        if (fileConfig.multiple) {
+          setUploadedFiles(prev => [...prev, result]);
+        } else {
+          setUploadedFiles([result]);
+        }
+      } catch (error) {
+        setUploadError(error instanceof Error ? error.message : "Upload failed");
+      }
+    }
+    
+    setIsUploading(false);
+  }, [isPreview, field.id, fileConfig]);
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (isPreview) setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (isPreview) handleFiles(e.dataTransfer.files);
+  };
+  
+  const removeFile = (fileId: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.fileId !== fileId));
+  };
+  
+  const getFileIcon = (type: string) => {
+    if (type.startsWith("image/")) {
+      return (
+        <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      );
+    }
+    if (type === "application/pdf") {
+      return (
+        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    }
+    return (
+      <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Drop Zone */}
+      <div
+        onClick={() => isPreview && fileInputRef.current?.click()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`
+          relative border-2 border-dashed rounded-lg p-6 text-center transition-all
+          ${isDragging 
+            ? "border-blue-500 bg-blue-50" 
+            : "border-gray-300 hover:border-gray-400"
+          }
+          ${isPreview ? "cursor-pointer" : "cursor-default opacity-75"}
+          ${isUploading ? "pointer-events-none" : ""}
+        `}
+        style={{
+          borderColor: isDragging ? styling?.primaryColor : undefined,
+          backgroundColor: isDragging ? `${styling?.primaryColor}10` : undefined,
+        }}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={getAcceptAttribute()}
+          multiple={fileConfig.multiple}
+          onChange={(e) => handleFiles(e.target.files)}
+          className="hidden"
+          disabled={!isPreview}
+        />
+        
+        {isUploading ? (
+          <div className="flex flex-col items-center">
+            <svg className="w-10 h-10 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <p className="text-gray-600 mt-2">Uploading...</p>
+          </div>
+        ) : (
+          <>
+            <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <p className="text-gray-600 mt-2">
+              {isPreview ? "Click to upload or drag and drop" : "File upload field"}
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              {fileConfig.acceptedTypes === "images" && "Images only (JPG, PNG, GIF, WebP)"}
+              {fileConfig.acceptedTypes === "documents" && "Documents only (PDF, Word, Excel, TXT)"}
+              {fileConfig.acceptedTypes === "pdf" && "PDF only"}
+              {fileConfig.acceptedTypes === "pdf_image" && "Images and PDF only"}
+              {fileConfig.acceptedTypes === "all" && "All file types accepted"}
+              {" • Max "}{fileConfig.maxSizeMB}MB
+              {fileConfig.multiple && " • Multiple files allowed"}
+            </p>
+          </>
+        )}
+      </div>
+      
+      {/* Error Message */}
+      {uploadError && (
+        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{uploadError}</span>
+          <button onClick={() => setUploadError(null)} className="ml-auto hover:text-red-800">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {/* Uploaded Files List */}
+      {uploadedFiles.length > 0 && (
+        <div className="space-y-2">
+          {uploadedFiles.map((file) => (
+            <div
+              key={file.fileId}
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
+            >
+              {file.type.startsWith("image/") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={file.url} 
+                  alt={file.originalName}
+                  className="w-12 h-12 object-cover rounded"
+                />
+              ) : (
+                getFileIcon(file.type)
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {file.originalName}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {formatFileSize(file.size)}
+                </p>
+              </div>
+              {isPreview && (
+                <button
+                  onClick={() => removeFile(file.fileId)}
+                  className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Remove file"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function getFontFamily(family: FormStyling["fontFamily"]): string {
@@ -17,6 +278,44 @@ function getFontFamily(family: FormStyling["fontFamily"]): string {
       return "ui-serif, Georgia, serif";
     case "mono":
       return "ui-monospace, monospace";
+    case "inter":
+      return '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "roboto":
+      return '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "open-sans":
+      return '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "lato":
+      return '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "montserrat":
+      return '"Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "playfair":
+      return '"Playfair Display", "Times New Roman", serif';
+    case "merriweather":
+      return '"Merriweather", "Times New Roman", serif';
+    case "arial":
+      return "Arial, Helvetica, sans-serif";
+    case "georgia":
+      return "Georgia, serif";
+    case "times":
+      return '"Times New Roman", Times, serif';
+    case "courier":
+      return '"Courier New", Courier, monospace';
+    case "poppins":
+      return '"Poppins", sans-serif';
+    case "raleway":
+      return '"Raleway", sans-serif';
+    case "nunito":
+      return '"Nunito", sans-serif';
+    case "rubik":
+      return '"Rubik", sans-serif';
+    case "pt-serif":
+      return '"PT Serif", serif';
+    case "source-serif":
+      return '"Source Serif Pro", serif';
+    case "fira-code":
+      return '"Fira Code", monospace';
+    case "jetbrains-mono":
+      return '"JetBrains Mono", monospace';
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
@@ -469,15 +768,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       // File Upload
       case "file":
       case "file-uploader":
-        return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <p className="text-gray-600 mt-2">Click to upload or drag and drop</p>
-            <p className="text-gray-400 text-sm mt-1">Max file size: 10MB</p>
-          </div>
-        );
+        return <FileUploadField field={field} isPreview={isPreview} styling={styling} />;
 
       default:
         return (

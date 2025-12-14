@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import VoiceInput from '@/components/VoiceInput';
-import BrowserCompatibilityWarning from '@/components/BrowserCompatibilityWarning';
-import MicrophonePermissionPrompt from '@/components/MicrophonePermissionPrompt';
+import VoiceInput from '@/components/voice/VoiceInput';
+import BrowserCompatibilityWarning from '@/components/voice/BrowserCompatibilityWarning';
+import MicrophonePermissionPrompt from '@/components/voice/MicrophonePermissionPrompt';
 import { SpeechRecognitionService } from '@/lib/speechRecognition';
 import Link from 'next/link';
 

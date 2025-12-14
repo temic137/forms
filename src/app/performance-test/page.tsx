@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import VoiceInputLazy from '@/components/VoiceInputLazy';
+import VoiceInputLazy from '@/components/voice/VoiceInputLazy';
 import { performanceMonitor } from '@/lib/performanceMonitor';
 
 /**

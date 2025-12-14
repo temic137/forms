@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
-import { useToast } from "@/components/Toast";
+import { useToastContext } from "@/contexts/ToastContext";
 
 interface GoogleSheetsIntegrationProps {
   formId: string;
 }
 
 export default function GoogleSheetsIntegration({ formId }: GoogleSheetsIntegrationProps) {
-  const toast = useToast();
+  const toast = useToastContext();
   const [loading, setLoading] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [spreadsheetId, setSpreadsheetId] = useState("");

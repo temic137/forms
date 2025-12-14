@@ -3,17 +3,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { transcriptionStorage, TranscriptionSession } from '@/lib/transcriptionStorage';
-import VoiceErrorDisplay from '@/components/VoiceErrorDisplay';
-import BrowserCompatibilityWarning from '@/components/BrowserCompatibilityWarning';
+import VoiceErrorDisplay from './VoiceErrorDisplay';
+import BrowserCompatibilityWarning from './BrowserCompatibilityWarning';
 import { SpeechRecognitionService } from '@/lib/speechRecognition';
-import ScreenReaderAnnouncement, { useScreenReaderAnnouncement } from '@/components/ScreenReaderAnnouncement';
-import VoiceInputTutorial from '@/components/VoiceInputTutorial';
-import VoiceInputHelpModal from '@/components/VoiceInputHelpModal';
+import ScreenReaderAnnouncement, { useScreenReaderAnnouncement } from '@/components/ui/ScreenReaderAnnouncement';
+import VoiceInputTutorial from './VoiceInputTutorial';
+import VoiceInputHelpModal from './VoiceInputHelpModal';
 import { voiceInputTutorial } from '@/lib/voiceInputTutorial';
-import VoicePrivacyNotice from '@/components/VoicePrivacyNotice';
+import VoicePrivacyNotice from './VoicePrivacyNotice';
 import { voiceSettings } from '@/lib/voiceSettings';
 import { useVoiceCleanup } from '@/hooks/useVoiceCleanup';
-import TranscriptionDisplay from '@/components/TranscriptionDisplay';
+import TranscriptionDisplay from './TranscriptionDisplay';
 import { 
   SupportedLanguage, 
   LANGUAGE_NAMES, 

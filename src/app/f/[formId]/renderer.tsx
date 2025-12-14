@@ -3,7 +3,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { ChangeEvent } from "react";
-import { Field, MultiStepConfig, QuizModeConfig } from "@/types/form";
+import { Field, MultiStepConfig, QuizModeConfig, FormStyling } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
 import { validateField } from "@/lib/validation";
 import { QuizScore } from "@/lib/scoring";
@@ -31,7 +31,7 @@ function inferTypeFromLabel(label: string): Field["type"] {
   return "text";
 }
 
-function getFontFamily(family: "system" | "sans" | "serif" | "mono"): string {
+function getFontFamily(family: FormStyling["fontFamily"]): string {
   switch (family) {
     case "sans":
       return "ui-sans-serif, system-ui, sans-serif";
@@ -39,6 +39,44 @@ function getFontFamily(family: "system" | "sans" | "serif" | "mono"): string {
       return "ui-serif, Georgia, serif";
     case "mono":
       return "ui-monospace, monospace";
+    case "inter":
+      return '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "roboto":
+      return '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "open-sans":
+      return '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "lato":
+      return '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "montserrat":
+      return '"Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "playfair":
+      return '"Playfair Display", "Times New Roman", serif';
+    case "merriweather":
+      return '"Merriweather", "Times New Roman", serif';
+    case "arial":
+      return "Arial, Helvetica, sans-serif";
+    case "georgia":
+      return "Georgia, serif";
+    case "times":
+      return '"Times New Roman", Times, serif';
+    case "courier":
+      return '"Courier New", Courier, monospace';
+    case "poppins":
+      return '"Poppins", sans-serif';
+    case "raleway":
+      return '"Raleway", sans-serif';
+    case "nunito":
+      return '"Nunito", sans-serif';
+    case "rubik":
+      return '"Rubik", sans-serif';
+    case "pt-serif":
+      return '"PT Serif", serif';
+    case "source-serif":
+      return '"Source Serif Pro", serif';
+    case "fira-code":
+      return '"Fira Code", monospace';
+    case "jetbrains-mono":
+      return '"JetBrains Mono", monospace';
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
@@ -62,6 +100,28 @@ function shuffleArray<T>(array: T[]): T[] {
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
   }
   return newArray;
+}
+
+function isShufflable(field: Field): boolean {
+  const type = field.type || inferTypeFromLabel(field.label || "");
+  
+  // Don't shuffle display-only fields
+  const isDisplayOnly = [
+    "display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video", "html"
+  ].includes(type);
+  if (isDisplayOnly) return false;
+
+  // Don't shuffle contact fields
+  if (["email", "phone", "address"].includes(type)) return false;
+
+  // Don't shuffle name fields (heuristic)
+  const label = (field.label || "").toLowerCase();
+  if ((type === "text" || type === "short-answer") &&
+      (label.includes("name") || label === "first" || label === "last")) {
+    return false;
+  }
+
+  return true;
 }
 
 // Star Rating Field Component
@@ -474,7 +534,29 @@ export default function FormRenderer({
   }, [formId, limitOneResponse, isPreview]);
   const [fields] = useState(() => {
     if (quizMode?.shuffleQuestions) {
-      return shuffleArray([...initialFields]);
+      const shufflableFields: Field[] = [];
+      const fixedFieldsMap: Map<number, Field> = new Map();
+
+      initialFields.forEach((f, index) => {
+        if (isShufflable(f)) {
+          shufflableFields.push(f);
+        } else {
+          fixedFieldsMap.set(index, f);
+        }
+      });
+
+      const shuffledShufflable = shuffleArray(shufflableFields);
+      const result: Field[] = [];
+      let shuffleIndex = 0;
+
+      for (let i = 0; i < initialFields.length; i++) {
+        if (fixedFieldsMap.has(i)) {
+          result.push(fixedFieldsMap.get(i)!);
+        } else {
+          result.push(shuffledShufflable[shuffleIndex++]);
+        }
+      }
+      return result;
     }
     return initialFields;
   });

@@ -149,6 +149,25 @@ export default function StyleEditor({ styling, onChange }: StyleEditorProps) {
             <option value="sans">Sans-serif</option>
             <option value="serif">Serif</option>
             <option value="mono">Monospace</option>
+            <option value="inter">Inter</option>
+            <option value="roboto">Roboto</option>
+            <option value="open-sans">Open Sans</option>
+            <option value="lato">Lato</option>
+            <option value="montserrat">Montserrat</option>
+            <option value="playfair">Playfair Display</option>
+            <option value="merriweather">Merriweather</option>
+            <option value="arial">Arial</option>
+            <option value="georgia">Georgia</option>
+            <option value="times">Times New Roman</option>
+            <option value="courier">Courier New</option>
+            <option value="poppins">Poppins</option>
+            <option value="raleway">Raleway</option>
+            <option value="nunito">Nunito</option>
+            <option value="rubik">Rubik</option>
+            <option value="pt-serif">PT Serif</option>
+            <option value="source-serif">Source Serif Pro</option>
+            <option value="fira-code">Fira Code</option>
+            <option value="jetbrains-mono">JetBrains Mono</option>
           </select>
         </div>
       </div>
@@ -209,6 +228,44 @@ function getFontFamily(family: FormStyling["fontFamily"]): string {
       return "ui-serif, Georgia, serif";
     case "mono":
       return "ui-monospace, monospace";
+    case "inter":
+      return '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "roboto":
+      return '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "open-sans":
+      return '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "lato":
+      return '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "montserrat":
+      return '"Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    case "playfair":
+      return '"Playfair Display", "Times New Roman", serif';
+    case "merriweather":
+      return '"Merriweather", "Times New Roman", serif';
+    case "arial":
+      return "Arial, Helvetica, sans-serif";
+    case "georgia":
+      return "Georgia, serif";
+    case "times":
+      return '"Times New Roman", Times, serif';
+    case "courier":
+      return '"Courier New", Courier, monospace';
+    case "poppins":
+      return '"Poppins", sans-serif';
+    case "raleway":
+      return '"Raleway", sans-serif';
+    case "nunito":
+      return '"Nunito", sans-serif';
+    case "rubik":
+      return '"Rubik", sans-serif';
+    case "pt-serif":
+      return '"PT Serif", serif';
+    case "source-serif":
+      return '"Source Serif Pro", serif';
+    case "fira-code":
+      return '"Fira Code", monospace';
+    case "jetbrains-mono":
+      return '"JetBrains Mono", monospace';
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";

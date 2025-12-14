@@ -1,6 +1,6 @@
 "use client";
 
-import VoiceUsageStatistics from '@/components/VoiceUsageStatistics';
+import VoiceUsageStatistics from '@/components/voice/VoiceUsageStatistics';
 import Link from 'next/link';
 
 /**

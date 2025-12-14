@@ -17,7 +17,7 @@ import ShareButton from "@/components/ShareButton";
 import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
 import { FileText, Calendar, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
-import { ConfirmationDialog, useConfirmDialog } from "@/components/ConfirmationDialog";
+import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
 
 interface Form {

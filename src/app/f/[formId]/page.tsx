@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FormRenderer from "./renderer";
 import ShareButton from "@/components/ShareButton";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import type { FormStyling } from "@/types/form";
 import type { CSSProperties } from "react";
 

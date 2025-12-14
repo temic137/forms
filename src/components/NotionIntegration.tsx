@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { CSSProperties } from "react";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@/components/ui/Toast";
 import { extractDatabaseId } from "@/lib/notion";
 
 interface NotionIntegrationProps {

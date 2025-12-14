@@ -116,6 +116,14 @@ export default function FileUpload({
       if (!allowedTypes.includes(file.type)) {
         return "Only document files (PDF, Word, Excel, Text) are accepted";
       }
+    } else if (config.acceptedTypes === "pdf") {
+      if (file.type !== "application/pdf") {
+        return "Only PDF files are accepted";
+      }
+    } else if (config.acceptedTypes === "pdf_image") {
+      if (file.type !== "application/pdf" && !file.type.startsWith("image/")) {
+        return "Only PDF and image files are accepted";
+      }
     }
 
     return null;
@@ -272,6 +280,10 @@ export default function FileUpload({
       return "image/*";
     } else if (config.acceptedTypes === "documents") {
       return ".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv";
+    } else if (config.acceptedTypes === "pdf") {
+      return ".pdf,application/pdf";
+    } else if (config.acceptedTypes === "pdf_image") {
+      return "image/*,.pdf,application/pdf";
     }
     return "*";
   };
@@ -326,6 +338,8 @@ export default function FileUpload({
           <p className="text-xs text-gray-500">
             {config.acceptedTypes === "images" && "Images only"}
             {config.acceptedTypes === "documents" && "Documents only (PDF, Word, Excel, Text)"}
+            {config.acceptedTypes === "pdf" && "PDF only"}
+            {config.acceptedTypes === "pdf_image" && "Images and PDF only"}
             {config.acceptedTypes === "all" && "Any file type"}
             {" • "}
             Max {config.maxSizeMB}MB

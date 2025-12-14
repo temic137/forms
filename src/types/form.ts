@@ -101,7 +101,7 @@ export interface ConditionalRule {
 
 // File Upload Configuration
 export interface FileUploadConfig {
-  acceptedTypes: "images" | "documents" | "all";
+  acceptedTypes: "images" | "documents" | "all" | "pdf" | "pdf_image";
   maxSizeMB: number;
   multiple: boolean;
 }
@@ -168,7 +168,7 @@ export interface FormStyling {
   backgroundColor: string;
   buttonColor: string;
   buttonTextColor: string;
-  fontFamily: "system" | "sans" | "serif" | "mono";
+  fontFamily: "system" | "sans" | "serif" | "mono" | "inter" | "roboto" | "open-sans" | "lato" | "montserrat" | "playfair" | "merriweather" | "courier" | "arial" | "georgia" | "times" | "poppins" | "raleway" | "nunito" | "rubik" | "pt-serif" | "source-serif" | "fira-code" | "jetbrains-mono";
   buttonRadius: number;
 }
 

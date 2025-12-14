@@ -35,6 +35,10 @@ export const fieldTemplates: FieldTemplate[] = [
   { type: "phone", label: "Phone Number", icon: "📱", defaultLabel: "Phone number", category: "Contact Info" },
   { type: "address", label: "Address", icon: "🏠", defaultLabel: "Full address", category: "Contact Info" },
   
+  // Files
+  { type: "file", label: "File Upload", icon: "📁", defaultLabel: "Upload a file", category: "Files" },
+  { type: "file-uploader", label: "Upload", icon: "☁️", defaultLabel: "Upload file", category: "Files" },
+  
   // Display
   { type: "display-text", label: "Display Text", icon: "💬", defaultLabel: "Information text", category: "Display" },
   { type: "h1", label: "H1 Heading", icon: "🔤", defaultLabel: "Main Heading", category: "Display" },
@@ -60,6 +64,7 @@ export const fieldTemplates: FieldTemplate[] = [
   // Number
   { type: "number", label: "Number", icon: "🔢", defaultLabel: "Enter a number", category: "Number" },
   { type: "currency", label: "Currency", icon: "💰", defaultLabel: "Enter amount", category: "Number" },
+  
 ];
 
 interface FieldPaletteProps {

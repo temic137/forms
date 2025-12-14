@@ -75,8 +75,29 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
   const lastSpeechTimeRef = useRef<number>(0);
   
   // Initialize service once using useMemo
-  const service = useMemo(() => new SpeechRecognitionService(), []);
-  const isSupported = useMemo(() => service.isSupported(), [service]);
+  const service = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return new SpeechRecognitionService();
+    }
+    return {
+      isSupported: () => false,
+      dispose: () => {},
+      initialize: () => {},
+      start: async () => {},
+      stop: () => {},
+      onResult: () => {},
+      onError: () => {},
+      onEnd: () => {},
+      onStart: () => {},
+      onAudioLevel: () => {},
+    } as unknown as SpeechRecognitionService;
+  }, []);
+
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    setIsSupported(service.isSupported());
+  }, [service]);
 
   /**
    * Cleanup on unmount

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import VoiceInputLazy from '@/components/VoiceInputLazy';
-import VoiceSettingsToggle from '@/components/VoiceSettingsToggle';
+import VoiceInputLazy from '@/components/voice/VoiceInputLazy';
+import VoiceSettingsToggle from '@/components/voice/VoiceSettingsToggle';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { featureFlags } from '@/lib/featureFlags';
 

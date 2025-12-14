@@ -14,6 +14,15 @@ const ACCEPTED_TYPES: Record<string, string[]> = {
     "text/plain",
     "text/csv",
   ],
+  pdf: ["application/pdf"],
+  pdf_image: [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml"
+  ],
   all: [], // Empty array means accept all types
 };
 

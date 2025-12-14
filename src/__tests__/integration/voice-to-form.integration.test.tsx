@@ -11,7 +11,7 @@
 
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import VoiceInput from '@/components/VoiceInput';
+import VoiceInput from '@/components/voice/VoiceInput';
 import { transcriptionStorage } from '@/lib/transcriptionStorage';
 import { voiceSettings } from '@/lib/voiceSettings';
 

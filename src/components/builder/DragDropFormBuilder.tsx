@@ -9,6 +9,7 @@ import FieldPalette, { fieldTemplates } from "./FieldPalette";
 import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
+import GoogleSheetsIntegration from "@/components/GoogleSheetsIntegration";
 import QuizSettings from "./QuizSettings";
 import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle } from "lucide-react";
 import PageDivider from "./PageDivider";
@@ -146,6 +147,11 @@ export default function DragDropFormBuilder({
       options: ["multiple-choice", "choices", "dropdown", "multiselect", "checkboxes", "radio", "select", "ranking"].includes(fieldType)
         ? ["Option 1", "Option 2", "Option 3"]
         : undefined,
+      fileConfig: (fieldType === "file" || fieldType === "file-uploader") ? {
+        acceptedTypes: "all",
+        maxSizeMB: 10,
+        multiple: false
+      } : undefined,
       order: fields.length,
       conditionalLogic: [],
       color: "#ffffff",
@@ -404,6 +410,11 @@ export default function DragDropFormBuilder({
         options: ["multiple-choice", "choices", "dropdown", "multiselect", "checkboxes", "radio", "select", "ranking"].includes(fieldType)
           ? ["Option 1", "Option 2", "Option 3"]
           : undefined,
+        fileConfig: (fieldType === "file" || fieldType === "file-uploader") ? {
+          acceptedTypes: "all",
+          maxSizeMB: 10,
+          multiple: false
+        } : undefined,
         order: fields.length,
         conditionalLogic: [],
         color: "#ffffff",
@@ -1227,6 +1238,15 @@ export default function DragDropFormBuilder({
                   config={notifications}
                   onChange={onNotificationsChange}
                 />
+
+                {currentFormId && (
+                  <div className="border-t border-gray-200 pt-6 space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Integrations</h3>
+                    <div className="p-1">
+                      <GoogleSheetsIntegration formId={currentFormId} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </>
