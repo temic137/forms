@@ -1238,7 +1238,7 @@ export default function DragDropFormBuilder({
                   config={notifications}
                   onChange={onNotificationsChange}
                 />
-
+{/* 
                 {currentFormId && (
                   <div className="border-t border-gray-200 pt-6 space-y-3">
                     <h3 className="text-sm font-semibold text-gray-900">Integrations</h3>
@@ -1246,7 +1246,7 @@ export default function DragDropFormBuilder({
                       <GoogleSheetsIntegration formId={currentFormId} />
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           </>
