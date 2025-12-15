@@ -850,7 +850,7 @@ ${additionalContext}
             </div>
             <div className="flex gap-8 text-sm text-gray-500">
               <a href="/privacy" className="hover:text-gray-900">Privacy</a>
-              <a href="#" className="hover:text-gray-900">Terms</a>
+              <a href="/terms" className="hover:text-gray-900">Terms</a>
               <a href="#" className="hover:text-gray-900">Twitter</a>
             </div>
           </div>
