@@ -200,14 +200,36 @@ Vercel automatically deploys when you push to your main branch:
 - **Production:** Deploys from `main`/`master` branch
 - **Preview:** Deploys from other branches and pull requests
 
-## Custom Domain
+## Custom Domain Setup
 
-To add a custom domain:
+To connect your custom domain (e.g., `anyform.live`) to Vercel:
 
-1. Go to **Project Settings** → **Domains**
-2. Add your domain
-3. Follow DNS configuration instructions
-4. Update `NEXTAUTH_URL` environment variable with your custom domain
+1. Go to **Project Settings** → **Domains** in your Vercel dashboard.
+2. Enter your domain (e.g., `anyform.live`) and click **Add**.
+3. Vercel will provide you with DNS records to configure.
+
+### Namecheap Configuration
+
+If you bought your domain on Namecheap, follow these specific steps:
+
+1. Log in to your Namecheap account.
+2. Go to **Domain List** and click **Manage** next to your domain (`anyform.live`).
+3. Click on the **Advanced DNS** tab.
+4. In the **Host Records** section, add the following records (delete existing records if they conflict):
+
+   | Type  | Host | Value             | TTL       |
+   | :---  | :--- | :---              | :---      |
+   | A     | @    | 76.76.21.21       | Automatic |
+   | CNAME | www  | cname.vercel-dns.com | Automatic |
+
+5. Save changes. It may take up to 24-48 hours for DNS to propagate, but often happens within minutes.
+
+### Post-Domain Setup
+
+After your domain is active:
+1. Go to **Project Settings** → **Environment Variables**.
+2. Update `NEXTAUTH_URL` to your new domain (e.g., `https://anyform.live`).
+3. If using Google OAuth, add `https://anyform.live/api/auth/callback/google` to your Authorized Redirect URIs in Google Cloud Console.
 
 ## Monitoring
 

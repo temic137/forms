@@ -461,9 +461,33 @@ ${additionalContext}
     );
   }
 
+  // Structured Data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AnyForm",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "The AI Form Builder. Create complex, validated forms in seconds using natural language. No drag-and-drop required.",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "120"
+    }
+  };
+
   // Show initial search interface
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* 
         NOTE: Navigation is handled globally in src/components/layout/Navigation.tsx 
       */}

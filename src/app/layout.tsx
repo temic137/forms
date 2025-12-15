@@ -16,13 +16,46 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AnyForm - AI Form Builder",
-  description: "Create beautiful forms instantly with AI assistance",
+  metadataBase: new URL('https://www.anyform.live'),
+  title: {
+    default: "AnyForm - AI Form Builder",
+    template: "%s | AnyForm"
+  },
+  description: "Create beautiful forms instantly with AI assistance. Just describe your form, upload a file, or paste a URL, and let AI build it for you.",
+  keywords: ["AI form builder", "form generator", "online forms", "survey maker", "quiz builder", "AI surveys"],
+  authors: [{ name: "AnyForm Team" }],
+  creator: "AnyForm",
+  publisher: "AnyForm",
+  openGraph: {
+    title: "AnyForm - AI Form Builder",
+    description: "Stop building forms manually. Just describe them to our AI.",
+    url: 'https://www.anyform.live',
+    siteName: 'AnyForm',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "AnyForm - AI Form Builder",
+    description: "Stop building forms manually. Just describe them to our AI.",
+    creator: "@anyform", // Placeholder if they have one
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
     apple: '/favicon.svg',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
