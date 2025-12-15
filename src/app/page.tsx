@@ -713,7 +713,7 @@ ${additionalContext}
                       <tr className="bg-gray-50">
                         <th scope="col" className="py-5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900">Feature</th>
                         <th scope="col" className="px-3 py-5 text-left text-sm font-medium text-gray-500">Google Forms</th>
-                        <th scope="col" className="px-3 py-5 text-left text-sm font-bold text-blue-600 bg-blue-50/50">Forms (Our Tool)</th>
+                        <th scope="col" className="px-3 py-5 text-left text-sm font-bold text-blue-600 bg-blue-50/50">AnyForm (Our Tool)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
@@ -822,7 +822,7 @@ ${additionalContext}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2 text-gray-900 font-bold">
-              <span>Forms</span>
+              <span>AnyForm</span>
             </div>
             <div className="flex gap-8 text-sm text-gray-500">
               <a href="#" className="hover:text-gray-900">Privacy</a>

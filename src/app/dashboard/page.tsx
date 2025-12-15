@@ -739,7 +739,7 @@ ${additionalContext}
             className="text-4xl font-bold mb-4"
             style={{ color: 'var(--foreground)' }}
           >
-            {forms.length === 0 ? "Welcome to Forms" : "Dashboard"}
+            {forms.length === 0 ? "Welcome to AnyForm" : "Dashboard"}
           </h1>
           <p 
             className="text-lg max-w-2xl mx-auto"

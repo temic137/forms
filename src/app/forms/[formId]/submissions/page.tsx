@@ -14,6 +14,9 @@ import { BarChart } from "@/components/analytics/BarChart";
 import { FieldAnalyticsCard } from "@/components/analytics/FieldAnalyticsCard";
 import ShareButton from "@/components/ShareButton";
 import { QuizScore } from "@/lib/scoring";
+import * as XLSX from "xlsx";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 // import IntegrationButton from "@/components/IntegrationButton";
 
 interface Submission {
@@ -39,7 +42,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
   const [analytics, setAnalytics] = useState<EnhancedAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'fields' | 'insights'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'responses' | 'fields' | 'insights'>('responses');
 
   const shareUrl = useMemo(() => {
     if (typeof window === "undefined" || !formId) return "";
@@ -93,6 +96,12 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
     }
   }, [status, formId, fetchSubmissions, fetchAnalytics]);
 
+  useEffect(() => {
+    if (analytics) {
+      setActiveTab('overview');
+    }
+  }, [analytics]);
+
   const exportToCSV = () => {
     if (submissions.length === 0) return;
 
@@ -129,6 +138,124 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
     a.href = url;
     a.download = `${formTitle}-submissions.json`;
     a.click();
+  };
+
+  const copyToClipboard = () => {
+    if (submissions.length === 0) return;
+
+    const headers = fields.map((f) => f.label).join("\t");
+    const rows = submissions.map((submission) => {
+      return fields
+        .map((field) => {
+          const value = submission.answersJson[field.id];
+          return String(value || "").replace(/\n/g, " ");
+        })
+        .join("\t");
+    });
+
+    const text = [headers, ...rows].join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Copied to clipboard!");
+    });
+  };
+
+  const exportToExcel = () => {
+    if (submissions.length === 0) return;
+
+    const data = submissions.map((submission) => {
+      const row: Record<string, unknown> = {
+        'Submission ID': submission.id,
+        'Submitted At': new Date(submission.createdAt).toLocaleString(),
+      };
+
+      if (submission.score) {
+        row['Score'] = `${submission.score.percentage.toFixed(0)}%`;
+        row['Passed'] = submission.score.passed ? 'Yes' : 'No';
+      }
+
+      fields.forEach((field) => {
+        const value = submission.answersJson[field.id];
+        if (field.type === 'file') {
+          const files = submission.files.filter((f) => f.fieldId === field.id);
+          row[field.label] = files.map((f) => f.originalName).join(', ');
+        } else {
+          row[field.label] = String(value || "");
+        }
+      });
+
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Submissions");
+    XLSX.writeFile(workbook, `${formTitle}-submissions.xlsx`);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const downloadSubmissionPDF = async () => {
+    // Create a new PDF document
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPosition = 20;
+
+    // Add Title
+    pdf.setFontSize(16);
+    pdf.text(`Response #${submissions.indexOf(selectedSubmission!) + 1}`, margin, yPosition);
+    yPosition += 10;
+
+    // Add Submission Date
+    pdf.setFontSize(10);
+    pdf.setTextColor(100);
+    pdf.text(`Submitted: ${new Date(selectedSubmission!.createdAt).toLocaleString()}`, margin, yPosition);
+    yPosition += 15;
+
+    // Add Score if exists
+    if (selectedSubmission?.score) {
+      pdf.setFontSize(12);
+      pdf.setTextColor(0);
+      pdf.text(`Score: ${selectedSubmission.score.percentage.toFixed(0)}% (${selectedSubmission.score.passed ? 'Passed' : 'Failed'})`, margin, yPosition);
+      yPosition += 15;
+    }
+
+    // Add Fields and Answers
+    pdf.setFontSize(12);
+    pdf.setTextColor(0);
+
+    fields.forEach((field) => {
+      // Check for page break
+      if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Field Label
+      pdf.setFont("helvetica", "bold");
+      const labelLines = pdf.splitTextToSize(field.label, pageWidth - (margin * 2));
+      pdf.text(labelLines, margin, yPosition);
+      yPosition += (labelLines.length * 7);
+
+      // Field Value
+      pdf.setFont("helvetica", "normal");
+      let valueText = "";
+      
+      if (field.type === 'file') {
+        const files = selectedSubmission!.files.filter((f) => f.fieldId === field.id);
+        valueText = files.map(f => f.originalName).join(', ') || "(No files)";
+      } else {
+        valueText = String(selectedSubmission!.answersJson[field.id] || "—");
+      }
+
+      const valueLines = pdf.splitTextToSize(valueText, pageWidth - (margin * 2));
+      pdf.text(valueLines, margin, yPosition);
+      yPosition += (valueLines.length * 7) + 10; // Add spacing between fields
+    });
+
+    pdf.save(`submission-${selectedSubmission?.id}.pdf`);
   };
 
   if (status === "loading" || loading) {
@@ -187,9 +314,9 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         </div>
 
         {/* Tab Navigation */}
-        {analytics && (
-          <div className="mb-6">
-            <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+        <div className="mb-6">
+          <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+            {analytics && (
               <button
                 onClick={() => setActiveTab('overview')}
                 className="px-4 py-2 font-medium transition-all"
@@ -200,29 +327,43 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               >
                 Overview
               </button>
-              <button
-                onClick={() => setActiveTab('fields')}
-                className="px-4 py-2 font-medium transition-all"
-                style={{
-                  color: activeTab === 'fields' ? 'var(--primary)' : 'var(--foreground-muted)',
-                  borderBottom: activeTab === 'fields' ? '2px solid var(--primary)' : '2px solid transparent',
-                }}
-              >
-                Field Analytics
-              </button>
-              <button
-                onClick={() => setActiveTab('insights')}
-                className="px-4 py-2 font-medium transition-all"
-                style={{
-                  color: activeTab === 'insights' ? 'var(--primary)' : 'var(--foreground-muted)',
-                  borderBottom: activeTab === 'insights' ? '2px solid var(--primary)' : '2px solid transparent',
-                }}
-              >
-                Time Insights
-              </button>
-            </div>
+            )}
+            <button
+              onClick={() => setActiveTab('responses')}
+              className="px-4 py-2 font-medium transition-all"
+              style={{
+                color: activeTab === 'responses' ? 'var(--primary)' : 'var(--foreground-muted)',
+                borderBottom: activeTab === 'responses' ? '2px solid var(--primary)' : '2px solid transparent',
+              }}
+            >
+              Responses
+            </button>
+            {analytics && (
+              <>
+                <button
+                  onClick={() => setActiveTab('fields')}
+                  className="px-4 py-2 font-medium transition-all"
+                  style={{
+                    color: activeTab === 'fields' ? 'var(--primary)' : 'var(--foreground-muted)',
+                    borderBottom: activeTab === 'fields' ? '2px solid var(--primary)' : '2px solid transparent',
+                  }}
+                >
+                  Field Analytics
+                </button>
+                <button
+                  onClick={() => setActiveTab('insights')}
+                  className="px-4 py-2 font-medium transition-all"
+                  style={{
+                    color: activeTab === 'insights' ? 'var(--primary)' : 'var(--foreground-muted)',
+                    borderBottom: activeTab === 'insights' ? '2px solid var(--primary)' : '2px solid transparent',
+                  }}
+                >
+                  Time Insights
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Analytics Content */}
         {analytics && activeTab === 'overview' && (
@@ -507,7 +648,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         )}
 
         {/* Export Buttons */}
-        {submissions.length > 0 && (
+        {activeTab === 'responses' && submissions.length > 0 && (
           <div className="flex gap-3 mb-6">
             <button
               onClick={exportToCSV}
@@ -521,6 +662,28 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               Export as CSV
             </button>
             <button
+              onClick={exportToExcel}
+              className="px-4 py-2 rounded-lg font-medium transition-all"
+              style={{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                color: 'var(--foreground)',
+              }}
+            >
+              Export to Excel
+            </button>
+            <button
+              onClick={copyToClipboard}
+              className="px-4 py-2 rounded-lg font-medium transition-all"
+              style={{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                color: 'var(--foreground)',
+              }}
+            >
+              Copy to Clipboard
+            </button>
+            <button
               onClick={exportToJSON}
               className="px-4 py-2 rounded-lg font-medium transition-all"
               style={{
@@ -531,90 +694,151 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
             >
               Export as JSON
             </button>
+            <button
+              onClick={handlePrint}
+              className="px-4 py-2 rounded-lg font-medium transition-all"
+              style={{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--card-border)',
+                color: 'var(--foreground)',
+              }}
+            >
+              Print / PDF
+            </button>
           </div>
         )}
 
         {/* Submissions List */}
-        {submissions.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <div className="mb-4">
-                <svg
-                  className="w-16 h-16 mx-auto"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  style={{ color: 'var(--foreground-muted)' }}
+        {activeTab === 'responses' && (
+          submissions.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <div className="mb-4">
+                  <svg
+                    className="w-16 h-16 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style={{ color: 'var(--foreground-muted)' }}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    />
+                  </svg>
+                </div>
+                <h3 
+                  className="text-xl font-semibold mb-2"
+                  style={{ color: 'var(--foreground)' }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                  />
-                </svg>
-              </div>
-              <h3 
-                className="text-xl font-semibold mb-2"
-                style={{ color: 'var(--foreground)' }}
-              >
-                No responses yet
-              </h3>
-              <p style={{ color: 'var(--foreground-muted)' }}>
-                Share your form to start collecting responses
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {submissions.map((submission) => (
-              <Card 
-                key={submission.id} 
-                hover
-                className="cursor-pointer"
-                onClick={() => setSelectedSubmission(submission)}
-              >
-                <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div 
-                        className="font-medium mb-1"
-                        style={{ color: 'var(--foreground)' }}
-                      >
-                        Response #{submissions.indexOf(submission) + 1}
-                      </div>
-                      <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
-                        {new Date(submission.createdAt).toLocaleString()}
-                      </div>
-                      {submission.score && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span 
-                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${
-                              submission.score.passed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}
-                          >
-                            {submission.score.percentage.toFixed(0)}%
-                          </span>
-                          <span style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>
-                            {submission.score.earnedPoints.toFixed(1)} / {submission.score.totalPoints} points
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      style={{ color: 'var(--foreground-muted)' }}
+                  No responses yet
+                </h3>
+                <p style={{ color: 'var(--foreground-muted)' }}>
+                  Share your form to start collecting responses
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--card-border)' }}>
+              <table className="w-full text-left text-sm">
+                <thead style={{ background: 'var(--background-subtle)', color: 'var(--foreground-muted)' }}>
+                  <tr>
+                    <th className="px-4 py-3 font-medium whitespace-nowrap">#</th>
+                    <th className="px-4 py-3 font-medium whitespace-nowrap">Submitted At</th>
+                    {analytics?.quizAnalytics && (
+                      <th className="px-4 py-3 font-medium whitespace-nowrap">Score</th>
+                    )}
+                    {fields.map((field) => (
+                      <th key={field.id} className="px-4 py-3 font-medium whitespace-nowrap min-w-[150px]">
+                        {field.label}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 font-medium text-right whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
+                  {submissions.map((submission, index) => (
+                    <tr
+                      key={submission.id}
+                      className="group transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+                      onClick={() => setSelectedSubmission(submission)}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--foreground)' }}>
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--foreground-muted)' }}>
+                        {new Date(submission.createdAt).toLocaleString()}
+                      </td>
+                      {analytics?.quizAnalytics && (
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {submission.score ? (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                submission.score.passed
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              }`}
+                            >
+                              {submission.score.percentage.toFixed(0)}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      )}
+                      {fields.map((field) => (
+                        <td
+                          key={field.id}
+                          className="px-4 py-3 max-w-[200px] truncate"
+                          style={{ color: 'var(--foreground)' }}
+                        >
+                          {field.type === 'file' ? (
+                            <span className="text-xs opacity-70">
+                              {submission.files.filter(f => f.fieldId === field.id).length} file(s)
+                            </span>
+                          ) : (
+                            String(submission.answersJson[field.id] || '—')
+                          )}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSubmission(submission);
+                          }}
+                          className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                          style={{ color: 'var(--foreground-muted)' }}
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
 
         {/* Submission Detail Modal */}
@@ -625,6 +849,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
             onClick={() => setSelectedSubmission(null)}
           >
             <div
+              id="submission-modal-content"
               className="max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -634,15 +859,27 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                     <CardTitle>
                       Response #{submissions.indexOf(selectedSubmission) + 1}
                     </CardTitle>
-                    <button
-                      onClick={() => setSelectedSubmission(null)}
-                      className="p-2 rounded-lg transition-all"
-                      style={{ color: 'var(--foreground-muted)' }}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={downloadSubmissionPDF}
+                        className="p-2 rounded-lg transition-all hover:bg-black/5 dark:hover:bg-white/5"
+                        title="Download as PDF"
+                        style={{ color: 'var(--foreground-muted)' }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setSelectedSubmission(null)}
+                        className="p-2 rounded-lg transition-all"
+                        style={{ color: 'var(--foreground-muted)' }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
                     Submitted: {new Date(selectedSubmission.createdAt).toLocaleString()}

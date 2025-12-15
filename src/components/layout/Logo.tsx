@@ -102,7 +102,7 @@ export default function Logo({ showText = true, size = "md", className = "" }: L
         <span
           className={`${textSizes[size]} font-black text-black tracking-tight group-hover:opacity-80 transition-opacity`}
         >
-          Forms
+          AnyForm
         </span>
       )}
     </Link>
