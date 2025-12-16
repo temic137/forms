@@ -1,4 +1,4 @@
-import { SpeechConfig, VoiceError, SpeechRecognitionCallbacks, BrowserSupport } from '@/types/voice';
+import { SpeechConfig, VoiceError, SpeechRecognitionCallbacks, BrowserSupport, SpeechAlternative } from '@/types/voice';
 import { createVoiceError } from '@/lib/voiceErrors';
 
 /**
@@ -75,7 +75,9 @@ export class SpeechRecognitionService {
       
       // IMPROVED: Request multiple alternatives for better accuracy (3-5 alternatives)
       // This allows us to choose the best interpretation or combine them
-      this.recognition.maxAlternatives = config.maxAlternatives || 5;
+      if ('maxAlternatives' in this.recognition) {
+        this.recognition.maxAlternatives = config.maxAlternatives || 5;
+      }
 
       // Set up event handlers
       this.setupEventHandlers();
@@ -177,6 +179,12 @@ export class SpeechRecognitionService {
    */
   private async startAudioLevelMonitoring(): Promise<void> {
     try {
+      // Check if mediaDevices is available (requires HTTPS or localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('MediaDevices API not available. Audio level monitoring disabled.');
+        return;
+      }
+
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -280,7 +288,7 @@ export class SpeechRecognitionService {
   /**
    * Register callback for speech recognition results
    */
-  onResult(callback: (transcript: string, isFinal: boolean) => void): void {
+  onResult(callback: (transcript: string, isFinal: boolean, confidence?: number, alternatives?: SpeechAlternative[]) => void): void {
     this.callbacks.onResult = callback;
   }
 

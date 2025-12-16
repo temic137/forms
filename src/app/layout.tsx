@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import Navigation from "@/components/layout/Navigation";
@@ -14,6 +15,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.anyform.live'),
@@ -85,6 +93,7 @@ export default function RootLayout({
           <ToastProvider>
             <Navigation />
             {children}
+            <Analytics />
           </ToastProvider>
         </AuthProvider>
       </body>
