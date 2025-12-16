@@ -509,21 +509,58 @@ ${additionalContext}
               Create complex, validated forms in seconds using natural language. No drag-and-drop required.
             </p>
 
-            {/* Instant Access Button */}
+            {/* Ghost Access Button - Try Without Signup */}
             <div className="mb-12 flex justify-center">
               <button
                 onClick={handleGuestSignIn}
                 disabled={loading}
-                className="flex items-center gap-3 bg-white text-gray-900 border-2 border-blue-200 hover:border-blue-400 hover:shadow-lg px-6 py-4 rounded-xl font-semibold text-lg transition-all group"
+                className="relative group overflow-hidden px-8 py-5 rounded-2xl font-semibold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
-                  <Zap className="w-5 h-5 fill-current" />
+                {/* Main button background */}
+                <div className="absolute inset-0 bg-white border-2 border-gray-200 group-hover:border-gray-800 transition-all duration-300 group-hover:bg-gray-900" />
+                
+                {/* Shimmer effect on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
+                    animation: 'shimmer 2s infinite'
+                  }}
+                />
+                
+                {/* Content */}
+                <div className="relative flex items-center gap-4 z-10">
+                  <div className="relative flex-shrink-0">
+                    {/* Ghost icon with animation */}
+                    <div className="text-4xl group-hover:scale-125 transition-transform duration-300 group-hover:animate-bounce origin-center">
+                      👻
+                    </div>
+                  </div>
+                  
+                  <div className="text-left">
+                    <div className="text-gray-900 font-bold text-base group-hover:text-white transition-colors duration-300 leading-tight">Go Ghost Mode</div>
+                    <div className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors duration-300 font-normal">Try it instantly, no signup needed</div>
+                  </div>
+                  
+                  {/* Arrow animation */}
+                  <div className="ml-2 text-gray-400 group-hover:text-white transition-all duration-300 group-hover:translate-x-3">
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
                 </div>
-                <div className="text-left">
-                  <div className="text-gray-900 font-bold leading-tight">Instant Access</div>
-                  <div className="text-xs text-gray-500 font-normal">Jump in without an account</div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all ml-2" />
+                
+                {/* Add keyframes animation */}
+                <style jsx>{`
+                  @keyframes shimmer {
+                    0% {
+                      transform: translateX(-100%);
+                    }
+                    100% {
+                      transform: translateX(100%);
+                    }
+                  }
+                  button:hover {
+                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+                  }
+                `}</style>
               </button>
             </div>
 
