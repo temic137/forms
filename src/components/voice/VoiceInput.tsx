@@ -615,6 +615,26 @@ export default function VoiceInput({
           />
         </div>
       )}
+      
+      {/* Mobile Device Hint */}
+      {browserSupport.isMobile && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-amber-900">
+                <strong>Mobile Tip:</strong> Speak clearly and pause briefly between phrases. 
+                Voice recognition will automatically restart if it stops. 
+                For best results, use Safari on iOS or Chrome on Android.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Voice Controls */}
       <div className="flex items-center gap-3 mb-4">

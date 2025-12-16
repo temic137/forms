@@ -38,6 +38,7 @@ export interface BrowserSupport {
   webAudioAPI: boolean;
   localStorage: boolean;
   recommendedBrowser?: string;
+  isMobile?: boolean;
 }
 
 /**
