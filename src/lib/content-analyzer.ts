@@ -173,6 +173,18 @@ const DOMAIN_PATTERNS: Record<Domain, string[]> = {
     'agreement', 'contract', 'terms', 'conditions', 'consent', 'liability',
     'signature', 'witness', 'notary', 'jurisdiction'
   ],
+  events: [
+    'event', 'party', 'wedding', 'celebration', 'ceremony', 'rsvp',
+    'invitation', 'attendance', 'venue', 'gathering', 'reception', 'gala'
+  ],
+  nonprofit: [
+    'donation', 'donate', 'charity', 'volunteer', 'fundraising', 'cause',
+    'sponsor', 'contribution', 'philanthropy', 'nonprofit', 'ngo', 'foundation'
+  ],
+  entertainment: [
+    'concert', 'show', 'movie', 'performance', 'ticket', 'music',
+    'festival', 'theater', 'entertainment', 'game', 'sports', 'recreation'
+  ],
   general: []
 };
 
@@ -189,6 +201,14 @@ const DOCUMENT_TYPE_PATTERNS: Record<DocumentType, string[]> = {
   assessment: ['assess', 'evaluate', 'measure', 'score', 'grade'],
   order_form: ['order', 'purchase', 'buy', 'cart', 'checkout'],
   consent_form: ['consent', 'agree', 'authorize', 'permission', 'approval'],
+  rsvp_form: ['rsvp', 'invitation', 'attend', 'attendance', 'party', 'wedding', 'event response'],
+  petition_form: ['petition', 'signature', 'sign', 'support', 'pledge', 'campaign'],
+  donation_form: ['donation', 'donate', 'contribute', 'fundraise', 'charity', 'sponsor'],
+  contest_form: ['contest', 'competition', 'giveaway', 'sweepstakes', 'raffle', 'enter to win'],
+  review_form: ['review', 'testimonial', 'rate us', 'rating'],
+  volunteer_form: ['volunteer', 'help out', 'participate', 'sign up to help'],
+  request_form: ['request', 'support ticket', 'help desk', 'issue report', 'bug report'],
+  poll_form: ['poll', 'vote', 'quick poll', 'opinion poll'],
   general: []
 };
 
