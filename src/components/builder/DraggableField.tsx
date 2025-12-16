@@ -38,6 +38,19 @@ function normalizeEditableValue(value: string): string {
   return value.replace(/\u00A0/g, " ").replace(/\r?\n/g, " ");
 }
 
+// Helper function to normalize options - handles both string[] and {value, label}[] formats
+function normalizeOptions(options: unknown[] | undefined): string[] {
+  if (!options || options.length === 0) return [];
+  return options.map((opt) => {
+    if (typeof opt === 'string') return opt;
+    if (typeof opt === 'object' && opt !== null) {
+      const optObj = opt as { value?: string; label?: string };
+      return optObj.label || optObj.value || String(opt);
+    }
+    return String(opt);
+  });
+}
+
 interface DraggableFieldProps {
   field: Field;
   index: number;
@@ -276,16 +289,17 @@ function FieldEditor({
 
   const resolvedOptions = useMemo(() => {
     if (!hasOptions) return [] as string[];
-    if (field.options && field.options.length > 0) return field.options;
+    if (field.options && field.options.length > 0) return normalizeOptions(field.options);
     return ["Option 1", "Option 2"];
   }, [field.options, hasOptions]);
 
   useEffect(() => {
+    const normalizedOptions = normalizeOptions(field.options);
     resolvedOptions.forEach((option, idx) => {
       const ref = optionRefs.current.get(idx);
       if (!ref) return;
       const value =
-        field.options && field.options[idx] !== undefined ? field.options[idx] : option;
+        normalizedOptions && normalizedOptions[idx] !== undefined ? normalizedOptions[idx] : option;
       if (ref.textContent !== value) {
         ref.textContent = value;
       }
@@ -885,7 +899,7 @@ function FieldEditor({
                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select correct option...</option>
-                    {(field.options || []).map((option, index) => (
+                    {normalizeOptions(field.options).map((option, index) => (
                       <option key={index} value={option}>{option}</option>
                     ))}
                   </select>
@@ -894,7 +908,7 @@ function FieldEditor({
                 {/* Multiple Choice */}
                 {["checkboxes", "multiselect"].includes(field.type) && (
                   <div className="space-y-1.5 border border-gray-200 rounded-md p-2 max-h-32 overflow-y-auto">
-                    {(field.options || []).map((option, index) => {
+                    {normalizeOptions(field.options).map((option, index) => {
                       const correctAnswers = (field.quizConfig?.correctAnswer as string[]) || [];
                       return (
                         <label key={index} className="flex items-center gap-2 text-sm cursor-pointer">

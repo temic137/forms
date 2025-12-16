@@ -28,6 +28,14 @@ export type DocumentType =
   | 'assessment'
   | 'order_form'
   | 'consent_form'
+  | 'rsvp_form'
+  | 'petition_form'
+  | 'donation_form'
+  | 'contest_form'
+  | 'review_form'
+  | 'volunteer_form'
+  | 'request_form'
+  | 'poll_form'
   | 'general';
 
 export type Domain =
@@ -40,6 +48,9 @@ export type Domain =
   | 'technology'
   | 'finance'
   | 'legal'
+  | 'events'
+  | 'nonprofit'
+  | 'entertainment'
   | 'general';
 
 export interface ExtractedEntity {

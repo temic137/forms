@@ -129,11 +129,11 @@ Return ONLY valid JSON with this structure:
 {
   "purpose": "Clear explanation of what this form accomplishes and the STRATEGIC VALUE it provides",
   "audience": "Detailed description of target audience including their expertise level, needs, and context",
-  "domain": "healthcare|education|business|government|finance|legal|retail|ecommerce|nonprofit|technology|science|general",
-  "formType": "registration|contact|survey|application|booking|feedback|order|assessment|quiz|questionnaire|research|evaluation|other",
+  "domain": "healthcare|education|business|government|finance|legal|retail|ecommerce|nonprofit|technology|science|events|hospitality|general",
+  "formType": "registration|contact|survey|application|booking|feedback|order|assessment|quiz|questionnaire|research|evaluation|rsvp|petition|donation|consent|contest|review|volunteer|request|poll|other",
   "isQuiz": true|false, // true for ANY knowledge assessment, trivia, test, or exam
   "keyEntities": ["important", "concepts", "mentioned", "or", "implied", "including", "technical", "terms"],
-  "tone": "professional|casual|formal|medical|legal|friendly|academic|scientific|conversational",
+  "tone": "professional|casual|formal|medical|legal|friendly|academic|scientific|conversational|celebratory",
   "complexity": "simple|moderate|complex|expert",
   "difficultyLevel": "beginner|intermediate|advanced|expert", // For quizzes - determines question difficulty
   "essentialFields": ["basic", "required", "fields"],
@@ -157,18 +157,29 @@ DOMAIN DETECTION GUIDE:
 - legal: Mentions of contract, agreement, witness, jurisdiction, legal matter
 - retail/ecommerce: Mentions of product, order, customer, purchase, shipping
 - nonprofit: Mentions of donation, volunteer, cause, membership, event
+- events: Mentions of party, wedding, celebration, ceremony, RSVP, invitation, gathering
+- hospitality: Mentions of hotel, restaurant, reservation, guest, accommodation
 
-FORM TYPE DETECTION:
+FORM TYPE DETECTION (Expanded - be flexible and intelligent):
 - quiz: Knowledge tests, trivia, exams, graded assessments
-- registration: Creating accounts, signing up
-- contact: Getting in touch, inquiries
-- survey: Gathering opinions, feedback, research
-- application: Job, program, service applications
-- booking: Reservations, appointments, scheduling
-- feedback: Post-interaction reviews, ratings
-- order: Purchases, transactions
+- registration: Creating accounts, signing up, enrollment, membership
+- contact: Getting in touch, inquiries, reach out, message us
+- survey: Gathering opinions, feedback, research, polls
+- application: Job, program, service, scholarship applications
+- booking: Reservations, appointments, scheduling, table booking
+- feedback: Post-interaction reviews, ratings, testimonials
+- order: Purchases, transactions, shopping, checkout
 - assessment: Evaluations, screenings (can be quiz-like or survey-like)
-- questionnaire: Structured data collection with specific research objectives`;
+- questionnaire: Structured data collection with specific research objectives
+- rsvp: Event responses, invitation replies, attendance confirmation, party/wedding responses
+- petition: Signature collection, pledges, support campaigns
+- donation: Fundraising, contributions, charity, sponsorship
+- consent: Agreements, waivers, permissions, GDPR consent, terms acceptance
+- contest: Giveaways, competitions, sweepstakes, raffles, enter to win
+- review: Product reviews, service ratings, testimonials
+- volunteer: Volunteer signups, help offers, participation forms
+- request: Support tickets, help desk, issue reports, service requests
+- poll: Quick votes, opinion polls, preference selection`;
 }
 
 // Stage 2: Form Generation - Create form based on rich context

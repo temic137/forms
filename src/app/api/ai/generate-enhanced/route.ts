@@ -238,12 +238,39 @@ export async function POST(req: Request) {
 }
 
 function getEnhancedSystemPrompt(analysis: ContentAnalysis, sourceType: string): string {
-  const isQuizLike = analysis.documentType?.toLowerCase().includes('quiz') || 
-                     analysis.documentType?.toLowerCase().includes('test') ||
-                     analysis.documentType?.toLowerCase().includes('exam');
-  const isSurveyLike = analysis.documentType?.toLowerCase().includes('survey') || 
-                       analysis.documentType?.toLowerCase().includes('questionnaire') ||
-                       analysis.documentType?.toLowerCase().includes('feedback');
+  const docType = analysis.documentType?.toLowerCase() || '';
+  
+  // Expanded type detection
+  const isQuizLike = docType.includes('quiz') || 
+                     docType.includes('test') ||
+                     docType.includes('exam') ||
+                     docType.includes('assessment') ||
+                     docType.includes('trivia');
+  const isSurveyLike = docType.includes('survey') || 
+                       docType.includes('questionnaire') ||
+                       docType.includes('feedback') ||
+                       docType.includes('poll');
+  const isRSVP = docType.includes('rsvp') ||
+                 docType.includes('invitation') ||
+                 docType.includes('event') ||
+                 docType.includes('attendance');
+  const isRegistration = docType.includes('registration') ||
+                         docType.includes('signup') ||
+                         docType.includes('enrollment');
+  const isBooking = docType.includes('booking') ||
+                    docType.includes('appointment') ||
+                    docType.includes('reservation');
+  const isApplication = docType.includes('application') ||
+                        docType.includes('job') ||
+                        docType.includes('candidate');
+  const isDonation = docType.includes('donation') ||
+                     docType.includes('fundrais') ||
+                     docType.includes('charity');
+  const isPetition = docType.includes('petition') ||
+                     docType.includes('signature');
+  const isConsent = docType.includes('consent') ||
+                    docType.includes('agreement') ||
+                    docType.includes('waiver');
 
   return `You are a world-class form architect combining expertise in UX design, psychometrics, survey methodology, and domain-specific best practices. Your mission is to create forms that capture MAXIMUM STRATEGIC VALUE.
 
@@ -254,6 +281,13 @@ CONTEXT:
 - Source Type: ${sourceType}
 - Is Assessment/Quiz: ${isQuizLike ? 'YES' : 'NO'}
 - Is Survey/Research: ${isSurveyLike ? 'YES' : 'NO'}
+- Is RSVP/Event: ${isRSVP ? 'YES' : 'NO'}
+- Is Registration: ${isRegistration ? 'YES' : 'NO'}
+- Is Booking: ${isBooking ? 'YES' : 'NO'}
+- Is Application: ${isApplication ? 'YES' : 'NO'}
+- Is Donation: ${isDonation ? 'YES' : 'NO'}
+- Is Petition: ${isPetition ? 'YES' : 'NO'}
+- Is Consent: ${isConsent ? 'YES' : 'NO'}
 
 ═══════════════════════════════════════════════════════════════
                     INTELLIGENCE REQUIREMENTS
@@ -265,6 +299,86 @@ Your generated form must:
 3. **PREDICT BEHAVIOR** - Include fields that indicate future actions
 4. **REDUCE FRICTION** - Smart defaults, clear guidance, logical flow
 5. **DOMAIN MASTERY** - Apply industry-specific best practices
+
+${isRSVP ? `
+═══════════════════════════════════════════════════════════════
+              RSVP/EVENT RESPONSE FORM ACTIVE
+═══════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+1. Include attendance confirmation (Yes/No/Maybe) as radio buttons
+2. Capture guest name and contact information
+3. Ask about number of guests/plus ones if applicable
+4. Include meal preferences and dietary restrictions
+5. Allow for special accommodation requests
+6. Optional message to host field
+7. Keep it simple and celebratory in tone
+` : ''}
+
+${isRegistration ? `
+═══════════════════════════════════════════════════════════════
+              REGISTRATION/SIGNUP FORM ACTIVE
+═══════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+1. Capture essential identity information (name, email)
+2. Include appropriate contact fields
+3. Add consent checkboxes for terms/privacy
+4. Consider optional profile enhancement fields
+5. Design for conversion - minimize required fields
+` : ''}
+
+${isBooking ? `
+═══════════════════════════════════════════════════════════════
+              BOOKING/APPOINTMENT FORM ACTIVE
+═══════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+1. Capture contact information
+2. Include date and time selection fields
+3. Ask about service/appointment type
+4. Allow for special requests
+5. Include confirmation preferences
+` : ''}
+
+${isDonation ? `
+═══════════════════════════════════════════════════════════════
+              DONATION/FUNDRAISING FORM ACTIVE
+═══════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+1. Capture donor information
+2. Include donation amount options (preset + custom)
+3. Ask about one-time vs recurring
+4. Allow for dedication/tribute options
+5. Include anonymous donation option
+` : ''}
+
+${isPetition ? `
+═══════════════════════════════════════════════════════════════
+              PETITION/SIGNATURE FORM ACTIVE
+═══════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+1. Capture signatory name
+2. Include email for verification
+3. Ask for location/region
+4. Allow optional comment/reason
+5. Include public display consent option
+` : ''}
+
+${isConsent ? `
+═══════════════════════════════════════════════════════════════
+              CONSENT/AGREEMENT FORM ACTIVE
+═══════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+1. Capture signatory identification
+2. Use separate checkboxes for each consent item
+3. Include date field
+4. Add acknowledgment of understanding
+5. Keep language clear and unambiguous
+` : ''}
 
 ${isQuizLike ? `
 ═══════════════════════════════════════════════════════════════

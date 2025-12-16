@@ -374,10 +374,10 @@ async function generateFormFromAnalysis(
   // Enforce maximum of 120, minimum of 1
   const questionCount = requestedCount ? Math.min(Math.max(requestedCount, 1), 120) : null;
 
-  // Detect if this is a quiz/test request
-
-  // Detect if this is a quiz/test request
+  // Enhanced flexible form type detection
   const contentLower = content.toLowerCase();
+  
+  // Quiz/Test detection
   const isQuiz = contentLower.includes('quiz') || 
                  contentLower.includes('test') || 
                  contentLower.includes('exam') ||
@@ -385,9 +385,117 @@ async function generateFormFromAnalysis(
                  contentLower.includes('assessment') ||
                  analysis.metadata?.contentType?.toLowerCase().includes('quiz');
 
+  // Survey/Questionnaire detection
   const isSurvey = contentLower.includes('survey') || 
                    contentLower.includes('questionnaire') ||
-                   contentLower.includes('feedback');
+                   contentLower.includes('feedback') ||
+                   contentLower.includes('poll') ||
+                   contentLower.includes('opinion');
+
+  // RSVP/Event Response detection
+  const isRSVP = contentLower.includes('rsvp') || 
+                 contentLower.includes('invitation') ||
+                 contentLower.includes('event response') ||
+                 contentLower.includes('attendance') ||
+                 contentLower.includes('will you attend') ||
+                 contentLower.includes('party') ||
+                 contentLower.includes('wedding') ||
+                 contentLower.includes('celebration') ||
+                 contentLower.includes('ceremony');
+
+  // Registration/Signup detection
+  const isRegistration = contentLower.includes('registration') ||
+                         contentLower.includes('signup') ||
+                         contentLower.includes('sign up') ||
+                         contentLower.includes('sign-up') ||
+                         contentLower.includes('register') ||
+                         contentLower.includes('enroll') ||
+                         contentLower.includes('enrollment') ||
+                         contentLower.includes('join') ||
+                         contentLower.includes('membership');
+
+  // Booking/Appointment detection
+  const isBooking = contentLower.includes('booking') ||
+                    contentLower.includes('appointment') ||
+                    contentLower.includes('reservation') ||
+                    contentLower.includes('schedule') ||
+                    contentLower.includes('book a') ||
+                    contentLower.includes('reserve');
+
+  // Order/Purchase detection
+  const isOrder = contentLower.includes('order') ||
+                  contentLower.includes('purchase') ||
+                  contentLower.includes('buy') ||
+                  contentLower.includes('checkout') ||
+                  contentLower.includes('shopping');
+
+  // Application detection
+  const isApplication = contentLower.includes('application') ||
+                        contentLower.includes('apply') ||
+                        contentLower.includes('job') ||
+                        contentLower.includes('position') ||
+                        contentLower.includes('candidate') ||
+                        contentLower.includes('resume') ||
+                        contentLower.includes('cv');
+
+  // Contact/Inquiry detection
+  const isContact = contentLower.includes('contact') ||
+                    contentLower.includes('inquiry') ||
+                    contentLower.includes('enquiry') ||
+                    contentLower.includes('get in touch') ||
+                    contentLower.includes('reach out') ||
+                    contentLower.includes('message us');
+
+  // Consent/Agreement detection  
+  const isConsent = contentLower.includes('consent') ||
+                    contentLower.includes('agreement') ||
+                    contentLower.includes('permission') ||
+                    contentLower.includes('waiver') ||
+                    contentLower.includes('terms') ||
+                    contentLower.includes('gdpr') ||
+                    contentLower.includes('privacy');
+
+  // Petition/Signature detection
+  const isPetition = contentLower.includes('petition') ||
+                     contentLower.includes('signature') ||
+                     contentLower.includes('sign this') ||
+                     contentLower.includes('support') ||
+                     contentLower.includes('pledge');
+
+  // Donation/Contribution detection
+  const isDonation = contentLower.includes('donation') ||
+                     contentLower.includes('donate') ||
+                     contentLower.includes('contribute') ||
+                     contentLower.includes('fundrais') ||
+                     contentLower.includes('charity') ||
+                     contentLower.includes('sponsor');
+
+  // Contest/Competition detection
+  const isContest = contentLower.includes('contest') ||
+                    contentLower.includes('competition') ||
+                    contentLower.includes('giveaway') ||
+                    contentLower.includes('sweepstake') ||
+                    contentLower.includes('raffle') ||
+                    contentLower.includes('enter to win');
+
+  // Review/Rating detection
+  const isReview = contentLower.includes('review') ||
+                   contentLower.includes('rating') ||
+                   contentLower.includes('rate us') ||
+                   contentLower.includes('testimonial') ||
+                   contentLower.includes('experience');
+
+  // Volunteer detection
+  const isVolunteer = contentLower.includes('volunteer') ||
+                      contentLower.includes('help out') ||
+                      contentLower.includes('participate');
+
+  // Request/Support detection
+  const isRequest = contentLower.includes('request') ||
+                    contentLower.includes('support ticket') ||
+                    contentLower.includes('help desk') ||
+                    contentLower.includes('issue report') ||
+                    contentLower.includes('bug report');
 
   // Extract the topic from content for quizzes
   const topicMatch = content.match(/(?:quiz|test|exam|trivia|assessment)\s+(?:on|about|for|regarding)\s+(.+?)(?:\.|$)/i);
@@ -560,6 +668,473 @@ Design a structured questionnaire with:
 - Logical progression from general to specific
 
 Return valid JSON with title and fields array containing exactly ${questionnaireCount} fields.`;
+
+  } else if (isRSVP) {
+    // RSVP / Event Response form
+    const rsvpFieldCount = questionCount || 6;
+    
+    systemPrompt = `You are an expert event planner and RSVP form designer. Create elegant, efficient RSVP and event response forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+RSVP FORM ESSENTIALS:
+1. Attendance confirmation (Yes/No/Maybe)
+2. Guest information (name, email, phone)
+3. Number of guests/plus ones
+4. Meal preferences or dietary restrictions
+5. Special accommodations needed
+6. Optional message to host
+
+Use appropriate field types:
+- radio for Yes/No/Maybe attendance
+- number for guest count
+- select for meal choices
+- textarea for special requests
+- checkbox for dietary restrictions (multiple selections)
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create an RSVP/event response form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${rsvpFieldCount} fields.**
+
+Include relevant fields such as:
+- Attendance confirmation
+- Guest name and contact info
+- Number of guests attending
+- Meal/dietary preferences (if applicable)
+- Special requests or accommodations
+- Message to host (optional)
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isRegistration) {
+    // Registration / Signup form
+    const registrationFieldCount = questionCount || 8;
+    
+    systemPrompt = `You are an expert in user registration and signup form design. Create secure, user-friendly registration forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+REGISTRATION FORM BEST PRACTICES:
+1. Essential identity fields (name, email)
+2. Contact information
+3. Account security (password if needed)
+4. Optional profile information
+5. Consent checkboxes for terms/privacy
+6. Marketing preferences
+
+Field type guidelines:
+- email for email addresses
+- tel for phone numbers
+- text for names
+- select for country/region
+- checkbox for consent and preferences
+- date for birth dates
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a registration/signup form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${registrationFieldCount} fields.**
+
+Include appropriate fields like:
+- Name (first/last or full name)
+- Email address
+- Phone number (if relevant)
+- Additional profile info based on context
+- Terms acceptance checkbox
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isBooking) {
+    // Booking / Appointment form
+    const bookingFieldCount = questionCount || 8;
+    
+    systemPrompt = `You are an expert in booking and appointment scheduling form design. Create efficient, comprehensive booking forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+BOOKING FORM ESSENTIALS:
+1. Contact information (name, email, phone)
+2. Date and time selection
+3. Service/appointment type selection
+4. Duration or number of guests
+5. Special requests or notes
+6. Confirmation preferences
+
+Field types:
+- date for date selection
+- select for time slots
+- select/radio for service types
+- number for guest count
+- textarea for special requests
+- tel for phone
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a booking/appointment form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${bookingFieldCount} fields.**
+
+Include relevant fields such as:
+- Customer name and contact info
+- Preferred date and time
+- Type of service/appointment
+- Number of people (if applicable)
+- Special requests
+- Confirmation contact preference
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isOrder) {
+    // Order / Purchase form
+    const orderFieldCount = questionCount || 10;
+    
+    systemPrompt = `You are an expert in e-commerce and order form design. Create clear, comprehensive order forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+ORDER FORM ESSENTIALS:
+1. Customer information (name, email, phone)
+2. Product/service selection
+3. Quantity and variations
+4. Shipping/delivery address
+5. Payment preferences
+6. Delivery instructions
+
+Field types:
+- text for names and addresses
+- email for email
+- tel for phone
+- select for product choices, quantities
+- number for quantities
+- textarea for delivery instructions
+- checkbox for add-ons or options
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create an order/purchase form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${orderFieldCount} fields.**
+
+Include relevant fields such as:
+- Customer name and contact
+- Product/service selection
+- Quantity
+- Delivery/shipping information
+- Special instructions
+- Payment preference (if applicable)
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isApplication) {
+    // Job/Program Application form
+    const applicationFieldCount = questionCount || 12;
+    
+    systemPrompt = `You are an expert in application form design for jobs, programs, and opportunities. Create professional, comprehensive application forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+APPLICATION FORM ESSENTIALS:
+1. Personal information (name, contact)
+2. Professional background
+3. Qualifications and experience
+4. Availability and expectations
+5. Supporting documents references
+6. Additional relevant questions
+
+Field types:
+- text for name, titles, company names
+- email for email
+- tel for phone
+- url for LinkedIn/portfolio
+- date for availability dates
+- textarea for cover letter, experience descriptions
+- select for experience levels, education
+- number for years of experience
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create an application form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${applicationFieldCount} fields.**
+
+Include relevant fields such as:
+- Full name and contact information
+- Current role/position
+- Relevant experience
+- Education/qualifications
+- Why applying/motivation
+- Availability
+- References or portfolio links
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isContact) {
+    // Contact / Inquiry form
+    const contactFieldCount = questionCount || 5;
+    
+    systemPrompt = `You are an expert in contact and inquiry form design. Create simple, effective contact forms that encourage engagement.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+CONTACT FORM ESSENTIALS:
+1. Name
+2. Email (required for response)
+3. Subject or inquiry type
+4. Message
+5. Optional: Phone, company, urgency
+
+Keep it simple - don't ask for unnecessary information.
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a contact/inquiry form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${contactFieldCount} fields.**
+
+Include essential fields:
+- Name
+- Email
+- Subject or topic (select if categories known)
+- Message (textarea)
+- Optional additional context fields
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isConsent) {
+    // Consent / Agreement form
+    const consentFieldCount = questionCount || 6;
+    
+    systemPrompt = `You are an expert in consent and agreement form design. Create clear, legally-minded consent forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+CONSENT FORM ESSENTIALS:
+1. Participant/signatory identification
+2. Clear consent statements (checkbox for each)
+3. Date of consent
+4. Optional: Parent/guardian info for minors
+5. Contact information
+6. Digital signature acknowledgment
+
+Use checkbox type for individual consent items - each consent should be a separate checkbox.
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a consent/agreement form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${consentFieldCount} fields.**
+
+Include relevant fields:
+- Name of person giving consent
+- Email/contact
+- Individual consent checkboxes for each agreement point
+- Date
+- Acknowledgment of understanding
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isPetition) {
+    // Petition / Signature form
+    const petitionFieldCount = questionCount || 5;
+    
+    systemPrompt = `You are an expert in petition and signature collection form design. Create engaging forms that encourage participation.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+PETITION FORM ESSENTIALS:
+1. Name (required)
+2. Email (for verification)
+3. Location/region (for geographic representation)
+4. Optional comment or reason for support
+5. Consent to display name publicly (checkbox)
+
+Keep it simple to maximize signatures.
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a petition/signature form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${petitionFieldCount} fields.**
+
+Include essential fields:
+- Full name
+- Email
+- Location (city, state, or country)
+- Reason for support (optional textarea)
+- Permission checkboxes
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isDonation) {
+    // Donation / Contribution form
+    const donationFieldCount = questionCount || 8;
+    
+    systemPrompt = `You are an expert in donation and fundraising form design. Create compelling forms that encourage contributions.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+DONATION FORM ESSENTIALS:
+1. Donor information (name, email)
+2. Donation amount (preset options + custom)
+3. Donation frequency (one-time vs recurring)
+4. Dedication/tribute option
+5. Anonymous option
+6. Contact for acknowledgment
+
+Field types:
+- radio for preset amounts
+- number for custom amount
+- select for frequency
+- checkbox for anonymous, dedications
+- textarea for messages
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a donation/contribution form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${donationFieldCount} fields.**
+
+Include relevant fields:
+- Donor name and contact
+- Donation amount options
+- One-time or recurring selection
+- Optional dedication message
+- Acknowledgment preferences
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isContest) {
+    // Contest / Giveaway entry form
+    const contestFieldCount = questionCount || 6;
+    
+    systemPrompt = `You are an expert in contest and giveaway entry form design. Create engaging, compliant entry forms.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+CONTEST FORM ESSENTIALS:
+1. Entrant information (name, email)
+2. Age verification (if required)
+3. Contest-specific entry (answer, submission, etc.)
+4. Terms and eligibility acknowledgment
+5. Marketing consent option
+6. How they heard about contest
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a contest/giveaway entry form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${contestFieldCount} fields.**
+
+Include relevant fields:
+- Name and email
+- Age confirmation (if needed)
+- Entry answer or submission
+- Terms acceptance checkbox
+- Optional marketing opt-in
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isReview) {
+    // Review / Rating form
+    const reviewFieldCount = questionCount || 6;
+    
+    systemPrompt = `You are an expert in review and rating form design. Create forms that capture valuable feedback.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+REVIEW FORM ESSENTIALS:
+1. Overall rating (star rating or scale)
+2. Specific aspect ratings
+3. Written review/comment
+4. Reviewer information (optional name)
+5. Would recommend? (Yes/No)
+6. Date of experience
+
+Use radio/select for ratings, textarea for comments.
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a review/rating form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${reviewFieldCount} fields.**
+
+Include relevant fields:
+- Overall rating (1-5 scale or similar)
+- Specific ratings for key aspects
+- Written review/testimonial
+- Recommendation question
+- Reviewer name (optional)
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isVolunteer) {
+    // Volunteer signup form
+    const volunteerFieldCount = questionCount || 10;
+    
+    systemPrompt = `You are an expert in volunteer recruitment form design. Create forms that effectively match volunteers to opportunities.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+VOLUNTEER FORM ESSENTIALS:
+1. Personal information (name, contact)
+2. Availability (days, times, frequency)
+3. Skills and interests
+4. Previous volunteer experience
+5. Areas of interest/preferred activities
+6. Emergency contact
+7. Any restrictions or requirements
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a volunteer signup form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${volunteerFieldCount} fields.**
+
+Include relevant fields:
+- Name and contact information
+- Availability (dates, times)
+- Skills and interests
+- Previous experience
+- Preferred volunteer activities
+- Emergency contact
+
+Return valid JSON with title and fields array.`;
+
+  } else if (isRequest) {
+    // Request / Support ticket form
+    const requestFieldCount = questionCount || 7;
+    
+    systemPrompt = `You are an expert in support request and ticket form design. Create efficient forms for issue reporting and requests.
+
+CRITICAL RULE: Generate EXACTLY the number of fields requested.
+
+REQUEST FORM ESSENTIALS:
+1. Contact information
+2. Request/issue category
+3. Priority/urgency level
+4. Detailed description
+5. Relevant details (order number, account, etc.)
+6. Preferred contact method
+7. Attachments reference
+
+Return ONLY valid JSON.`;
+
+    formPrompt = `Create a request/support form for: "${content}"
+
+**IMPORTANT: Generate EXACTLY ${requestFieldCount} fields.**
+
+Include relevant fields:
+- Name and contact info
+- Issue/request type (select)
+- Priority level
+- Detailed description (textarea)
+- Reference numbers or IDs
+- Preferred response method
+
+Return valid JSON with title and fields array.`;
 
   } else {
     // Standard form - determine field count

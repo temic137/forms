@@ -68,8 +68,20 @@ ${languageContext}
    - "with X, Y, and Z" → Field specifications
    - "for X" / "to do X" / "about X" → Form purpose/topic
    - "quiz" / "test" / "exam" → KNOWLEDGE ASSESSMENT mode
-   - "survey" / "questionnaire" / "research" → RESEARCH INSTRUMENT mode
-   - "feedback" / "review" / "rating" → EVALUATION mode
+   - "survey" / "questionnaire" / "research" / "poll" → RESEARCH INSTRUMENT mode
+   - "feedback" / "review" / "rating" / "testimonial" → EVALUATION mode
+   - "rsvp" / "invitation" / "event" / "attendance" / "party" / "wedding" → EVENT RESPONSE mode
+   - "registration" / "signup" / "enroll" / "join" / "membership" → REGISTRATION mode
+   - "booking" / "appointment" / "reservation" / "schedule" → BOOKING mode
+   - "order" / "purchase" / "buy" / "checkout" → ORDER mode
+   - "application" / "apply" / "job" / "position" / "candidate" → APPLICATION mode
+   - "contact" / "inquiry" / "message" / "reach out" → CONTACT mode
+   - "consent" / "agreement" / "waiver" / "permission" / "terms" → CONSENT mode
+   - "petition" / "signature" / "support" / "pledge" → PETITION mode
+   - "donation" / "donate" / "fundrais" / "charity" / "contribute" → DONATION mode
+   - "contest" / "giveaway" / "competition" / "sweepstake" / "raffle" → CONTEST mode
+   - "volunteer" / "help out" / "participate" → VOLUNTEER mode
+   - "request" / "support ticket" / "help desk" / "issue" → REQUEST mode
    
 2. **INTELLIGENT FIELD INFERENCE**:
    - Email/contact patterns → email type
@@ -80,6 +92,9 @@ ${languageContext}
    - Choices/selection → select OR radio based on option count
    - Multiple selections → checkbox/multiselect
    - Ranking/ordering → ranking type
+   - Attendance (Yes/No/Maybe) → radio type for RSVP
+   - Guest count → number type for events
+   - Meal preferences → select or checkboxes for dietary options
    
 3. **CONTEXT-AWARE ENHANCEMENT**:
    Add insightful fields users didn't explicitly request but SHOULD have:
@@ -87,6 +102,10 @@ ${languageContext}
    - Feedback forms: Add NPS question and "What one thing would you change?"
    - Registration: Add "What brings you here?" for segmentation
    - Applications: Add "Availability" and "How did you find this opportunity?"
+   - RSVP: Add "Dietary restrictions", "Number of guests", "Special accommodations"
+   - Booking: Add "Preferred time", "Special requests"
+   - Donation: Add "Dedication message", "Anonymous option"
+   - Contest: Add "How did you hear about this?", "Terms acceptance"
 
 ═══════════════════════════════════════════════════════════════
           QUIZ/TEST GENERATION - PROFESSIONAL STANDARDS

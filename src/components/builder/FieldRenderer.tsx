@@ -338,6 +338,21 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
     () => (styling ? getFontFamily(styling.fontFamily) : undefined),
     [styling]
   );
+  
+  // Helper function to normalize options - handles both string[] and {value, label}[] formats
+  const normalizeOptions = (options: unknown[] | undefined): string[] => {
+    if (!options) return ["Option 1", "Option 2", "Option 3"];
+    return options.map((opt) => {
+      if (typeof opt === 'string') return opt;
+      if (typeof opt === 'object' && opt !== null) {
+        // Handle {value, label} or {label} format
+        const optObj = opt as { value?: string; label?: string };
+        return optObj.label || optObj.value || String(opt);
+      }
+      return String(opt);
+    });
+  };
+  
   const isDisplayOnly = [
     "display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video"
   ].includes(field.type);
@@ -429,7 +444,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "radio":
         return (
           <div className="space-y-2">
-            {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, idx) => (
+            {normalizeOptions(field.options).map((option, idx) => (
               <label key={idx} className="flex items-center gap-2 cursor-pointer">
                 <input type="radio" name={field.id} disabled={!isPreview} className="w-4 h-4" />
                 <span className="text-gray-700">{option}</span>
@@ -451,7 +466,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
             disabled={!isPreview}
           >
             <option value="">Select an option...</option>
-            {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, idx) => (
+            {normalizeOptions(field.options).map((option, idx) => (
               <option key={idx} value={option}>{option}</option>
             ))}
           </select>
@@ -461,7 +476,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "multiselect":
         return (
           <div className="space-y-2">
-            {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, idx) => (
+            {normalizeOptions(field.options).map((option, idx) => (
               <label key={idx} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />
                 <span className="text-gray-700">{option}</span>
@@ -475,7 +490,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         if (field.options && field.options.length > 0) {
           return (
             <div className="space-y-2">
-              {field.options.map((option, idx) => (
+              {normalizeOptions(field.options).map((option, idx) => (
                 <label key={idx} className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />
                   <span className="text-gray-700">{option}</span>
@@ -506,7 +521,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "picture-choice":
         return (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, i) => (
+            {normalizeOptions(field.options).map((option, i) => (
               <label key={i} className="relative cursor-pointer">
                 <input 
                   type="radio" 
@@ -542,7 +557,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
               <thead>
                 <tr>
                   <th className="border border-gray-300 px-4 py-2 bg-gray-50"></th>
-                  {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, idx) => (
+                  {normalizeOptions(field.options).map((option, idx) => (
                     <th key={idx} className="border border-gray-300 px-4 py-2 bg-gray-50 font-medium">
                       {option}
                     </th>
@@ -553,7 +568,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
                 {(field.matrixRows || ["Row 1", "Row 2", "Row 3"]).map((row, rowIdx) => (
                   <tr key={rowIdx}>
                     <td className="border border-gray-300 px-4 py-2 font-medium">{row}</td>
-                    {(field.options || ["Option 1", "Option 2", "Option 3"]).map((option, colIdx) => (
+                    {normalizeOptions(field.options).map((option, colIdx) => (
                       <td key={colIdx} className="border border-gray-300 px-4 py-2 text-center">
                         <input
                           type={field.allowMultipleSelection ? "checkbox" : "radio"}
@@ -675,7 +690,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "ranking":
         return (
           <div className="space-y-2">
-            {(field.options || ["Item 1", "Item 2", "Item 3"]).map((option, idx) => (
+            {normalizeOptions(field.options).map((option, idx) => (
               <div key={idx} className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg bg-white">
                 <svg className="w-5 h-5 text-gray-400 cursor-move" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
