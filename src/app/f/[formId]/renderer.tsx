@@ -31,7 +31,7 @@ function inferTypeFromLabel(label: string): Field["type"] {
   return "text";
 }
 
-function getFontFamily(family: "system" | "sans" | "serif" | "mono"): string {
+function getFontFamily(family: string): string {
   switch (family) {
     case "sans":
       return "ui-sans-serif, system-ui, sans-serif";
@@ -39,6 +39,44 @@ function getFontFamily(family: "system" | "sans" | "serif" | "mono"): string {
       return "ui-serif, Georgia, serif";
     case "mono":
       return "ui-monospace, monospace";
+    case "inter":
+      return "'Inter', sans-serif";
+    case "roboto":
+      return "'Roboto', sans-serif";
+    case "open-sans":
+      return "'Open Sans', sans-serif";
+    case "lato":
+      return "'Lato', sans-serif";
+    case "montserrat":
+      return "'Montserrat', sans-serif";
+    case "playfair":
+      return "'Playfair Display', serif";
+    case "merriweather":
+      return "'Merriweather', serif";
+    case "courier":
+      return "'Courier New', Courier, monospace";
+    case "arial":
+      return "Arial, Helvetica, sans-serif";
+    case "georgia":
+      return "Georgia, serif";
+    case "times":
+      return "'Times New Roman', Times, serif";
+    case "poppins":
+      return "'Poppins', sans-serif";
+    case "raleway":
+      return "'Raleway', sans-serif";
+    case "nunito":
+      return "'Nunito', sans-serif";
+    case "rubik":
+      return "'Rubik', sans-serif";
+    case "pt-serif":
+      return "'PT Serif', serif";
+    case "source-serif":
+      return "'Source Serif Pro', serif";
+    case "fira-code":
+      return "'Fira Code', monospace";
+    case "jetbrains-mono":
+      return "'JetBrains Mono', monospace";
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
