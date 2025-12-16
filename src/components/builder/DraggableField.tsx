@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import { Field, FormStyling, QuizConfig } from "@/types/form";
+import { InlineAIAction } from "@/hooks/useInlineAI";
 
 import FieldRenderer from "./FieldRenderer";
+import InlineAIButton, { SingleAIButton } from "./InlineAIButton";
+import { InlineSuggestions } from "./AISuggestionsModal";
 
 const OPTION_FIELD_TYPES = new Set([
   "multiple-choice",
@@ -174,6 +177,10 @@ function FieldEditor({
     () => DISPLAY_ONLY_FIELD_TYPES.has(field.type),
     [field.type]
   );
+
+  // AI suggestion states
+  const [labelSuggestions, setLabelSuggestions] = useState<{ text: string; reason?: string }[]>([]);
+  const [showLabelSuggestions, setShowLabelSuggestions] = useState(false);
 
   const labelRef = useRef<HTMLDivElement | null>(null);
   const optionRefs = useRef(new Map<number, HTMLDivElement>());
@@ -445,30 +452,102 @@ function FieldEditor({
     });
   };
 
+  // Handler for AI label improvements
+  const handleLabelAIResult = (action: InlineAIAction, data: Record<string, unknown>) => {
+    if (action === "improve-question" && data.suggestions) {
+      const suggestions = data.suggestions as { text: string; reason?: string }[];
+      setLabelSuggestions(suggestions);
+      setShowLabelSuggestions(true);
+    } else if (action === "rewrite-concise" || action === "rewrite-formal" || action === "rewrite-casual") {
+      const rewritten = data.rewritten as string;
+      if (rewritten) {
+        onUpdate({ label: rewritten });
+      }
+    } else if (action === "fix-grammar") {
+      const fixed = data.fixed as string;
+      if (fixed) {
+        onUpdate({ label: fixed });
+      }
+    } else if (action === "translate") {
+      const translated = data.translated as string;
+      if (translated) {
+        onUpdate({ label: translated });
+      }
+    }
+  };
+
+  // Handler for AI options generation
+  const handleOptionsAIResult = (data: Record<string, unknown>) => {
+    if (data.options) {
+      const options = data.options as string[];
+      onUpdate({ options });
+    } else if (data.newOptions) {
+      const newOptions = data.newOptions as string[];
+      const current = field.options || resolvedOptions;
+      onUpdate({ options: [...current, ...newOptions] });
+    }
+  };
+
+  // Handler for quiz AI results
+  const handleQuizAIResult = (action: string, data: Record<string, unknown>) => {
+    if (action === "generate-distractors" && data.distractors) {
+      const distractors = data.distractors as { text: string }[];
+      const currentOptions = field.options || [];
+      const correctAnswer = field.quizConfig?.correctAnswer;
+      const newOptions = distractors.map(d => d.text);
+      // Add correct answer if not present
+      if (correctAnswer && typeof correctAnswer === "string" && !newOptions.includes(correctAnswer)) {
+        newOptions.unshift(correctAnswer);
+      }
+      onUpdate({ options: [...currentOptions, ...newOptions.filter(o => !currentOptions.includes(o))] });
+    } else if (action === "explain-answer" && data.explanation) {
+      updateQuizConfig({ explanation: data.explanation as string });
+    }
+  };
+
+  // AI context for this field
+  const getAIContext = () => ({
+    fieldLabel: field.label,
+    fieldType: field.type,
+    options: field.options,
+    correctAnswer: field.quizConfig?.correctAnswer,
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
-        <div
-          ref={labelRef}
-          role="textbox"
-          contentEditable
-          suppressContentEditableWarning
-          className="relative flex-1 cursor-text rounded-md px-1 py-1 text-base font-semibold text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-500/40 before:pointer-events-none before:absolute before:inset-1 before:select-none before:text-sm before:text-gray-400 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
-          data-placeholder="Untitled field"
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onInput={(e) => {
-            captureSelection(e.currentTarget, "label");
-            updateLabel(e.currentTarget.textContent || "");
-          }}
-          onBlur={(e) => updateLabel(e.currentTarget.textContent || "")}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              focusEditable(optionRefs.current.get(0) || null);
-            }
-          }}
-        />
+        <div className="flex items-center gap-2 flex-1">
+          <div
+            ref={labelRef}
+            role="textbox"
+            contentEditable
+            suppressContentEditableWarning
+            className="relative flex-1 cursor-text rounded-md px-1 py-1 text-base font-semibold text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-500/40 before:pointer-events-none before:absolute before:inset-1 before:select-none before:text-sm before:text-gray-400 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
+            data-placeholder="Untitled field"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onInput={(e) => {
+              captureSelection(e.currentTarget, "label");
+              updateLabel(e.currentTarget.textContent || "");
+            }}
+            onBlur={(e) => updateLabel(e.currentTarget.textContent || "")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                focusEditable(optionRefs.current.get(0) || null);
+              }
+            }}
+          />
+          {/* AI Button for question label */}
+          {field.label && field.label.length > 2 && (
+            <InlineAIButton
+              actions={["improve-question", "rewrite-concise", "rewrite-formal", "rewrite-casual", "fix-grammar"]}
+              context={getAIContext()}
+              onResult={handleLabelAIResult}
+              size="sm"
+            />
+          )}
+        </div>
         {!isDisplayOnly && (
           <button
             onClick={(e) => {
@@ -489,6 +568,22 @@ function FieldEditor({
           </button>
         )}
       </div>
+
+      {/* AI Label Suggestions */}
+      {showLabelSuggestions && labelSuggestions.length > 0 && (
+        <InlineSuggestions
+          suggestions={labelSuggestions}
+          onSelect={(text) => {
+            onUpdate({ label: text });
+            setShowLabelSuggestions(false);
+            setLabelSuggestions([]);
+          }}
+          onClose={() => {
+            setShowLabelSuggestions(false);
+            setLabelSuggestions([]);
+          }}
+        />
+      )}
 
       {hasOptions && (
         <div className="space-y-2">
@@ -604,16 +699,28 @@ function FieldEditor({
               </div>
             );
           })}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOptionInsertAfter();
-            }}
-            className="w-full rounded-xl border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-600"
-            type="button"
-          >
-            + Add option
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOptionInsertAfter();
+              }}
+              className="flex-1 rounded-xl border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-600"
+              type="button"
+            >
+              + Add option
+            </button>
+            {/* AI Generate Options Button */}
+            {field.label && (
+              <SingleAIButton
+                action={field.options && field.options.length > 1 ? "add-more-options" : "generate-options"}
+                context={getAIContext()}
+                onResult={handleOptionsAIResult}
+                label={field.options && field.options.length > 1 ? "✨ More" : "✨ Generate"}
+                className="flex-shrink-0"
+              />
+            )}
+          </div>
         </div>
       )}
 
@@ -821,7 +928,19 @@ function FieldEditor({
 
               {/* Explanation */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Explanation</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-gray-500">Explanation</label>
+                  {/* AI Generate Explanation Button */}
+                  {field.quizConfig?.correctAnswer && (
+                    <SingleAIButton
+                      action="explain-answer"
+                      context={getAIContext()}
+                      onResult={(data) => handleQuizAIResult("explain-answer", data)}
+                      label="✨ Generate"
+                      className="text-[10px] py-1 px-2"
+                    />
+                  )}
+                </div>
                 <textarea
                   value={field.quizConfig?.explanation || ""}
                   onChange={(e) => updateQuizConfig({ explanation: e.target.value })}
@@ -830,6 +949,22 @@ function FieldEditor({
                   placeholder="Explain why this is correct (shown after submission)"
                 />
               </div>
+
+              {/* AI Generate Distractors (Wrong Answers) - for choice fields */}
+              {hasOptions && field.quizConfig?.correctAnswer && (
+                <div className="sm:col-span-2 pt-2 border-t border-gray-100">
+                  <SingleAIButton
+                    action="generate-distractors"
+                    context={getAIContext()}
+                    onResult={(data) => handleQuizAIResult("generate-distractors", data)}
+                    label="✨ Generate Wrong Answers"
+                    className="w-full justify-center"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1 text-center">
+                    AI will create plausible but incorrect options
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

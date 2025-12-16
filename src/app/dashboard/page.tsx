@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
@@ -15,29 +15,28 @@ import InlineJSONImport from "@/components/InlineJSONImport";
 import InlineURLScraper from "@/components/InlineURLScraper";
 import ShareButton from "@/components/ShareButton";
 // import IntegrationButton from "@/components/IntegrationButton";
-import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
+// Lazy load the heavy builder component
+const DragDropFormBuilder = lazy(() => import("@/components/builder/DragDropFormBuilder"));
 import { FileText, Calendar, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
-
-interface Form {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  _count: {
-    submissions: number;
-  };
-}
+import { 
+  useForms, 
+  updateFormInCache, 
+  removeFormFromCache, 
+  addFormToCache,
+  revalidateForms 
+} from "@/hooks/useForms";
 
 export default function DashboardPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
   const toast = useToastContext();
   const { confirm, dialogState } = useConfirmDialog();
-  const [forms, setForms] = useState<Form[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use SWR for forms fetching with caching
+  const { forms, isLoading: formsLoading } = useForms();
   
   // Form generation state
   const [query, setQuery] = useState("");
@@ -115,11 +114,7 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchForms();
-    }
-  }, [status]);
+  // SWR handles data fetching automatically - no need for manual fetchForms useEffect
 
   // Restore editing state if returning from preview
   useEffect(() => {
@@ -145,20 +140,6 @@ export default function DashboardPage() {
       sessionStorage.removeItem('formPreviewData');
     }
   }, [status, showBuilder]);
-
-  const fetchForms = async () => {
-    try {
-      const response = await fetch("/api/forms/my-forms");
-      if (response.ok) {
-        const data = await response.json();
-        setForms(data.forms);
-      }
-    } catch (error) {
-      console.error("Error fetching forms:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Auto-submit after 3 seconds of silence
   useEffect(() => {
@@ -528,7 +509,7 @@ ${additionalContext}
     }
   };
 
-  // Save form from builder
+  // Save form from builder with optimistic updates
   const handleBuilderSave = async () => {
     if (!previewTitle.trim()) {
       toast.warning("Please enter a form title");
@@ -541,11 +522,22 @@ ${additionalContext}
     }
 
     setSavingForm(true);
+    
+    // Store previous state for rollback
+    const isNewForm = !editingFormId;
+    const now = new Date().toISOString();
+    
     try {
       let url: string;
       let method: string;
 
       if (editingFormId) {
+        // Optimistic update for existing form
+        updateFormInCache(editingFormId, {
+          title: previewTitle,
+          updatedAt: now,
+        });
+        
         // Use sync endpoint for updates to support real-time collaboration
         url = `/api/forms/${editingFormId}/sync`;
         method = "POST";
@@ -574,21 +566,36 @@ ${additionalContext}
         const data = await response.json();
         toast.success(editingFormId ? "Form updated successfully!" : "Form created successfully!");
         
-        // If creating a new form, set the editingFormId to the newly created form's ID
-        // This allows the user to continue editing and keeps the builder open
-        if (!editingFormId && data.id) {
+        // If creating a new form, add it to cache and set the editingFormId
+        if (isNewForm && data.id) {
+          // Add the new form to cache optimistically
+          addFormToCache({
+            id: data.id,
+            title: previewTitle,
+            createdAt: now,
+            updatedAt: now,
+            _count: { submissions: 0 },
+          });
           setEditingFormId(data.id);
         }
         
-        // Keep the builder open in both cases (new and existing forms)
-        await fetchForms();
+        // Revalidate in background to ensure consistency
+        revalidateForms();
       } else {
         const error = await response.json();
         toast.error(`Failed to save form: ${error.error || "Unknown error"}`);
+        
+        // Rollback optimistic update on error
+        if (editingFormId) {
+          revalidateForms();
+        }
       }
     } catch (error) {
       console.error("Error saving form:", error);
       toast.error("Failed to save form. Please try again.");
+      
+      // Rollback on error
+      revalidateForms();
     } finally {
       setSavingForm(false);
     }
@@ -640,27 +647,42 @@ ${additionalContext}
       return;
     }
 
+    // Store the form for potential rollback
+    const formToDelete = forms.find((f) => f.id === formId);
+    
+    // Optimistic update - remove immediately from UI
+    removeFormFromCache(formId);
     setDeletingFormId(formId);
+    
     try {
       const response = await fetch(`/api/forms/${formId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
-        setForms(forms.filter((f) => f.id !== formId));
         toast.success("Form deleted successfully");
+        // Already removed from cache, just revalidate in background
+        revalidateForms();
       } else {
+        // Rollback - add the form back to cache
+        if (formToDelete) {
+          addFormToCache(formToDelete);
+        }
         toast.error("Failed to delete form");
       }
     } catch (error) {
       console.error("Error deleting form:", error);
+      // Rollback - add the form back to cache
+      if (formToDelete) {
+        addFormToCache(formToDelete);
+      }
       toast.error("Failed to delete form");
     } finally {
       setDeletingFormId(null);
     }
   };
 
-  if (status === "loading" || loading) {
+  if (status === "loading" || (formsLoading && forms.length === 0)) {
     return (
       <div 
         className="min-h-screen flex items-center justify-center"
@@ -688,16 +710,27 @@ ${additionalContext}
           onConfirm={dialogState.onConfirm}
           onCancel={dialogState.onCancel}
         />
-        <DragDropFormBuilder
-          formTitle={previewTitle}
-          fields={previewFields}
-          styling={previewStyling}
-          notifications={previewNotifications}
-          multiStepConfig={previewMultiStepConfig}
-          quizMode={previewQuizMode}
-          limitOneResponse={limitOneResponse}
-          saveAndEdit={saveAndEdit}
-          currentFormId={editingFormId}
+        <Suspense fallback={
+          <div 
+            className="min-h-screen flex items-center justify-center"
+            style={{ background: 'var(--background)' }}
+          >
+            <div className="flex items-center gap-3" style={{ color: 'var(--foreground-muted)' }}>
+              <Spinner size="lg" variant="primary" />
+              <span>Loading builder...</span>
+            </div>
+          </div>
+        }>
+          <DragDropFormBuilder
+            formTitle={previewTitle}
+            fields={previewFields}
+            styling={previewStyling}
+            notifications={previewNotifications}
+            multiStepConfig={previewMultiStepConfig}
+            quizMode={previewQuizMode}
+            limitOneResponse={limitOneResponse}
+            saveAndEdit={saveAndEdit}
+            currentFormId={editingFormId}
           onFormTitleChange={setPreviewTitle}
           onFieldsChange={setPreviewFields}
           onStylingChange={setPreviewStyling}
@@ -710,6 +743,7 @@ ${additionalContext}
           onCancel={handleBuilderCancel}
           saving={savingForm}
         />
+        </Suspense>
       </>
     );
   }
