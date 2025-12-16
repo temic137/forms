@@ -546,7 +546,6 @@ ${additionalContext}
                         placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
                         className="w-full px-4 py-4 text-lg bg-transparent border-0 focus:ring-0 placeholder:text-gray-400 text-gray-900 font-medium resize-none"
                         style={{ minHeight: '120px' }}
-                        autoFocus
                       />
                       {isSupported && (
                         <button
