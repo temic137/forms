@@ -33,12 +33,21 @@ export const metadata: Metadata = {
     siteName: 'AnyForm',
     locale: 'en_US',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'AnyForm Preview',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: "AnyForm - AI Form Builder",
     description: "Stop building forms manually. Just describe them to our AI.",
     creator: "@anyform", // Placeholder if they have one
+    images: ['/og-image.png'],
   },
   icons: {
     icon: [

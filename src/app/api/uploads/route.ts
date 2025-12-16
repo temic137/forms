@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 const ACCEPTED_TYPES: Record<string, string[]> = {
   images: ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"],
@@ -67,22 +65,16 @@ export async function POST(req: NextRequest) {
     const extension = file.name.split(".").pop() || "";
     const uniqueFilename = `${timestamp}-${randomString}.${extension}`;
 
-    // Create directory structure
-    const uploadDir = join(process.cwd(), "public", "uploads", formId, submissionId);
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    // Save file
-    const filePath = join(uploadDir, uniqueFilename);
+    // Upload to Cloudinary
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+    const folder = `forms/${formId}/${submissionId}`;
+    
+    const { url } = await uploadToCloudinary(buffer, folder, uniqueFilename);
 
-    // Generate URL and expiration
-    const url = `/uploads/${formId}/${submissionId}/${uniqueFilename}`;
+    // Generate expiration
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
+    expiresAt.setDate(expiresAt.getDate() + 365 * 10); // 10 years expiration
 
     // Generate file ID
     const fileId = `${formId}-${submissionId}-${fieldId}-${timestamp}`;
