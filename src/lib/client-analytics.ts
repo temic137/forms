@@ -24,6 +24,7 @@ export interface ClientEventProperties {
   exportFormat?: "csv" | "json" | "pdf";
   creationMethod?: "ai" | "voice" | "file" | "url" | "manual";
   templateType?: string;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 /**
