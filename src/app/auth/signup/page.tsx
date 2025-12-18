@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
@@ -9,7 +8,6 @@ import Link from "next/link";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 export default function SignUpPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,8 +57,8 @@ export default function SignUpPage() {
         setError("Account created but sign in failed. Please try signing in.");
         setLoading(false);
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        // Use direct navigation for faster redirect
+        window.location.href = "/dashboard";
       }
     } catch (error) {
       console.error("Sign up failed:", error);

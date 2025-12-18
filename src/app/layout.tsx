@@ -52,10 +52,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@anyform',
     title: "AnyForm - AI Form Builder",
     description: "Stop building forms manually. Just describe them to our AI.",
-    creator: "@anyform", // Placeholder if they have one
-    images: ['https://www.anyform.live/og-image.png'],
+    creator: "@anyform",
+    images: {
+      url: 'https://www.anyform.live/og-image.png',
+      alt: 'AnyForm - AI Form Builder Preview',
+      width: 1200,
+      height: 630,
+    },
   },
   icons: {
     icon: [

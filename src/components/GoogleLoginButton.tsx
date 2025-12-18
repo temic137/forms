@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Spinner } from "@/components/ui/Spinner";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   signIn as nextAuthSignIn,
   signOut as nextAuthSignOut,
@@ -13,7 +12,6 @@ import {
 import { signInWithGoogle, signOutFromFirebase } from "@/lib/firebase-auth";
 
 export default function GoogleLoginButton() {
-  const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
 
@@ -30,8 +28,8 @@ export default function GoogleLoginButton() {
         throw new Error(result.error);
       }
 
-      await router.push("/dashboard");
-      router.refresh();
+      // Use direct navigation for faster redirect
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Failed to sign in:", error);
       alert("Failed to sign in. Please try again.");
@@ -45,8 +43,8 @@ export default function GoogleLoginButton() {
     try {
       await signOutFromFirebase();
       await nextAuthSignOut({ redirect: false });
-      await router.push("/");
-      router.refresh();
+      // Use direct navigation for faster redirect
+      window.location.href = "/";
     } catch (error) {
       console.error("Failed to sign out:", error);
       alert("Failed to sign out. Please try again.");

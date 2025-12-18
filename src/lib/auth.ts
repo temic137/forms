@@ -52,6 +52,8 @@ providers.push(
         id: user.id,
         email: user.email,
         name: user.name,
+        image: user.image,
+        isAnonymous: user.isAnonymous,
       };
     },
   })
@@ -76,6 +78,7 @@ providers.push(
           name: user.name,
           email: null,
           image: null,
+          isAnonymous: true,
         };
       } catch (error) {
         console.error("Error creating anonymous user:", error);
@@ -156,6 +159,8 @@ providers.push(
           id: user.id,
           email: user.email,
           name: user.name,
+          image: user.image,
+          isAnonymous: user.isAnonymous,
         };
       } catch (error) {
         // Enhanced error logging for debugging
@@ -231,37 +236,33 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
-        // Use token.sub (which holds the user ID) to fetch the user
-        // This is more reliable than email and works for anonymous users too
-        try {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore - augmenting session user with id
-          session.user.id = token.sub;
-
-          const dbUser = await prisma.user.findUnique({
-            where: { id: token.sub },
-          });
-
-          if (dbUser) {
-            session.user.name = dbUser.name;
-            session.user.email = dbUser.email;
-            session.user.image = dbUser.image;
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore - adding isAnonymous to session
-            session.user.isAnonymous = dbUser.isAnonymous;
-          }
-        } catch (error) {
-          console.error("Error fetching user in session:", error);
-        }
+        // Use cached data from JWT token instead of database lookup
+        // This makes session access instant instead of waiting for DB
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - augmenting session user with id
+        session.user.id = token.sub;
+        session.user.name = token.name as string | null;
+        session.user.email = token.email as string | null;
+        session.user.image = token.image as string | null;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - adding isAnonymous to session
+        session.user.isAnonymous = token.isAnonymous as boolean || false;
       }
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
+        // Store user data in the token to avoid database lookups in session callback
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - augmenting token with id
+        // @ts-ignore - augmenting token with user data
         token.id = (user as { id?: string }).id;
-        token.sub = (user as { id?: string }).id; // Ensure sub is set
+        token.sub = (user as { id?: string }).id;
+        token.name = user.name;
+        token.email = user.email;
+        token.image = user.image;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - adding isAnonymous to token
+        token.isAnonymous = (user as { isAnonymous?: boolean }).isAnonymous || false;
       }
       return token;
     },

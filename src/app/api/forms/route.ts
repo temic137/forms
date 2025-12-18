@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
 
 export async function POST(req: Request) {
   try {
@@ -27,6 +28,14 @@ export async function POST(req: Request) {
         userId: session?.user?.id || null,
       },
       select: { id: true },
+    });
+
+    // Track form creation (no PII)
+    trackEvent('form_created', {
+      fieldCount: fields.length,
+      hasQuizMode: !!quizMode,
+      hasMultiStep: !!multiStepConfig,
+      isConversational: !!conversationalMode,
     });
 
     return NextResponse.json({ id: created.id });

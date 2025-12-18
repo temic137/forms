@@ -16,6 +16,7 @@ import {
   Link as LinkIcon,
   ExternalLink,
 } from "lucide-react";
+import { trackClientEvent } from "@/lib/client-analytics";
 
 interface ShareOption {
   id: string;
@@ -64,6 +65,15 @@ export default function ShareButton({
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Embed customization state
+  const [embedWidth, setEmbedWidth] = useState("100%");
+  const [embedHeight, setEmbedHeight] = useState("600");
+  const [embedTransparent, setEmbedTransparent] = useState(false);
+  const [embedHideTitle, setEmbedHideTitle] = useState(false);
+  const [embedHideBranding, setEmbedHideBranding] = useState(false);
+  const [embedTheme, setEmbedTheme] = useState<"auto" | "light" | "dark">("auto");
+  const [embedPadding, setEmbedPadding] = useState("16");
 
   useEffect(() => {
     setMounted(true);
@@ -210,6 +220,7 @@ export default function ShareButton({
           const subject = encodeURIComponent(effectiveTitle);
           const body = encodeURIComponent(`Check out this form: ${effectiveUrl}`);
           window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+          trackClientEvent("form_shared", { shareMethod: "email" });
           setShowMenu(false);
         },
       },
@@ -350,6 +361,7 @@ export default function ShareButton({
       return;
     }
     setCopied(true);
+    trackClientEvent("form_shared", { shareMethod: "link" });
     setTimeout(() => setCopied(false), 2000);
     setTimeout(() => setShowMenu(false), 1500);
   }, [copyToClipboard, effectiveUrl]);
@@ -358,12 +370,43 @@ export default function ShareButton({
     setShowMenu((prev) => !prev);
   }, []);
 
-  const embedCode = `<iframe src="${effectiveUrl}" width="100%" height="600" frameborder="0"></iframe>`;
+  // Generate embed URL with customization params
+  const getEmbedUrl = useCallback(() => {
+    if (!effectiveUrl) return "";
+    
+    // Extract formId from URL (assumes /f/[formId] format)
+    const urlParts = effectiveUrl.split("/");
+    const formIdIndex = urlParts.findIndex(part => part === "f");
+    const formId = formIdIndex !== -1 ? urlParts[formIdIndex + 1] : null;
+    
+    if (!formId) return effectiveUrl;
+    
+    // Build embed URL with parameters
+    const baseUrl = effectiveUrl.replace(/\/f\//, "/embed/");
+    const params = new URLSearchParams();
+    
+    if (embedTransparent) params.set("transparent", "true");
+    if (embedHideTitle) params.set("hideTitle", "true");
+    if (embedHideBranding) params.set("hideBranding", "true");
+    if (embedTheme !== "auto") params.set("theme", embedTheme);
+    if (embedPadding !== "16") params.set("padding", embedPadding);
+    
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  }, [effectiveUrl, embedTransparent, embedHideTitle, embedHideBranding, embedTheme, embedPadding]);
+
+  const embedUrl = useMemo(() => getEmbedUrl(), [getEmbedUrl]);
+  
+  const embedCode = useMemo(() => {
+    const widthAttr = embedWidth.includes("%") ? embedWidth : `${embedWidth}px`;
+    return `<iframe src="${embedUrl}" width="${widthAttr}" height="${embedHeight}" frameborder="0" style="border: none; border-radius: 8px;"></iframe>`;
+  }, [embedUrl, embedWidth, embedHeight]);
 
   const handleCopyEmbed = async () => {
     const success = await copyToClipboard(embedCode);
     if (success) {
       setEmbedCopied(true);
+      trackClientEvent("form_shared", { shareMethod: "embed" });
       setTimeout(() => setEmbedCopied(false), 2000);
     }
   };
@@ -375,6 +418,7 @@ export default function ShareButton({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    trackClientEvent("form_shared", { shareMethod: "qr" });
   };
 
   // Button style variants
@@ -612,13 +656,13 @@ export default function ShareButton({
 
       {/* Embed Code Modal */}
       {showEmbed && mounted && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div 
-            className="rounded-xl p-6 max-w-2xl w-full shadow-xl"
+            className="rounded-xl p-6 max-w-3xl w-full shadow-xl my-4"
             style={{ background: 'var(--background)' }}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>Embed Code</h3>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>Embed Form</h3>
               <button
                 onClick={() => setShowEmbed(false)}
                 className="p-1 rounded-lg transition-colors"
@@ -627,8 +671,160 @@ export default function ShareButton({
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-4">
-              <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Customization Options */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Customize Embed</h4>
+                
+                {/* Dimensions */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                      Width
+                    </label>
+                    <select 
+                      value={embedWidth}
+                      onChange={(e) => setEmbedWidth(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      style={{ 
+                        background: 'var(--input-bg)', 
+                        borderColor: 'var(--input-border)',
+                        color: 'var(--foreground)'
+                      }}
+                    >
+                      <option value="100%">100% (Full Width)</option>
+                      <option value="500">500px</option>
+                      <option value="600">600px</option>
+                      <option value="700">700px</option>
+                      <option value="800">800px</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                      Height
+                    </label>
+                    <select 
+                      value={embedHeight}
+                      onChange={(e) => setEmbedHeight(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm border"
+                      style={{ 
+                        background: 'var(--input-bg)', 
+                        borderColor: 'var(--input-border)',
+                        color: 'var(--foreground)'
+                      }}
+                    >
+                      <option value="400">400px</option>
+                      <option value="500">500px</option>
+                      <option value="600">600px</option>
+                      <option value="700">700px</option>
+                      <option value="800">800px</option>
+                      <option value="auto">Auto</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Theme */}
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Theme
+                  </label>
+                  <select 
+                    value={embedTheme}
+                    onChange={(e) => setEmbedTheme(e.target.value as "auto" | "light" | "dark")}
+                    className="w-full px-3 py-2 rounded-lg text-sm border"
+                    style={{ 
+                      background: 'var(--input-bg)', 
+                      borderColor: 'var(--input-border)',
+                      color: 'var(--foreground)'
+                    }}
+                  >
+                    <option value="auto">Auto (System)</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+
+                {/* Padding */}
+                <div>
+                  <label className="block text-xs font-medium mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Padding
+                  </label>
+                  <select 
+                    value={embedPadding}
+                    onChange={(e) => setEmbedPadding(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg text-sm border"
+                    style={{ 
+                      background: 'var(--input-bg)', 
+                      borderColor: 'var(--input-border)',
+                      color: 'var(--foreground)'
+                    }}
+                  >
+                    <option value="0">None</option>
+                    <option value="8">Small (8px)</option>
+                    <option value="16">Medium (16px)</option>
+                    <option value="24">Large (24px)</option>
+                    <option value="32">Extra Large (32px)</option>
+                  </select>
+                </div>
+
+                {/* Toggle Options */}
+                <div className="space-y-3 pt-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={embedTransparent}
+                      onChange={(e) => setEmbedTransparent(e.target.checked)}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm" style={{ color: 'var(--foreground)' }}>Transparent Background</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={embedHideTitle}
+                      onChange={(e) => setEmbedHideTitle(e.target.checked)}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm" style={{ color: 'var(--foreground)' }}>Hide Form Title</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={embedHideBranding}
+                      onChange={(e) => setEmbedHideBranding(e.target.checked)}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm" style={{ color: 'var(--foreground)' }}>Hide Branding</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Preview</h4>
+                <div 
+                  className="rounded-lg border overflow-hidden"
+                  style={{ 
+                    background: embedTransparent ? 'repeating-conic-gradient(#d4d4d4 0% 25%, #fff 0% 50%) 50% / 16px 16px' : 'var(--background)',
+                    borderColor: 'var(--card-border)',
+                    height: '300px',
+                  }}
+                >
+                  <iframe
+                    src={embedUrl}
+                    className="w-full h-full"
+                    title="Form Embed Preview"
+                    style={{ border: 'none' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Embed Code */}
+            <div className="mt-6 space-y-3">
+              <h4 className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Embed Code</h4>
+              <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
                 Copy this code and paste it into your website&apos;s HTML:
               </p>
               <div className="relative">
@@ -662,26 +858,31 @@ export default function ShareButton({
                   )}
                 </button>
               </div>
-              <div 
-                className="rounded-lg p-4 border"
-                style={{ 
-                  background: 'var(--background-subtle)',
-                  borderColor: 'var(--card-border)',
-                }}
-              >
-                <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>Preview</h4>
+              
+              {/* Direct Embed URL */}
+              <div className="pt-2">
+                <p className="text-xs mb-2" style={{ color: 'var(--foreground-muted)' }}>
+                  Or use this direct URL for embedding:
+                </p>
                 <div 
-                  className="rounded-lg border overflow-hidden"
+                  className="flex items-center gap-2 p-2 rounded-lg text-xs break-all"
                   style={{ 
-                    background: 'var(--background)',
-                    borderColor: 'var(--card-border)',
+                    background: 'var(--background-subtle)',
+                    color: 'var(--foreground-muted)',
                   }}
                 >
-                  <iframe
-                    src={effectiveUrl}
-                    className="w-full h-64"
-                    title="Form Preview"
-                  />
+                  <LinkIcon className="w-3 h-3 shrink-0" />
+                  <span className="flex-1">{embedUrl}</span>
+                  <button
+                    onClick={async () => {
+                      await copyToClipboard(embedUrl);
+                      setEmbedCopied(true);
+                      setTimeout(() => setEmbedCopied(false), 2000);
+                    }}
+                    className="shrink-0 p-1 rounded hover:bg-black/10 transition-colors"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
                 </div>
               </div>
             </div>

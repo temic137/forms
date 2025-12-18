@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { trackEvent } from "@/lib/analytics";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,6 +42,9 @@ export async function POST(req: NextRequest) {
         email: true,
       },
     });
+
+    // Track registration (no PII)
+    trackEvent('user_registered');
 
     return NextResponse.json(
       { message: "User created successfully", user },

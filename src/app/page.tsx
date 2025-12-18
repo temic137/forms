@@ -12,14 +12,59 @@ import InlineDocumentScanner from "@/components/InlineDocumentScanner";
 import InlineJSONImport from "@/components/InlineJSONImport";
 import InlineURLScraper from "@/components/InlineURLScraper";
 import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
-import { Mic, Sparkles, UploadCloud, Globe, Trash2, BarChart3, Check, Minus, Upload, ArrowRight, Zap } from "lucide-react";
+import { Mic, Sparkles, UploadCloud, Globe, Trash2, BarChart3, Check, Minus, Upload, ArrowRight, Clock, Brain, FileText, ScanLine, Lock, HelpCircle, X, Languages, GraduationCap } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
+
+// Example prompts for help popup
+const examplePrompts = [
+  { category: "Basic Forms", prompts: ["contact form with name, email, and message", "newsletter signup with email and preferences"] },
+  { category: "Business", prompts: ["job application with resume upload", "customer feedback survey with NPS score"] },
+  { category: "Events", prompts: ["event registration with dietary restrictions", "wedding RSVP with meal preference and plus one"] },
+  { category: "Education", prompts: ["quiz about world history with 10 multiple choice questions", "student enrollment form with parent contact info"] },
+];
+
+// Rotating placeholder examples
+const placeholderExamples = [
+  "A contact form with name, email, and message...",
+  "Job application with resume upload and cover letter...",
+  "Customer feedback survey with NPS score...",
+  "Event registration with dietary restrictions...",
+  "Quiz about world history with 10 questions...",
+  "Wedding RSVP with meal preference and plus one...",
+  "Product order form with quantity and shipping...",
+];
+
+// Template cards data
+const templateCards = [
+  {
+    title: "Contact Form",
+    description: "Name, email, phone & message",
+    fields: 4,
+    icon: "📧",
+    query: "contact form with name, email, phone number, and message fields",
+  },
+  {
+    title: "Event Registration",
+    description: "Attendee info & preferences",
+    fields: 6,
+    icon: "🎉",
+    query: "event registration form with name, email, company, dietary restrictions, session preferences, and special requirements",
+  },
+  {
+    title: "Customer Feedback",
+    description: "NPS score & detailed feedback",
+    fields: 5,
+    icon: "⭐",
+    query: "customer feedback survey with NPS score rating, what did you like most, what can we improve, would you recommend us, and additional comments",
+  },
+];
 
 export default function Home() {
   const router = useRouter();
   const toast = useToastContext();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   
   // Form state
   const [showBuilder, setShowBuilder] = useState(false);
@@ -34,6 +79,19 @@ export default function Home() {
   
   // Creation method state
   const [creationMethod, setCreationMethod] = useState<CreationMethodInline>("prompt");
+  
+  // Help popup and onboarding state
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
+  const [hasCreatedForm, setHasCreatedForm] = useState(false);
+  const [showMethodTooltip, setShowMethodTooltip] = useState(false);
+  
+  // Check if user has created a form before (for progressive disclosure)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const created = localStorage.getItem('hasCreatedForm');
+      setHasCreatedForm(created === 'true');
+    }
+  }, []);
 
   // Attachment state
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
@@ -143,6 +201,12 @@ ${additionalContext}
       setAttachedUrl("");
       setShowUrlInput(false);
       setQuery("");
+      
+      // Mark that user has created their first form (for progressive disclosure)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hasCreatedForm', 'true');
+        setHasCreatedForm(true);
+      }
     } catch {
       toast.error("Failed to generate form. Please try again.");
     } finally {
@@ -341,6 +405,14 @@ ${additionalContext}
     }
   };
 
+  // Rotate placeholder text
+  useEffect(() => {
+    const placeholderInterval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholderExamples.length);
+    }, 3000);
+    return () => clearInterval(placeholderInterval);
+  }, []);
+
   // Auto-submit after 3 seconds of silence
   useEffect(() => {
     if (silenceTimerRef.current) {
@@ -509,6 +581,22 @@ ${additionalContext}
               Create complex, validated forms in seconds using natural language. No drag-and-drop required.
             </p>
 
+            {/* Value Proposition Badges */}
+            <div className="flex flex-wrap justify-center gap-3 mb-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm">
+                <Check className="w-4 h-4 text-blue-600" />
+                <span className="text-gray-700">AI-Powered Generation</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm">
+                <ScanLine className="w-4 h-4 text-blue-600" />
+                <span className="text-gray-700">Document Scanning/OCR</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm">
+                <GraduationCap className="w-4 h-4 text-blue-600" />
+                <span className="text-gray-700">Quiz Mode with Auto-Grading</span>
+              </div>
+            </div>
+
             {/* Ghost Access Button - Try Without Signup */}
             <div className="mb-12 flex justify-center">
               <button
@@ -573,30 +661,62 @@ ${additionalContext}
                   disabled={loading}
                 />
                 
+                {/* Onboarding tooltip for first-time users */}
+                {!hasCreatedForm && !showMethodTooltip && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">First time here? Start simple!</p>
+                        <p className="text-blue-600 mt-1">Just describe your form in plain English below. Try: &quot;job application with resume upload&quot;</p>
+                      </div>
+                      <button onClick={() => setShowMethodTooltip(true)} className="text-blue-400 hover:text-blue-600 ml-auto">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
                 {creationMethod === 'prompt' && (
                   <form onSubmit={handleSubmit} className="mt-4">
                     <div className="relative">
+                      {/* Help button */}
+                      <button
+                        type="button"
+                        onClick={() => setShowHelpPopup(true)}
+                        className="absolute left-3 top-3 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors z-10"
+                        title="What can I say?"
+                      >
+                        <HelpCircle className="w-5 h-5" />
+                      </button>
+                      
                       <textarea
                         id="landing-prompt-input"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
-                        className="w-full px-4 py-4 text-lg bg-transparent border-0 focus:ring-0 placeholder:text-gray-400 text-gray-900 font-medium resize-none"
+                        placeholder={placeholderExamples[placeholderIndex]}
+                        className="w-full pl-12 pr-4 py-4 text-lg bg-transparent border-0 focus:ring-0 placeholder:text-gray-400 placeholder:transition-opacity text-gray-900 font-medium resize-none"
                         style={{ minHeight: '120px' }}
                       />
                       {isSupported && (
-                        <button
-                          type="button"
-                          onClick={handleVoiceClick}
-                          className="absolute right-3 bottom-3 p-3 rounded-full transition-all shadow-sm hover:shadow-md z-10"
-                          style={{
-                            background: isListening ? '#ef4444' : '#f3f4f6',
-                            color: isListening ? '#fff' : '#4b5563',
-                          }}
-                          title={isListening ? 'Stop recording' : 'Start voice input'}
-                        >
-                          <Mic className="w-5 h-5" />
-                        </button>
+                        <div className="absolute right-3 bottom-3 flex items-center gap-2 z-10">
+                          <span className="hidden sm:flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                            <Lock className="w-3 h-3" />
+                            Processed locally
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleVoiceClick}
+                            className="p-3 rounded-full transition-all shadow-sm hover:shadow-md"
+                            style={{
+                              background: isListening ? '#ef4444' : '#f3f4f6',
+                              color: isListening ? '#fff' : '#4b5563',
+                            }}
+                            title={isListening ? 'Stop recording' : 'Start voice input'}
+                          >
+                            <Mic className="w-5 h-5" />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -707,6 +827,10 @@ ${additionalContext}
                   )}
                   {creationMethod === 'scan' && (
                     <div className="mt-4">
+                      <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mb-3 bg-green-50 py-2 rounded-lg border border-green-100">
+                        <Lock className="w-3 h-3 text-green-600" />
+                        <span className="text-green-700">🔒 Your documents are processed securely and not stored</span>
+                      </div>
                       <InlineDocumentScanner
                         onFileSelect={handleDocumentScan}
                         onCancel={() => setCreationMethod('prompt')}
@@ -750,6 +874,99 @@ ${additionalContext}
                     {action.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Template Cards */}
+            <div className="max-w-4xl mx-auto mt-16">
+              <h3 className="text-center text-sm font-medium text-gray-500 uppercase tracking-wide mb-6">Or start with a template</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {templateCards.map((template) => (
+                  <button
+                    key={template.title}
+                    onClick={() => {
+                      setQuery(template.query);
+                      generateForm(template.query);
+                    }}
+                    disabled={loading}
+                    className="group relative p-5 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-lg transition-all duration-200 text-left disabled:opacity-50"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="text-3xl">{template.icon}</span>
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        {template.fields} fields
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                      {template.title}
+                    </h4>
+                    <p className="text-sm text-gray-500">{template.description}</p>
+                    <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-blue-500 transition-colors pointer-events-none" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why AnyForm Section */}
+        <section className="py-20 bg-gray-50 border-t border-gray-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Why AnyForm?</h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Three powerful reasons teams are switching to AI-powered form building
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Differentiator 1: Speed */}
+              <div className="relative p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                <div className="absolute -top-4 -right-4 w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                  <Clock className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">10x Faster Creation</h3>
+                <p className="text-gray-600 mb-4">
+                  What takes 10 minutes in Google Forms takes 30 seconds here. Just describe what you need.
+                </p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded font-medium">Before: 10 min</span>
+                  <ArrowRight className="w-4 h-4 text-gray-400" />
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded font-medium">Now: 30 sec</span>
+                </div>
+              </div>
+
+              {/* Differentiator 2: Intelligence */}
+              <div className="relative p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                <div className="absolute -top-4 -right-4 w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-md">
+                  <Brain className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Context-Aware AI</h3>
+                <p className="text-gray-600 mb-4">
+                  Our AI understands your intent. It auto-detects field types, validation rules, and conditional logic.
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Smart Validation</span>
+                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Auto Field Types</span>
+                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Logic Detection</span>
+                </div>
+              </div>
+
+              {/* Differentiator 3: Multiple Input Methods */}
+              <div className="relative p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                <div className="absolute -top-4 -right-4 w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                  <FileText className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Create Your Way</h3>
+                <p className="text-gray-600 mb-4">
+                  Type, speak, upload a file, scan a document, or paste a URL. We turn anything into a form.
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><Mic className="w-3 h-3" /> Voice</span>
+                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><Upload className="w-3 h-3" /> Upload</span>
+                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><ScanLine className="w-3 h-3" /> Scan</span>
+                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><Globe className="w-3 h-3" /> URL</span>
+                </div>
               </div>
             </div>
           </div>
@@ -877,6 +1094,68 @@ ${additionalContext}
           </div>
         </section>
       </main>
+
+      {/* What Can I Say? Help Popup */}
+      {showHelpPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowHelpPopup(false)}>
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">What can I say?</h3>
+                  <p className="text-sm text-gray-500 mt-1">Just describe your form naturally. Here are some examples:</p>
+                </div>
+                <button onClick={() => setShowHelpPopup(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+              {examplePrompts.map((category) => (
+                <div key={category.category}>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">{category.category}</h4>
+                  <div className="space-y-2">
+                    {category.prompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        onClick={() => {
+                          setQuery(prompt);
+                          setShowHelpPopup(false);
+                        }}
+                        className="w-full text-left p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm text-gray-700 hover:text-blue-700 transition-colors"
+                      >
+                        &quot;{prompt}&quot;
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">💡 Pro Tips</h4>
+                <ul className="text-sm text-gray-600 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Mention specific field types: &quot;email&quot;, &quot;phone number&quot;, &quot;date picker&quot;</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Specify if fields are required: &quot;required email address&quot;</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Add validation: &quot;phone number with US format&quot;</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>For quizzes: &quot;quiz with 5 multiple choice questions about [topic]&quot;</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="bg-white border-t border-gray-200 py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

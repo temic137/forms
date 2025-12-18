@@ -7,6 +7,7 @@ import { calculateQuizScore } from "@/lib/scoring";
 import { resend, generateEditLinkEmailHtml } from "@/lib/resend";
 import { randomUUID } from "crypto";
 import { Prisma } from "@prisma/client";
+import { trackEvent } from "@/lib/analytics";
 
 interface FileMetadata {
   fieldId: string;
@@ -38,7 +39,9 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         saveAndEdit: true,
       } 
     });
-    if (!form) return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    if (!form) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
 
     // Extract file metadata and respondentId if present
     const fileMetadata: FileMetadata[] = body._fileMetadata || [];
@@ -218,6 +221,13 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       // Log error but don't fail the submission
       console.error("Failed to sync to Google Sheets:", sheetsError);
     }
+
+    // Track submission (no PII)
+    trackEvent('form_submitted', {
+      fieldCount: fields.length,
+      hasQuizMode: !!quizModeConfig,
+      quizScore: quizScore?.percentage,
+    });
 
     return NextResponse.json({ 
       ok: true, 

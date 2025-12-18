@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 export default function SignInPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,8 +28,9 @@ export default function SignInPage() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        // Use replace for faster navigation (no history entry)
+        // and avoid router.refresh() which causes unnecessary re-validation
+        window.location.href = "/dashboard";
       }
     } catch (error) {
       console.error("Sign in failed:", error);

@@ -21,6 +21,7 @@ import {
   detectUserLanguage 
 } from '@/lib/languageDetection';
 import { voiceAnalytics } from '@/lib/voiceAnalytics';
+import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
 
 export interface VoiceInputProps {
   onTranscriptComplete?: (transcript: string) => void;
@@ -63,6 +64,15 @@ export default function VoiceInput({
   
   // Browser support detection
   const browserSupport = useRef(new SpeechRecognitionService().detectBrowserSupport()).current;
+  
+  // Mobile optimizations hook
+  const { 
+    isMobile: isMobileDevice, 
+    isOnline, 
+    triggerHaptic, 
+    requestWakeLock, 
+    releaseWakeLock,
+  } = useMobileOptimizations();
   
   // Track browser compatibility on mount (Requirement 15.4)
   useEffect(() => {
@@ -268,8 +278,23 @@ export default function VoiceInput({
     setErrorMessage(null);
     setSuccessMessage(null);
     
+    // Check network status on mobile
+    if (isMobileDevice && !isOnline) {
+      setErrorMessage('Voice input requires an internet connection. Please check your network.');
+      announce('No internet connection. Voice input unavailable.', 'assertive');
+      return;
+    }
+    
     try {
+      // Request wake lock on mobile to prevent screen sleep during recording
+      if (isMobileDevice) {
+        await requestWakeLock();
+      }
+      
       await startListening();
+      
+      // Haptic feedback on mobile
+      triggerHaptic('medium');
       
       // Track session start in analytics (Requirement 15.1)
       voiceAnalytics.startSession(sessionId, language);
@@ -277,6 +302,10 @@ export default function VoiceInput({
       // Announce to screen readers (Requirement 8.2)
       announce('Voice input started. Recording in progress.', 'polite');
     } catch (err) {
+      // Release wake lock if start failed
+      if (isMobileDevice) {
+        await releaseWakeLock();
+      }
       // Error is already handled by useVoiceInput hook
       console.error('Failed to start listening:', err);
     }
@@ -291,8 +320,16 @@ export default function VoiceInput({
     setErrorMessage(null);
   };
 
-  const handleStopListening = () => {
+  const handleStopListening = async () => {
     stopListening();
+    
+    // Release wake lock on mobile
+    if (isMobileDevice) {
+      await releaseWakeLock();
+    }
+    
+    // Haptic feedback on mobile
+    triggerHaptic('success');
     
     // Track session stop in analytics (Requirement 15.1)
     const wordCount = editableTranscript.trim().split(/\s+/).filter(w => w.length > 0).length;
@@ -379,9 +416,21 @@ export default function VoiceInput({
   const handleGenerateForm = useCallback(async () => {
     if (!onGenerateForm || !editableTranscript.trim()) return;
     
+    // Check network status on mobile
+    if (isMobileDevice && !isOnline) {
+      setErrorMessage('Form generation requires an internet connection. Please check your network.');
+      triggerHaptic('error');
+      announce('No internet connection. Cannot generate form.', 'assertive');
+      return;
+    }
+    
     setIsGenerating(true);
     setErrorMessage(null);
     setSuccessMessage(null);
+    
+    // Haptic feedback on mobile
+    triggerHaptic('light');
+    
     // Announce to screen readers (Requirement 8.2)
     announce('Generating form from transcription. Please wait.', 'polite');
     
@@ -403,12 +452,20 @@ export default function VoiceInput({
       // Clear local storage after successful form generation (Requirement 14.3)
       transcriptionStorage.clear();
       lastSavedTranscriptRef.current = '';
+      
+      // Success haptic feedback on mobile
+      triggerHaptic('success');
+      
       setSuccessMessage('Form generated successfully!');
       // Announce to screen readers (Requirement 8.2)
       announce('Form generated successfully!', 'polite');
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Form generation failed:', error);
+      
+      // Error haptic feedback on mobile
+      triggerHaptic('error');
+      
       setErrorMessage('Failed to generate form. Please try again.');
       // Announce error to screen readers (Requirement 8.4)
       announce('Failed to generate form. Please try again.', 'assertive');
@@ -416,7 +473,7 @@ export default function VoiceInput({
     } finally {
       setIsGenerating(false);
     }
-  }, [onGenerateForm, editableTranscript, language, announce]);
+  }, [onGenerateForm, editableTranscript, language, announce, isMobileDevice, isOnline, triggerHaptic]);
 
   // Auto-submit after 3 seconds of silence when listening
   useEffect(() => {
@@ -560,7 +617,7 @@ export default function VoiceInput({
   }
 
   return (
-    <div className="bg-white border border-neutral-200 rounded-lg p-6" role="region" aria-label="Voice input controls">
+    <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-6" role="region" aria-label="Voice input controls">
       {/* Privacy Notice (Requirement 9.1, 9.5) */}
       {showPrivacyNotice && (
         <VoicePrivacyNotice
@@ -569,15 +626,15 @@ export default function VoiceInput({
         />
       )}
 
-      {/* Header with controls */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Header with controls - Responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-normal text-black">Voice Input</h3>
+          <h3 className="text-base sm:text-lg font-normal text-black">Voice Input</h3>
           
           {/* Help Button (Requirement 13.3) */}
           <button
             onClick={handleOpenHelp}
-            className="text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded p-1"
+            className="text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded p-1.5 sm:p-1 touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             aria-label="Open voice input help and best practices"
             title="Help & Best Practices"
           >
@@ -585,12 +642,12 @@ export default function VoiceInput({
           </button>
         </div>
         
-        {/* Language Selector (Requirement 6.1) */}
+        {/* Language Selector (Requirement 6.1) - Full width on mobile */}
         <select
           value={language}
           onChange={handleLanguageChange}
           disabled={Boolean(disabled || isListening)}
-          className="px-3 py-1.5 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto px-3 py-2.5 sm:py-1.5 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px] sm:min-h-0"
           aria-label="Select voice input language"
           aria-describedby="language-help"
           title={isListening ? "Cannot change language while recording" : "Select language for voice recognition"}
@@ -635,15 +692,33 @@ export default function VoiceInput({
           </div>
         </div>
       )}
+      
+      {/* Offline Warning for Mobile */}
+      {!isOnline && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-red-900">
+                <strong>Offline:</strong> Voice input requires an internet connection. Please check your network.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Voice Controls */}
-      <div className="flex items-center gap-3 mb-4">
-        {/* Microphone Button */}
+      {/* Voice Controls - Mobile optimized with larger touch targets */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
+        {/* Microphone Button - Touch-friendly sizing */}
         {!isListening ? (
           <button
             onClick={handleStartListening}
-            disabled={Boolean(disabled || !isSupported)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={Boolean(disabled || !isSupported || !isOnline)}
+            className="flex items-center gap-2 px-4 sm:px-4 py-3 sm:py-2.5 bg-black text-white rounded-lg hover:bg-neutral-800 active:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[48px] sm:min-h-0"
             aria-label="Start voice input recording"
             aria-pressed={isListening}
             aria-describedby="mic-button-help"
@@ -656,7 +731,7 @@ export default function VoiceInput({
           <button
             onClick={handleStopListening}
             disabled={disabled}
-            className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 sm:px-4 py-3 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[48px] sm:min-h-0 animate-pulse"
             aria-label="Stop voice input recording"
             aria-pressed={isListening}
             title="Stop recording"
@@ -673,7 +748,7 @@ export default function VoiceInput({
         <button
           onClick={handleClear}
           disabled={Boolean(disabled || !editableTranscript.trim())}
-          className="px-4 py-2.5 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-3 sm:py-2.5 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 active:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[48px] sm:min-h-0"
           aria-label="Clear all transcription text"
           title="Clear transcription"
         >
@@ -682,7 +757,7 @@ export default function VoiceInput({
 
         {/* Recording Status Indicator with Audio Level */}
         {isListening && (
-          <div className="flex items-center gap-3 ml-auto" role="status" aria-live="polite" aria-label="Recording in progress">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto flex-wrap sm:flex-nowrap" role="status" aria-live="polite" aria-label="Recording in progress">
             <div className="flex items-center gap-2">
               {/* Pulsing Recording Indicator */}
               <div className="relative flex items-center justify-center" aria-hidden="true">
@@ -695,15 +770,17 @@ export default function VoiceInput({
                 <AnimatedMicrophoneIcon />
               </div>
               
-              <span className="text-sm text-neutral-600 font-medium">
+              <span className="text-xs sm:text-sm text-neutral-600 font-medium">
                 {autoSubmitCountdown !== null && autoSubmitCountdown > 0 
-                  ? `Auto-submitting in ${autoSubmitCountdown}s...` 
+                  ? `Auto-submit: ${autoSubmitCountdown}s` 
                   : 'Recording...'}
               </span>
             </div>
             
-            {/* Audio Level Meter */}
-            <AudioLevelMeter level={audioLevel} />
+            {/* Audio Level Meter - Hidden on very small screens */}
+            <div className="hidden sm:block">
+              <AudioLevelMeter level={audioLevel} />
+            </div>
           </div>
         )}
       </div>
@@ -871,22 +948,22 @@ export default function VoiceInput({
         )}
       </div>
 
-      {/* Generate Form Button */}
+      {/* Generate Form Button - Mobile optimized with larger touch target */}
       {onGenerateForm && (
         <button
           onClick={handleGenerateForm}
-          disabled={Boolean(disabled || !editableTranscript.trim() || isGenerating || isListening)}
-          className="w-full px-4 py-3 bg-black text-white rounded-lg hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          disabled={Boolean(disabled || !editableTranscript.trim() || isGenerating || isListening || !isOnline)}
+          className="w-full px-4 py-4 sm:py-3 bg-black text-white rounded-lg hover:bg-neutral-800 active:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium touch-manipulation min-h-[52px] sm:min-h-0"
           aria-label={isGenerating ? 'Generating form, please wait' : 'Generate form from transcription'}
           aria-busy={isGenerating}
         >
           {isGenerating ? (
             <span className="flex items-center justify-center gap-2">
               <LoadingSpinner />
-              Generating Form...
+              <span className="text-sm sm:text-base">Generating Form...</span>
             </span>
           ) : (
-            'Generate Form'
+            <span className="text-sm sm:text-base">Generate Form</span>
           )}
         </button>
       )}

@@ -49,13 +49,24 @@ async function performOCR(_file: File): Promise<string> {
 }
 
 // Use AI to analyze OCR text and generate form structure
-async function analyzeFormStructure(extractedText: string): Promise<{ title: string; fields: Field[] }> {
+async function analyzeFormStructure(extractedText: string, customInstructions?: string): Promise<{ title: string; fields: Field[] }> {
   const groq = getGroqClient();
+
+  let additionalInstructions = "";
+  if (customInstructions && customInstructions.trim()) {
+    additionalInstructions = `
+
+ADDITIONAL USER INSTRUCTIONS:
+${customInstructions}
+
+Please incorporate these instructions into your analysis. They take priority over default behavior.`;
+  }
 
   const prompt = `You are an expert form analyst. Analyze the following text extracted from a scanned document (via OCR) and determine if it contains a form.
 
 Extracted Text:
 ${extractedText}
+${additionalInstructions}
 
 CRITICAL RULES:
 1. ONLY extract fields if this is clearly an ACTUAL FORM with field labels and input areas
@@ -153,46 +164,53 @@ Guidelines for field extraction:
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file") as File | null;
+    const customInstructions = formData.get("customInstructions") as string | null;
+    const extractedTextFromClient = formData.get("extractedText") as string | null;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    // If we have extracted text from client (regenerate mode), skip file processing
+    let extractedText = extractedTextFromClient;
+    
+    if (!extractedText) {
+      if (!file) {
+        return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      }
+
+      // Validate file type
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+      if (!validTypes.includes(file.type)) {
+        return NextResponse.json(
+          { error: "Invalid file type. Please upload an image or PDF." },
+          { status: 400 }
+        );
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "File size must be less than 10MB" },
+          { status: 400 }
+        );
+      }
+
+      // Perform OCR
+      extractedText = await performOCR(file);
+
+      if (!extractedText || extractedText.trim().length === 0) {
+        return NextResponse.json(
+          { error: "Could not extract text from the document. Please ensure the image is clear." },
+          { status: 400 }
+        );
+      }
     }
 
-    // Validate file type
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
-    if (!validTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Invalid file type. Please upload an image or PDF." },
-        { status: 400 }
-      );
-    }
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "File size must be less than 10MB" },
-        { status: 400 }
-      );
-    }
-
-    // Perform OCR
-    const extractedText = await performOCR(file);
-
-    if (!extractedText || extractedText.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Could not extract text from the document. Please ensure the image is clear." },
-        { status: 400 }
-      );
-    }
-
-    // Analyze form structure using AI
-    const formData_ = await analyzeFormStructure(extractedText);
+    // Analyze form structure using AI (with optional custom instructions)
+    const formData_ = await analyzeFormStructure(extractedText, customInstructions || undefined);
 
     return NextResponse.json({
       title: formData_.title || "Scanned Form",
       fields: formData_.fields,
-      extractedText, // Include for debugging (remove in production)
+      extractedText, // Include so client can use for regeneration
     });
   } catch (error) {
     console.error("Document scan error:", error);
