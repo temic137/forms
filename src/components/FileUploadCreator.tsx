@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, CSSProperties } from "react";
-import { Upload, X, FileText, FileSpreadsheet, AlertCircle, CheckCircle, Loader } from "lucide-react";
+import { Upload, X, FileText, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner";
 import { Field } from "@/types/form";
 
 interface FileUploadCreatorProps {
@@ -278,7 +279,7 @@ export default function FileUploadCreator({
                     className="btn btn-primary font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ paddingInline: '24px' }}
                   >
-                    {loading && <Loader className="w-4 h-4 animate-spin" />}
+                    {loading && <Spinner size="sm" variant="white" />}
                     {success && <CheckCircle className="w-4 h-4" />}
                     <span>
                       {loading ? "Processing..." : success ? "Success!" : "Generate Form"}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, X, Upload, Image as ImageIcon, FileText, AlertCircle, CheckCircle, Loader, Smartphone, WifiOff, RefreshCw, Edit3, ChevronDown, ChevronUp } from "lucide-react";
+import { Camera, X, Upload, Image as ImageIcon, FileText, AlertCircle, CheckCircle, Smartphone, WifiOff, RefreshCw, Edit3, ChevronDown, ChevronUp } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner";
 import { Field } from "@/types/form";
 
 interface DocumentScannerProps {
@@ -513,7 +514,7 @@ export default function DocumentScanner({
                     disabled={loading || success || !isOnline}
                     className="px-6 py-3 sm:py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 active:bg-rose-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 touch-manipulation min-h-[48px] sm:min-h-0"
                   >
-                    {loading && <Loader className="w-4 h-4 animate-spin" />}
+                    {loading && <Spinner size="sm" variant="white" />}
                     {success && <CheckCircle className="w-4 h-4" />}
                     <span>
                       {loading ? "Scanning..." : success ? "Success!" : "Scan & Generate"}
@@ -528,7 +529,7 @@ export default function DocumentScanner({
           {loading && processingStage && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
               <div className="flex items-center space-x-3">
-                <Loader className="w-5 h-5 text-blue-600 animate-spin shrink-0" />
+                <Spinner size="sm" />
                 <div className="min-w-0">
                   <p className="font-semibold text-blue-900 text-sm sm:text-base">Processing</p>
                   <p className="text-xs sm:text-sm text-blue-700 truncate">{processingStage}</p>

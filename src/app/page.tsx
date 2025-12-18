@@ -12,6 +12,7 @@ import InlineDocumentScanner from "@/components/InlineDocumentScanner";
 import InlineJSONImport from "@/components/InlineJSONImport";
 import InlineURLScraper from "@/components/InlineURLScraper";
 import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
+import { Spinner } from "@/components/ui/Spinner";
 import { Mic, Sparkles, UploadCloud, Globe, Trash2, BarChart3, Check, Minus, Upload, ArrowRight, Clock, Brain, FileText, ScanLine, Lock, HelpCircle, X, Languages, GraduationCap } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 
@@ -800,7 +801,7 @@ ${additionalContext}
                       >
                         {loading ? (
                           <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <Spinner size="sm" variant="white" />
                             Creating...
                           </>
                         ) : (

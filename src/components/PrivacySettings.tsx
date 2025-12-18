@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Shield, Download, Trash2, Loader } from "lucide-react";
+import { Shield, Download, Trash2 } from "lucide-react";
+import { Spinner, PageSpinner } from "@/components/ui/Spinner";
 
 interface PrivacyData {
   user: { name: string | null; email: string | null; memberSince: string };
@@ -94,11 +95,7 @@ export default function PrivacySettings() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <PageSpinner />;
   }
 
   if (status === "unauthenticated") {
@@ -175,7 +172,7 @@ export default function PrivacySettings() {
             className="w-full flex items-center gap-3 p-4 rounded-lg mb-3 border border-gray-200 hover:border-blue-300 hover:bg-gray-50 transition"
           >
             {actionLoading === "export" ? (
-              <Loader className="w-5 h-5 animate-spin text-blue-600" />
+              <Spinner size="sm" />
             ) : (
               <Download className="w-5 h-5 text-blue-600" />
             )}

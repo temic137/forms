@@ -2,6 +2,7 @@
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
 import { FileUploadConfig } from "@/types/form";
+import { Spinner } from "@/components/ui/Spinner";
 
 /**
  * FileUpload Component
@@ -370,7 +371,7 @@ export default function FileUpload({
 
               {file.uploading && (
                 <div className="ml-4 flex items-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <Spinner size="sm" />
                 </div>
               )}
 

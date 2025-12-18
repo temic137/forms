@@ -1,39 +1,55 @@
 import React from "react";
+import { Loader } from "lucide-react";
 
-interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
-  size?: "sm" | "md" | "lg" | "xl";
+interface SpinnerProps {
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   variant?: "primary" | "secondary" | "white" | "current";
   className?: string;
 }
 
 export function Spinner({ 
   size = "md", 
-  variant = "current",
+  variant = "primary",
   className = "",
-  ...props 
 }: SpinnerProps) {
   const sizeClasses = {
-    sm: "w-4 h-4 border-2",
-    md: "w-6 h-6 border-2",
-    lg: "w-8 h-8 border-3",
-    xl: "w-12 h-12 border-4",
+    xs: "w-3 h-3",
+    sm: "w-4 h-4",
+    md: "w-6 h-6",
+    lg: "w-8 h-8",
+    xl: "w-12 h-12",
   };
 
   const variantClasses = {
-    primary: "border-gray-200 border-t-blue-600",
-    secondary: "border-gray-200 border-t-gray-600",
-    white: "border-white/30 border-t-white",
-    current: "border-current border-t-transparent border-opacity-25",
+    primary: "text-blue-600",
+    secondary: "text-gray-600",
+    white: "text-white",
+    current: "text-current",
   };
 
   return (
-    <div
-      className={`inline-block rounded-full animate-spin ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+    <Loader
+      className={`animate-spin ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       role="status"
       aria-label="Loading"
-      {...props}
-    >
-      <span className="sr-only">Loading...</span>
+    />
+  );
+}
+
+/**
+ * Full page loading spinner - centered in viewport
+ */
+export function PageSpinner({ size = "lg", variant = "primary" }: SpinnerProps) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <Spinner size={size} variant={variant} />
     </div>
   );
+}
+
+/**
+ * Inline loading spinner for buttons
+ */
+export function ButtonSpinner({ variant = "current" }: { variant?: "primary" | "secondary" | "white" | "current" }) {
+  return <Spinner size="sm" variant={variant} className="mr-2" />;
 }

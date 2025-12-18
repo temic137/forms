@@ -10,6 +10,7 @@ import { QuizScore } from "@/lib/scoring";
 import MultiStepRenderer from "@/components/MultiStepRenderer";
 import FileUpload from "@/components/FileUpload";
 import ConversationalForm from "@/components/ConversationalForm";
+import { Spinner } from "@/components/ui/Spinner";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -1902,10 +1903,7 @@ export default function FormRenderer({
                 aria-label={status === "submitting" ? "Submitting form" : finalSubmitLabel}
               >
                 {status === "submitting" && (
-                  <div className="relative w-4 h-4">
-                    <div className="absolute inset-0 border-2 border-current border-opacity-25 rounded-full"></div>
-                    <div className="absolute inset-0 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  </div>
+                  <Spinner size="sm" variant="current" />
                 )}
                 {status === "submitting" ? "Submitting..." : finalSubmitLabel}
               </button>

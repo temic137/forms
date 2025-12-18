@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Upload, Link as LinkIcon, FileText, CheckCircle } from "lucide-react";
+import { Upload, Link as LinkIcon, FileText, CheckCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function CreateByAiPromptPage() {
   const router = useRouter();
@@ -214,7 +215,7 @@ ${additionalContext}
             <div className="text-sm text-gray-500">
               {status && (
                 <span className="flex items-center text-blue-600">
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                   {status}
                 </span>
               )}

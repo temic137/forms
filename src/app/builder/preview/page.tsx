@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import FormRenderer from "@/app/f/[formId]/renderer";
 import { Field, FormStyling, MultiStepConfig } from "@/types/form";
 import { ArrowLeft } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface PreviewData {
   title: string;
@@ -40,10 +41,7 @@ export default function FormPreviewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
         <div className="flex items-center gap-3" style={{ color: 'var(--foreground-muted)' }}>
-          <div className="relative w-5 h-5">
-            <div className="absolute inset-0 border-2 border-current border-opacity-25 rounded-full"></div>
-            <div className="absolute inset-0 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-          </div>
+          <Spinner size="sm" variant="current" />
           <span>Loading preview...</span>
         </div>
       </div>
