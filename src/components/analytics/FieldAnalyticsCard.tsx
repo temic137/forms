@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { DistributionChart } from "./DistributionChart";
 
 interface FieldAnalytics {
@@ -9,29 +8,29 @@ interface FieldAnalytics {
   totalResponses: number;
   completionRate: number;
   emptyResponses: number;
-  
+
   // Text/Textarea/Email fields
   avgLength?: number;
   avgWordCount?: number;
   minLength?: number;
   maxLength?: number;
-  
+
   // Number fields
   min?: number;
   max?: number;
   avg?: number;
   median?: number;
-  
+
   // Choice fields (select, radio, checkbox)
   distribution?: Record<string, number>;
   mostPopular?: string;
   leastPopular?: string;
-  
+
   // Date fields
   earliestDate?: string;
   latestDate?: string;
   monthDistribution?: Record<string, number>;
-  
+
   // File fields
   totalFiles?: number;
   fileTypes?: Record<string, number>;
@@ -61,14 +60,14 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{analytics.label}</CardTitle>
-        <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
+    <div className="py-4 border-b" style={{ borderColor: 'var(--card-border)' }}>
+      <div className="mb-3">
+        <div className="font-medium" style={{ color: 'var(--foreground)' }}>{analytics.label}</div>
+        <div className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
           {analytics.type} field
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div>
         <div className="space-y-4">
           {/* Completion Rate */}
           <div>
@@ -76,7 +75,7 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
               <span style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
                 Completion Rate
               </span>
-              <span 
+              <span
                 className="font-semibold"
                 style={{ color: getCompletionColor(analytics.completionRate) }}
               >
@@ -255,8 +254,8 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

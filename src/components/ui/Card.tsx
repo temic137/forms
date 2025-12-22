@@ -10,26 +10,21 @@ interface CardProps {
 export function Card({ children, className = "", hover = false, onClick }: CardProps) {
   return (
     <div
-      className={`border transition-all ${hover ? "duration-200" : ""} ${className}`}
+      className={`border transition-colors ${hover ? "duration-150" : ""} ${className}`}
       style={{
         background: 'var(--card-bg)',
         borderColor: 'var(--card-border)',
         borderRadius: 'var(--card-radius)',
-        boxShadow: 'var(--card-shadow)',
       }}
       onClick={onClick}
       onMouseEnter={(e) => {
         if (hover) {
-          e.currentTarget.style.background = 'var(--card-bg-hover)';
           e.currentTarget.style.borderColor = 'var(--card-border-hover)';
-          e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)';
         }
       }}
       onMouseLeave={(e) => {
         if (hover) {
-          e.currentTarget.style.background = 'var(--card-bg)';
           e.currentTarget.style.borderColor = 'var(--card-border)';
-          e.currentTarget.style.boxShadow = 'var(--card-shadow)';
         }
       }}
     >
@@ -40,7 +35,7 @@ export function Card({ children, className = "", hover = false, onClick }: CardP
 
 export function CardHeader({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div 
+    <div
       className={`px-4 sm:px-6 py-4 sm:py-5 border-b ${className}`}
       style={{ borderColor: 'var(--divider)' }}
     >
@@ -51,7 +46,7 @@ export function CardHeader({ children, className = "" }: { children: React.React
 
 export function CardTitle({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <h3 
+    <h3
       className={`text-lg font-medium ${className}`}
       style={{ color: 'var(--foreground)' }}
     >
@@ -68,27 +63,27 @@ export function CardContent({ children, className = "" }: { children: React.Reac
   );
 }
 
-export function CardSection({ 
-  label, 
-  value, 
+export function CardSection({
+  label,
+  value,
   action,
-  className = "" 
-}: { 
-  label: string; 
-  value: React.ReactNode; 
+  className = ""
+}: {
+  label: string;
+  value: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={`flex items-start justify-between py-4 ${className}`}>
       <div className="flex-1 min-w-0 pr-4">
-        <div 
+        <div
           className="text-sm font-medium mb-1"
           style={{ color: 'var(--foreground-muted)' }}
         >
           {label}
         </div>
-        <div 
+        <div
           className="text-base"
           style={{ color: 'var(--foreground)' }}
         >
@@ -106,7 +101,7 @@ export function CardSection({
 
 export function CardDivider() {
   return (
-    <div 
+    <div
       className="h-px my-0"
       style={{ background: 'var(--divider)' }}
     />

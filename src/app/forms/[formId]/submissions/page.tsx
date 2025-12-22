@@ -242,7 +242,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
       // Field Value
       pdf.setFont("helvetica", "normal");
       let valueText = "";
-      
+
       if (field.type === 'file') {
         const files = selectedSubmission!.files.filter((f) => f.fieldId === field.id);
         valueText = files.map(f => f.originalName).join(', ') || "(No files)";
@@ -260,7 +260,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
 
   if (status === "loading" || loading) {
     return (
-      <div 
+      <div
         className="min-h-screen flex items-center justify-center"
         style={{ background: 'var(--background)' }}
       >
@@ -273,7 +273,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen"
       style={{ background: 'var(--background)' }}
     >
@@ -293,7 +293,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               </svg>
             </Link>
             <div>
-              <h1 
+              <h1
                 className="text-3xl font-bold mb-1"
                 style={{ color: 'var(--foreground)' }}
               >
@@ -435,7 +435,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                 }
                 subtitle="Weekly growth"
               />
-              
+
               <AnalyticsCard
                 title="Avg per Day"
                 value={analytics.avgPerDay}
@@ -446,7 +446,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                 }
                 subtitle={`Trend: ${analytics.timeAnalytics.trendDirection}`}
               />
-              
+
               <AnalyticsCard
                 title="Completion Rate"
                 value={`${Math.round(analytics.engagementMetrics.overallCompletionRate)}%`}
@@ -457,7 +457,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                 }
                 subtitle="Required fields filled"
               />
-              
+
               <AnalyticsCard
                 title="Last 7 Days"
                 value={analytics.timeAnalytics.last7DaysCount}
@@ -479,72 +479,60 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
             />
 
             {/* Additional Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Response Velocity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
-                        Submissions per Hour
-                      </div>
-                      <div className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                        {analytics.engagementMetrics.responseVelocity.toFixed(2)}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
-                        Average Time Between Submissions
-                      </div>
-                      <div className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                        {analytics.timeAnalytics.avgTimeBetweenSubmissions < 3600
-                          ? `${Math.round(analytics.timeAnalytics.avgTimeBetweenSubmissions / 60)} min`
-                          : `${(analytics.timeAnalytics.avgTimeBetweenSubmissions / 3600).toFixed(1)} hrs`}
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+              <div>
+                <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--foreground)' }}>Response Velocity</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Submissions per Hour</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                      {analytics.engagementMetrics.responseVelocity.toFixed(2)}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Avg Time Between</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                      {analytics.timeAnalytics.avgTimeBetweenSubmissions < 3600
+                        ? `${Math.round(analytics.timeAnalytics.avgTimeBetweenSubmissions / 60)} min`
+                        : `${(analytics.timeAnalytics.avgTimeBetweenSubmissions / 3600).toFixed(1)} hrs`}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Form Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span style={{ color: 'var(--foreground-muted)' }}>Total Fields</span>
-                      <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                        {analytics.engagementMetrics.totalFields}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: 'var(--foreground-muted)' }}>Required Fields</span>
-                      <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                        {analytics.engagementMetrics.requiredFields}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: 'var(--foreground-muted)' }}>First Response</span>
-                      <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                        {analytics.firstSubmission 
-                          ? new Date(analytics.firstSubmission).toLocaleDateString()
-                          : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span style={{ color: 'var(--foreground-muted)' }}>Latest Response</span>
-                      <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                        {analytics.lastSubmission 
-                          ? new Date(analytics.lastSubmission).toLocaleDateString()
-                          : 'N/A'}
-                      </span>
-                    </div>
+              <div>
+                <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--foreground)' }}>Form Details</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Total Fields</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                      {analytics.engagementMetrics.totalFields}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Required Fields</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                      {analytics.engagementMetrics.requiredFields}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>First Response</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                      {analytics.firstSubmission
+                        ? new Date(analytics.firstSubmission).toLocaleDateString()
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Latest Response</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                      {analytics.lastSubmission
+                        ? new Date(analytics.lastSubmission).toLocaleDateString()
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -602,48 +590,44 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               />
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Peak Activity Times</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                      Peak Hour
-                    </div>
-                    <div className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                      {analytics.timeAnalytics.peakHour !== null
-                        ? analytics.timeAnalytics.peakHour === 0
-                          ? '12 AM'
-                          : analytics.timeAnalytics.peakHour < 12
+            <div className="mt-6 py-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
+              <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--foreground)' }}>Peak Activity Times</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Peak Hour
+                  </div>
+                  <div className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                    {analytics.timeAnalytics.peakHour !== null
+                      ? analytics.timeAnalytics.peakHour === 0
+                        ? '12 AM'
+                        : analytics.timeAnalytics.peakHour < 12
                           ? `${analytics.timeAnalytics.peakHour} AM`
                           : analytics.timeAnalytics.peakHour === 12
-                          ? '12 PM'
-                          : `${analytics.timeAnalytics.peakHour - 12} PM`
-                        : 'N/A'}
-                    </div>
-                    <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                      Most submissions received
-                    </div>
+                            ? '12 PM'
+                            : `${analytics.timeAnalytics.peakHour - 12} PM`
+                      : 'N/A'}
                   </div>
-
-                  <div>
-                    <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                      Peak Day
-                    </div>
-                    <div className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-                      {analytics.timeAnalytics.peakDayOfWeek !== null
-                        ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][analytics.timeAnalytics.peakDayOfWeek]
-                        : 'N/A'}
-                    </div>
-                    <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                      Most active day of week
-                    </div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Most submissions received
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div>
+                  <div className="text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Peak Day
+                  </div>
+                  <div className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                    {analytics.timeAnalytics.peakDayOfWeek !== null
+                      ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][analytics.timeAnalytics.peakDayOfWeek]
+                      : 'N/A'}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                    Most active day of week
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -711,35 +695,33 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         {/* Submissions List */}
         {activeTab === 'responses' && (
           submissions.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <div className="mb-4">
-                  <svg
-                    className="w-16 h-16 mx-auto"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    style={{ color: 'var(--foreground-muted)' }}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                    />
-                  </svg>
-                </div>
-                <h3 
-                  className="text-xl font-semibold mb-2"
-                  style={{ color: 'var(--foreground)' }}
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <svg
+                  className="w-12 h-12 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{ color: 'var(--foreground-muted)' }}
                 >
-                  No responses yet
-                </h3>
-                <p style={{ color: 'var(--foreground-muted)' }}>
-                  Share your form to start collecting responses
-                </p>
-              </CardContent>
-            </Card>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                  />
+                </svg>
+              </div>
+              <h3
+                className="text-lg font-medium mb-1"
+                style={{ color: 'var(--foreground)' }}
+              >
+                No responses yet
+              </h3>
+              <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                Share your form to start collecting responses
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--card-border)' }}>
               <table className="w-full text-left text-sm">
@@ -775,11 +757,10 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                         <td className="px-4 py-3 whitespace-nowrap">
                           {submission.score ? (
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                submission.score.passed
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              }`}
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${submission.score.passed
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                }`}
                             >
                               {submission.score.percentage.toFixed(0)}%
                             </span>
@@ -885,7 +866,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                     Submitted: {new Date(selectedSubmission.createdAt).toLocaleString()}
                   </div>
                   {selectedSubmission.score && (
-                    <div 
+                    <div
                       className="mt-4 p-4 rounded-lg"
                       style={{
                         background: selectedSubmission.score.passed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
@@ -896,7 +877,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                         <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
                           Quiz Score
                         </span>
-                        <span 
+                        <span
                           className="text-2xl font-bold"
                           style={{ color: selectedSubmission.score.passed ? '#22c55e' : '#eab308' }}
                         >
@@ -919,7 +900,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                   <div className="space-y-4">
                     {fields.map((field) => (
                       <div key={field.id}>
-                        <div 
+                        <div
                           className="text-sm font-medium mb-1"
                           style={{ color: 'var(--foreground-muted)' }}
                         >

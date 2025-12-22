@@ -18,7 +18,7 @@ export const fieldTemplates: FieldTemplate[] = [
   { type: "short-answer", label: "Short Answer", icon: "📝", defaultLabel: "Your answer", category: "Text", recommended: true },
   { type: "long-answer", label: "Long Answer", icon: "📄", defaultLabel: "Your detailed answer", category: "Text" },
   { type: "text", label: "Text", icon: "✍️", defaultLabel: "Text input", category: "Text" },
-  
+
   // Choices
   { type: "multiple-choice", label: "Multiple Choice", icon: "⭕", defaultLabel: "Select one option", category: "Choices", recommended: true },
   { type: "choices", label: "Choices", icon: "🔘", defaultLabel: "Pick an option", category: "Choices" },
@@ -29,16 +29,16 @@ export const fieldTemplates: FieldTemplate[] = [
   { type: "checkboxes", label: "Checkboxes", icon: "✔️", defaultLabel: "Select all that apply", category: "Choices" },
   { type: "switch", label: "Switch", icon: "🔄", defaultLabel: "Toggle option", category: "Choices" },
   { type: "choice-matrix", label: "Choice Matrix", icon: "📊", defaultLabel: "Matrix selection", category: "Choices" },
-  
+
   // Contact Info
   { type: "email", label: "Email", icon: "📧", defaultLabel: "Email address", category: "Contact Info", recommended: true },
   { type: "phone", label: "Phone Number", icon: "📱", defaultLabel: "Phone number", category: "Contact Info" },
   { type: "address", label: "Address", icon: "🏠", defaultLabel: "Full address", category: "Contact Info" },
-  
+
   // Files
   { type: "file", label: "File Upload", icon: "📁", defaultLabel: "Upload a file", category: "Files" },
   { type: "file-uploader", label: "Upload", icon: "☁️", defaultLabel: "Upload file", category: "Files" },
-  
+
   // Display
   { type: "display-text", label: "Display Text", icon: "💬", defaultLabel: "Information text", category: "Display" },
   { type: "h1", label: "H1 Heading", icon: "🔤", defaultLabel: "Main Heading", category: "Display" },
@@ -47,24 +47,24 @@ export const fieldTemplates: FieldTemplate[] = [
   { type: "banner", label: "Banner", icon: "🎯", defaultLabel: "Banner message", category: "Display" },
   { type: "divider", label: "Divider", icon: "➖", defaultLabel: "Section divider", category: "Display" },
   { type: "image", label: "Image", icon: "🖼️", defaultLabel: "Image display", category: "Display" },
-  
+
   // Date & Time
   { type: "date-picker", label: "Date Picker", icon: "📅", defaultLabel: "Select date", category: "Date & Time" },
   { type: "time-picker", label: "Time Picker", icon: "🕐", defaultLabel: "Select time", category: "Date & Time" },
   { type: "datetime-picker", label: "Date Time Picker", icon: "📆", defaultLabel: "Select date and time", category: "Date & Time" },
   { type: "date-range", label: "Date Range", icon: "📊", defaultLabel: "Select date range", category: "Date & Time" },
   { type: "time", label: "Time", icon: "⏰", defaultLabel: "Enter time", category: "Date & Time" },
-  
+
   // Rating & Ranking
   { type: "star-rating", label: "Star Rating", icon: "⭐", defaultLabel: "Rate from 1 to 5", category: "Rating & Ranking" },
   { type: "ranking", label: "Ranking", icon: "🔢", defaultLabel: "Rank in order", category: "Rating & Ranking" },
   { type: "slider", label: "Slider", icon: "🎚️", defaultLabel: "Slide to select", category: "Rating & Ranking" },
   { type: "opinion-scale", label: "Opinion Scale", icon: "📈", defaultLabel: "Rate on a scale", category: "Rating & Ranking" },
-  
+
   // Number
   { type: "number", label: "Number", icon: "🔢", defaultLabel: "Enter a number", category: "Number" },
   { type: "currency", label: "Currency", icon: "💰", defaultLabel: "Enter amount", category: "Number" },
-  
+
 ];
 
 interface FieldPaletteProps {
@@ -83,7 +83,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
     if (!searchQuery.trim()) return fieldTemplates;
     const query = searchQuery.toLowerCase();
     return fieldTemplates.filter(
-      field => 
+      field =>
         field.label.toLowerCase().includes(query) ||
         field.category.toLowerCase().includes(query) ||
         field.type.toLowerCase().includes(query)
@@ -117,11 +117,10 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
       <div className="flex border-b border-gray-200 bg-gray-50">
         <button
           onClick={() => setActiveTab("fields")}
-          className={`flex-1 px-3 py-2.5 text-xs font-medium transition-colors relative ${
-            activeTab === "fields"
+          className={`flex-1 px-3 py-2.5 text-xs font-medium transition-colors relative ${activeTab === "fields"
               ? "text-blue-600 bg-white"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           Fields
           {activeTab === "fields" && (
@@ -130,11 +129,10 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
         </button>
         <button
           onClick={() => setActiveTab("theme")}
-          className={`flex-1 px-3 py-2.5 text-xs font-medium transition-colors relative ${
-            activeTab === "theme"
+          className={`flex-1 px-3 py-2.5 text-xs font-medium transition-colors relative ${activeTab === "theme"
               ? "text-blue-600 bg-white"
               : "text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           Theme
           {activeTab === "theme" && (
@@ -153,7 +151,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                 💡 Tap any field below to add it to your form
               </p>
             </div>
-            
+
             {/* Search */}
             <div className="mb-3">
               <div className="relative">
@@ -186,7 +184,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                     <button
                       key={`rec-${field.type}`}
                       onClick={() => onFieldSelect(field.type)}
-                      className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-center group"
+                      className="flex flex-col items-center justify-center p-3 rounded-md bg-gray-50 hover:bg-gray-100 transition-all text-center group"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData("fieldType", field.type);
@@ -194,7 +192,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                       }}
                     >
                       <span className="text-2xl mb-1">{field.icon}</span>
-                      <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700">{field.label}</span>
+                      <span className="text-xs font-medium text-gray-700 group-hover:text-gray-900">{field.label}</span>
                     </button>
                   ))}
                 </div>
@@ -206,11 +204,11 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
               {(searchQuery ? Object.keys(categoryGroups) : categories).map(category => {
                 const fields = searchQuery ? categoryGroups[category] : fieldTemplates.filter(f => f.category === category);
                 const isExpanded = searchQuery || expandedCategories.has(category);
-                
+
                 if (fields.length === 0) return null;
 
                 return (
-                  <div key={category} className="border border-gray-100 rounded-lg overflow-hidden">
+                  <div key={category} className="rounded-md overflow-hidden">
                     {!searchQuery && (
                       <button
                         onClick={() => toggleCategory(category)}

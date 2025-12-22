@@ -71,7 +71,7 @@ export default function DragDropFormBuilder({
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [hoveredDropIndex, setHoveredDropIndex] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  
+
   // AI suggestion states
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [aiSuggestions, setAISuggestions] = useState<Array<{
@@ -109,21 +109,21 @@ export default function DragDropFormBuilder({
       conditionalLogic: [],
       color: "#ffffff",
     };
-    
+
     const newFields = [...fields, newField];
     onFieldsChange(newFields);
     setSelectedFieldId(newField.id);
     setShowAISuggestions(false);
     setAISuggestions([]);
-    
+
     // Auto-assign to current/last page if multi-page enabled
     if (multiStepConfig?.enabled && multiStepConfig.steps.length > 0) {
       const sortedSteps = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
       const lastStep = sortedSteps[sortedSteps.length - 1];
       onMultiStepConfigChange({
         ...multiStepConfig,
-        steps: multiStepConfig.steps.map(s => 
-          s.id === lastStep.id 
+        steps: multiStepConfig.steps.map(s =>
+          s.id === lastStep.id
             ? { ...s, fieldIds: [...s.fieldIds, newField.id] }
             : s
         ),
@@ -174,10 +174,10 @@ export default function DragDropFormBuilder({
     if (!multiStepConfig?.enabled || !multiStepConfig.steps.length) {
       return { pages: [], fieldsInPage: fields };
     }
-    
+
     const pages = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
     const fieldsInPage = pages.flatMap(step => step.fieldIds.map(id => fields.find(f => f.id === id)).filter(Boolean) as Field[]);
-    
+
     return { pages, fieldsInPage };
   };
 
@@ -190,10 +190,10 @@ export default function DragDropFormBuilder({
   // Helper: Auto-assign fields to pages based on order
   const autoAssignFieldsToPages = () => {
     if (!multiStepConfig?.enabled || !multiStepConfig.steps.length) return;
-    
+
     const sortedSteps = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
     const sortedFields = [...fields].sort((a, b) => a.order - b.order);
-    
+
     // Distribute fields evenly across pages
     const fieldsPerPage = Math.ceil(sortedFields.length / sortedSteps.length);
     const newSteps = sortedSteps.map((step, stepIndex) => {
@@ -202,7 +202,7 @@ export default function DragDropFormBuilder({
       const fieldIds = sortedFields.slice(startIndex, endIndex).map(f => f.id);
       return { ...step, fieldIds };
     });
-    
+
     onMultiStepConfigChange({
       ...multiStepConfig,
       steps: newSteps,
@@ -228,19 +228,19 @@ export default function DragDropFormBuilder({
       conditionalLogic: [],
       color: "#ffffff",
     };
-    
+
     const newFields = [...fields, newField];
     onFieldsChange(newFields);
     setSelectedFieldId(newField.id);
-    
+
     // Auto-assign to current/last page if multi-page enabled
     if (multiStepConfig?.enabled && multiStepConfig.steps.length > 0) {
       const sortedSteps = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
       const lastStep = sortedSteps[sortedSteps.length - 1];
       onMultiStepConfigChange({
         ...multiStepConfig,
-        steps: multiStepConfig.steps.map(s => 
-          s.id === lastStep.id 
+        steps: multiStepConfig.steps.map(s =>
+          s.id === lastStep.id
             ? { ...s, fieldIds: [...s.fieldIds, newField.id] }
             : s
         ),
@@ -271,14 +271,14 @@ export default function DragDropFormBuilder({
 
   const handleAddPage = () => {
     if (!multiStepConfig?.enabled) return;
-    
+
     const newPage: FormStep = {
       id: `step_${Date.now()}`,
       title: `Page ${multiStepConfig.steps.length + 1}`,
       order: multiStepConfig.steps.length,
       fieldIds: [],
     };
-    
+
     onMultiStepConfigChange({
       ...multiStepConfig,
       steps: [...multiStepConfig.steps, newPage],
@@ -295,10 +295,10 @@ export default function DragDropFormBuilder({
 
   const handleDeletePage = (pageId: string) => {
     if (!multiStepConfig?.enabled || multiStepConfig.steps.length <= 1) return;
-    
+
     const deletedPage = multiStepConfig.steps.find(s => s.id === pageId);
     const remainingSteps = multiStepConfig.steps.filter(s => s.id !== pageId);
-    
+
     // Move fields from deleted page to first remaining page
     if (deletedPage && remainingSteps.length > 0) {
       const firstRemaining = remainingSteps[0];
@@ -307,7 +307,7 @@ export default function DragDropFormBuilder({
         fieldIds: [...firstRemaining.fieldIds, ...deletedPage.fieldIds],
       };
     }
-    
+
     onMultiStepConfigChange({
       ...multiStepConfig,
       steps: remainingSteps.map((s, idx) => ({ ...s, order: idx })),
@@ -319,9 +319,9 @@ export default function DragDropFormBuilder({
     const sortedSteps = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
     const index = sortedSteps.findIndex(s => s.id === pageId);
     if (index <= 0) return;
-    
+
     [sortedSteps[index - 1], sortedSteps[index]] = [sortedSteps[index], sortedSteps[index - 1]];
-    
+
     onMultiStepConfigChange({
       ...multiStepConfig,
       steps: sortedSteps.map((s, i) => ({ ...s, order: i })),
@@ -333,9 +333,9 @@ export default function DragDropFormBuilder({
     const sortedSteps = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
     const index = sortedSteps.findIndex(s => s.id === pageId);
     if (index < 0 || index >= sortedSteps.length - 1) return;
-    
+
     [sortedSteps[index], sortedSteps[index + 1]] = [sortedSteps[index + 1], sortedSteps[index]];
-    
+
     onMultiStepConfigChange({
       ...multiStepConfig,
       steps: sortedSteps.map((s, i) => ({ ...s, order: i })),
@@ -344,23 +344,23 @@ export default function DragDropFormBuilder({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (!over) {
       setActiveId(null);
       return;
     }
-    
+
     const activeId = active.id as string;
     const overId = over.id as string;
-    
+
     // Check if dragging a field
     const activeField = fields.find(f => f.id === activeId);
-    
+
     if (!activeField) {
       setActiveId(null);
       return;
     }
-    
+
     // Multi-page mode: handle page assignments
     if (multiStepConfig?.enabled && multiStepConfig.steps.length > 0) {
       // Check if dropping on a page drop zone
@@ -371,13 +371,13 @@ export default function DragDropFormBuilder({
           ...step,
           fieldIds: step.fieldIds.filter(id => id !== activeId),
         }));
-        
+
         // Add to target page (at the end)
         const targetStep = updatedSteps.find(s => s.id === targetPageId);
         if (targetStep) {
           targetStep.fieldIds.push(activeId);
         }
-        
+
         onMultiStepConfigChange({
           ...multiStepConfig,
           steps: updatedSteps,
@@ -385,37 +385,37 @@ export default function DragDropFormBuilder({
         setActiveId(null);
         return;
       }
-      
+
       // Check if dropping on another field
       const overField = fields.find(f => f.id === overId);
       if (overField) {
         // Find which page the target field belongs to
         const targetPage = multiStepConfig.steps.find(step => step.fieldIds.includes(overId));
         const sourcePage = multiStepConfig.steps.find(step => step.fieldIds.includes(activeId));
-        
+
         if (targetPage) {
           // Remove field from its current page
           const updatedSteps = multiStepConfig.steps.map(step => ({
             ...step,
             fieldIds: step.fieldIds.filter(id => id !== activeId),
           }));
-          
+
           // Find the target step again after filtering
           const updatedTargetStep = updatedSteps.find(s => s.id === targetPage.id);
           if (updatedTargetStep) {
             // Find the index of the target field in the target page
             const targetFieldIndex = targetPage.fieldIds.indexOf(overId);
-            
+
             // Insert the active field at the position of the target field
             updatedTargetStep.fieldIds.splice(targetFieldIndex, 0, activeId);
           }
-          
+
           onMultiStepConfigChange({
             ...multiStepConfig,
             steps: updatedSteps,
           });
         }
-        
+
         setActiveId(null);
         return;
       }
@@ -425,7 +425,7 @@ export default function DragDropFormBuilder({
       if (overField) {
         const oldIndex = fields.findIndex(f => f.id === activeId);
         const newIndex = fields.findIndex(f => f.id === overId);
-        
+
         if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
           const reorderedFields = arrayMove(fields, oldIndex, newIndex).map((field, index) => ({
             ...field,
@@ -435,7 +435,7 @@ export default function DragDropFormBuilder({
         }
       }
     }
-    
+
     setActiveId(null);
   };
 
@@ -471,7 +471,7 @@ export default function DragDropFormBuilder({
     e.preventDefault();
     const fieldType = e.dataTransfer.getData("fieldType") as FieldType;
     setHoveredDropIndex(null);
-    
+
     if (fieldType) {
       const template = fieldTemplates.find(t => t.type === fieldType);
       const newField: Field = {
@@ -491,17 +491,17 @@ export default function DragDropFormBuilder({
         conditionalLogic: [],
         color: "#ffffff",
       };
-      
+
       // Insert field at the correct position
       let newFields: Field[];
       let globalInsertIndex: number | undefined = insertIndex;
-      
+
       // If multi-page mode, calculate global insert index based on page position
       if (multiStepConfig?.enabled && targetPageId && insertPositionInPage !== undefined) {
         // Find the global index by counting all fields before this position in this page
         const sortedSteps = [...multiStepConfig.steps].sort((a, b) => a.order - b.order);
         let globalIndex = 0;
-        
+
         // Count actual fields in all pages before the target page
         for (const step of sortedSteps) {
           if (step.id === targetPageId) break;
@@ -511,12 +511,12 @@ export default function DragDropFormBuilder({
             .filter(Boolean);
           globalIndex += stepFields.length;
         }
-        
+
         // Add the position within the target page
         globalIndex += insertPositionInPage;
         globalInsertIndex = globalIndex;
       }
-      
+
       if (globalInsertIndex !== undefined && globalInsertIndex >= 0) {
         // Insert at specific index
         newFields = [...fields];
@@ -527,10 +527,10 @@ export default function DragDropFormBuilder({
         // Append to end
         newFields = [...fields, newField];
       }
-      
+
       onFieldsChange(newFields);
       setSelectedFieldId(newField.id);
-      
+
       // If multi-page is enabled, assign field to the target page at the correct position
       if (multiStepConfig?.enabled && targetPageId) {
         const updatedSteps = multiStepConfig.steps.map(step => {
@@ -547,7 +547,7 @@ export default function DragDropFormBuilder({
           }
           return step;
         });
-        
+
         onMultiStepConfigChange({
           ...multiStepConfig,
           steps: updatedSteps,
@@ -603,16 +603,15 @@ export default function DragDropFormBuilder({
       {/* Left Sidebar - Field Palette & Theme Settings */}
       {/* Mobile backdrop */}
       {showFieldPalette && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setShowFieldPalette(false)}
         />
       )}
-      
+
       {/* Sidebar - slides in on mobile, always visible on desktop */}
-      <div className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 lg:transform-none ${
-        showFieldPalette ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
+      <div className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 lg:transform-none ${showFieldPalette ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}>
         {/* Close button for mobile */}
         <button
           onClick={() => setShowFieldPalette(false)}
@@ -620,8 +619,8 @@ export default function DragDropFormBuilder({
         >
           <X className="w-5 h-5" />
         </button>
-        
-        <FieldPalette 
+
+        <FieldPalette
           onFieldSelect={(fieldType) => {
             handleFieldSelect(fieldType);
             setShowFieldPalette(false); // Close on mobile after selection
@@ -733,11 +732,10 @@ export default function DragDropFormBuilder({
 
               <button
                 onClick={handleToggleMultiPage}
-                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors font-medium flex items-center gap-1 sm:gap-1.5 ${
-                  multiStepConfig?.enabled
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors font-medium flex items-center gap-1 sm:gap-1.5 ${multiStepConfig?.enabled
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "text-gray-700 hover:bg-gray-50"
+                  }`}
                 title={multiStepConfig?.enabled ? "Disable Multi-Page" : "Enable Multi-Page"}
               >
                 <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -794,11 +792,10 @@ export default function DragDropFormBuilder({
 
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className={`p-1.5 sm:p-2 rounded-md transition-colors ${
-                  showSettings
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
+                className={`p-1.5 sm:p-2 rounded-md transition-colors ${showSettings
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 title="Settings"
               >
                 <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -994,9 +991,9 @@ export default function DragDropFormBuilder({
         )}
 
         {/* Canvas Area */}
-        <div 
+        <div
           className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8"
-          style={{ 
+          style={{
             backgroundColor: styling?.backgroundColor || '#f3f4f6',
           }}
         >
@@ -1009,34 +1006,34 @@ export default function DragDropFormBuilder({
             >
               {fields.length === 0 ? (
                 <div
-                  className="border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center bg-white shadow-sm hover:border-blue-400 transition-colors"
+                  className="border border-dashed border-gray-300 rounded-lg p-12 text-center bg-white hover:border-gray-400 transition-colors"
                   onDrop={handleDropZoneDrop}
                   onDragOver={handleDropZoneDragOver}
                 >
                   <div className="max-w-md mx-auto">
-                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-50 flex items-center justify-center animate-pulse">
-                      <Plus className="w-12 h-12 text-blue-500" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Plus className="w-8 h-8 text-gray-500" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Start Building Your Form</h3>
-                    <p className="text-gray-600 mb-8 text-base">
-                      Drag fields from the left sidebar or click the buttons below to get started quickly.
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Building Your Form</h3>
+                    <p className="text-gray-500 mb-6 text-sm">
+                      Drag fields from the left sidebar or click below to get started.
                     </p>
-                    <div className="flex flex-wrap gap-3 justify-center">
+                    <div className="flex flex-wrap gap-2 justify-center">
                       <button
                         onClick={() => handleFieldSelect("short-answer")}
-                        className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm flex items-center gap-2"
+                        className="px-4 py-2 bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center gap-2"
                       >
                         <span>📝</span> Short Answer
                       </button>
                       <button
                         onClick={() => handleFieldSelect("multiple-choice")}
-                        className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm flex items-center gap-2"
+                        className="px-4 py-2 bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center gap-2"
                       >
                         <span>⭕</span> Multiple Choice
                       </button>
                       <button
                         onClick={() => handleFieldSelect("email")}
-                        className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm flex items-center gap-2"
+                        className="px-4 py-2 bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center gap-2"
                       >
                         <span>📧</span> Email
                       </button>
@@ -1053,7 +1050,7 @@ export default function DragDropFormBuilder({
                         .filter(Boolean) as Field[];
                       const isFirst = pageIndex === 0;
                       const isLast = pageIndex === multiStepConfig.steps.length - 1;
-                      
+
                       return (
                         <div key={page.id} className="space-y-4">
                           <PageDivider
@@ -1067,18 +1064,18 @@ export default function DragDropFormBuilder({
                             onMoveDown={() => handleMovePageDown(page.id)}
                             canDelete={multiStepConfig.steps.length > 1}
                           />
-                          
+
                           {/* Fields in this page */}
                           <div className="space-y-4 pl-6">
                             {/* Drop zone for adding fields at the beginning of this page */}
-                            <PageDropZone 
-                              pageId={page.id} 
+                            <PageDropZone
+                              pageId={page.id}
                               isEmpty={pageFields.length === 0}
                               onDrop={(e) => handleDropZoneDrop(e, undefined, page.id, 0)}
                               onDragOver={handleDropZoneDragOver}
                               onDragLeave={handleDropZoneDragLeave}
                             />
-                            
+
                             {pageFields.map((field, fieldIndexInPage) => {
                               const globalIndex = fields.findIndex(f => f.id === field.id);
                               return (
@@ -1112,15 +1109,15 @@ export default function DragDropFormBuilder({
                         </div>
                       );
                     })}
-                  
+
                     {/* Add Field Buttons */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleFieldSelect("short-answer")}
-                        className="flex-1 py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all font-medium text-sm shadow-sm"
+                        className="flex-1 py-3 border border-dashed border-gray-300 rounded-md text-gray-500 hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
                       >
                         <div className="flex items-center justify-center gap-2">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
                           Add Field
@@ -1150,14 +1147,12 @@ export default function DragDropFormBuilder({
                       onDragOver={(e) => handleDropZoneDragOver(e, 0)}
                       onDragLeave={handleDropZoneDragLeave}
                     >
-                      <div className={`h-4 transition-all duration-200 rounded-lg ${
-                        hoveredDropIndex === 0 ? 'opacity-100' : 'opacity-30'
-                      }`}>
-                        <div className={`h-full border-2 border-dashed rounded-lg transition-all ${
-                          hoveredDropIndex === 0 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-300 bg-gray-50'
-                        }`} />
+                      <div className={`h-4 transition-all duration-200 rounded-lg ${hoveredDropIndex === 0 ? 'opacity-100' : 'opacity-30'
+                        }`}>
+                        <div className={`h-full border-2 border-dashed rounded-lg transition-all ${hoveredDropIndex === 0
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-300 bg-gray-50'
+                          }`} />
                       </div>
                     </div>
 
@@ -1181,14 +1176,12 @@ export default function DragDropFormBuilder({
                           onDragOver={(e) => handleDropZoneDragOver(e, index + 1)}
                           onDragLeave={handleDropZoneDragLeave}
                         >
-                          <div className={`h-4 transition-all duration-200 rounded-lg ${
-                            hoveredDropIndex === index + 1 ? 'opacity-100' : 'opacity-30'
-                          }`}>
-                            <div className={`h-full border-2 border-dashed rounded-lg transition-all ${
-                              hoveredDropIndex === index + 1 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-300 bg-gray-50'
-                            }`} />
+                          <div className={`h-4 transition-all duration-200 rounded-lg ${hoveredDropIndex === index + 1 ? 'opacity-100' : 'opacity-30'
+                            }`}>
+                            <div className={`h-full border-2 border-dashed rounded-lg transition-all ${hoveredDropIndex === index + 1
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-300 bg-gray-50'
+                              }`} />
                           </div>
                         </div>
                       </div>
@@ -1199,10 +1192,10 @@ export default function DragDropFormBuilder({
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleFieldSelect("short-answer")}
-                      className="flex-1 py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all font-medium text-sm shadow-sm"
+                      className="flex-1 py-3 border border-dashed border-gray-300 rounded-md text-gray-500 hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                         Add Field
@@ -1224,7 +1217,7 @@ export default function DragDropFormBuilder({
 
               <DragOverlay>
                 {activeId ? (
-                  <div className="bg-white border-2 border-blue-500 rounded-xl p-4 shadow-2xl ring-2 ring-blue-500/20 opacity-95">
+                  <div className="bg-white border border-gray-300 rounded-lg p-4 opacity-95">
                     <FieldRenderer field={fields.find(f => f.id === activeId)!} styling={styling} />
                   </div>
                 ) : null}
@@ -1237,13 +1230,13 @@ export default function DragDropFormBuilder({
         {showSettings && (
           <>
             {/* Mobile backdrop */}
-            <div 
+            <div
               className="lg:hidden fixed inset-0 bg-black/50 z-40"
               onClick={() => setShowSettings(false)}
             />
-            
-            <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-96 max-w-full bg-white border-l border-gray-200 shadow-xl z-50 flex flex-col">
-              <div className="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between bg-gray-50">
+
+            <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-96 max-w-full bg-white border-l border-gray-200 z-50 flex flex-col">
+              <div className="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
                 <h2 className="text-base font-semibold text-gray-900">Settings</h2>
                 <button
                   onClick={() => setShowSettings(false)}
@@ -1291,7 +1284,7 @@ export default function DragDropFormBuilder({
                     </label>
                   </div>
                 )}
-                
+
                 {/* Submission Settings */}
                 {(onLimitOneResponseChange || onSaveAndEditChange) && (
                   <div className="border-t border-gray-200 pt-6 space-y-3">
@@ -1325,7 +1318,7 @@ export default function DragDropFormBuilder({
                   config={notifications}
                   onChange={onNotificationsChange}
                 />
-{/* 
+                {/* 
                 {currentFormId && (
                   <div className="border-t border-gray-200 pt-6 space-y-3">
                     <h3 className="text-sm font-semibold text-gray-900">Integrations</h3>
@@ -1350,21 +1343,21 @@ export default function DragDropFormBuilder({
           }}
         >
           <div
-            className="w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden"
+            className="w-full max-w-md mx-4 bg-white rounded-lg border border-gray-200 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-5 py-4 bg-gradient-to-r from-purple-500 to-blue-500">
+            <div className="px-5 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-gray-100 rounded-md">
+                    <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">AI Suggested Questions</h3>
-                    <p className="text-xs text-white/80">Click to add to your form</p>
+                    <h3 className="font-semibold text-gray-900">AI Suggested Questions</h3>
+                    <p className="text-xs text-gray-500">Click to add to your form</p>
                   </div>
                 </div>
                 <button
@@ -1372,9 +1365,9 @@ export default function DragDropFormBuilder({
                     setShowAISuggestions(false);
                     setAISuggestions([]);
                   }}
-                  className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+                  className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
                 >
-                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -1388,7 +1381,7 @@ export default function DragDropFormBuilder({
                   <button
                     key={index}
                     onClick={() => handleSelectAISuggestion(suggestion)}
-                    className="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-purple-200 hover:bg-purple-50/50 transition-all duration-200"
+                    className="w-full text-left p-4 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
@@ -1397,7 +1390,7 @@ export default function DragDropFormBuilder({
                           <p className="mt-1 text-xs text-gray-500">{suggestion.reason}</p>
                         )}
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                      <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
                         {suggestion.type}
                       </span>
                     </div>
@@ -1419,7 +1412,7 @@ export default function DragDropFormBuilder({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <div className="px-5 py-3 border-t border-gray-200 flex justify-end">
               <button
                 onClick={() => {
                   setShowAISuggestions(false);

@@ -66,7 +66,7 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  
+
   // Form state
   const [showBuilder, setShowBuilder] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
@@ -77,15 +77,15 @@ export default function Home() {
   const [previewQuizMode, setPreviewQuizMode] = useState<QuizModeConfig | undefined>(undefined);
   const [limitOneResponse, setLimitOneResponse] = useState(false);
   const [saveAndEdit, setSaveAndEdit] = useState(false);
-  
+
   // Creation method state
   const [creationMethod, setCreationMethod] = useState<CreationMethodInline>("prompt");
-  
+
   // Help popup and onboarding state
   const [showHelpPopup, setShowHelpPopup] = useState(false);
   const [hasCreatedForm, setHasCreatedForm] = useState(false);
   const [showMethodTooltip, setShowMethodTooltip] = useState(false);
-  
+
   // Check if user has created a form before (for progressive disclosure)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -157,7 +157,7 @@ ${additionalContext}
       const res = await fetch("/api/ai/generate-enhanced", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           content: fullContent,
           sourceType: "text",
           userContext: "The user wants to create a form.",
@@ -166,11 +166,11 @@ ${additionalContext}
           }
         }),
       });
-      
+
       if (!res.ok) throw new Error("Failed to generate form");
-      
+
       const data = await res.json();
-      
+
       // Normalize fields consistent with Dashboard implementation
       const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
         id: f.id || `field_${Date.now()}_${idx}`,
@@ -202,7 +202,7 @@ ${additionalContext}
       setAttachedUrl("");
       setShowUrlInput(false);
       setQuery("");
-      
+
       // Mark that user has created their first form (for progressive disclosure)
       if (typeof window !== 'undefined') {
         localStorage.setItem('hasCreatedForm', 'true');
@@ -221,7 +221,7 @@ ${additionalContext}
       await generateForm(query.trim());
     }
   };
-  
+
   async function handleFileUpload(file: File) {
     setLoading(true);
     try {
@@ -302,7 +302,7 @@ ${additionalContext}
       setPreviewFields(normalizedFields);
       setPreviewStyling(undefined);
       setShowBuilder(true);
-      setCreationMethod("prompt"); 
+      setCreationMethod("prompt");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to scan document");
     } finally {
@@ -330,7 +330,7 @@ ${additionalContext}
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
       setShowBuilder(true);
-      setCreationMethod("prompt"); 
+      setCreationMethod("prompt");
     } catch {
       toast.error("Failed to import JSON");
     } finally {
@@ -373,7 +373,7 @@ ${additionalContext}
 
       setPreviewTitle(data.title || "Form from URL");
       setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined); 
+      setPreviewStyling(undefined);
       setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
       setPreviewMultiStepConfig(undefined);
       setShowBuilder(true);
@@ -423,20 +423,20 @@ ${additionalContext}
 
     if (isListening && query.trim() && query !== lastTranscriptRef.current) {
       lastTranscriptRef.current = query;
-      
+
       // Start 3-second countdown
       setAutoSubmitCountdown(3);
       let countdown = 3;
-      
+
       const countdownInterval = setInterval(() => {
         countdown -= 1;
         setAutoSubmitCountdown(countdown);
-        
+
         if (countdown <= 0) {
           clearInterval(countdownInterval);
         }
       }, 1000);
-      
+
       // Auto-submit after 3 seconds
       silenceTimerRef.current = setTimeout(() => {
         clearInterval(countdownInterval);
@@ -477,24 +477,24 @@ ${additionalContext}
 
   const handleSave = () => {
     if (typeof window !== 'undefined') {
-        const formData = {
-            title: previewTitle,
-            fields: previewFields,
-            styling: previewStyling,
-            notifications: previewNotifications,
-            multiStepConfig: previewMultiStepConfig,
-            quizMode: previewQuizMode,
-            limitOneResponse,
-            saveAndEdit
-        };
-        
-        // Save to session storage for retrieval after signup
-        sessionStorage.setItem('pendingForm', JSON.stringify(formData));
-        
-        toast.success("Please sign up to save your form!");
-        setTimeout(() => {
-            router.push('/auth/signup');
-        }, 1500);
+      const formData = {
+        title: previewTitle,
+        fields: previewFields,
+        styling: previewStyling,
+        notifications: previewNotifications,
+        multiStepConfig: previewMultiStepConfig,
+        quizMode: previewQuizMode,
+        limitOneResponse,
+        saveAndEdit
+      };
+
+      // Save to session storage for retrieval after signup
+      sessionStorage.setItem('pendingForm', JSON.stringify(formData));
+
+      toast.success("Please sign up to save your form!");
+      setTimeout(() => {
+        router.push('/auth/signup');
+      }, 1500);
     }
   };
 
@@ -509,28 +509,28 @@ ${additionalContext}
   // Show form editor if form exists
   if (showBuilder) {
     return (
-        <DragDropFormBuilder
-          formTitle={previewTitle}
-          fields={previewFields}
-          styling={previewStyling}
-          notifications={previewNotifications}
-          multiStepConfig={previewMultiStepConfig}
-          quizMode={previewQuizMode}
-          limitOneResponse={limitOneResponse}
-          saveAndEdit={saveAndEdit}
-          currentFormId={null} // No ID yet as it's not saved
-          onFormTitleChange={setPreviewTitle}
-          onFieldsChange={setPreviewFields}
-          onStylingChange={setPreviewStyling}
-          onNotificationsChange={setPreviewNotifications}
-          onMultiStepConfigChange={setPreviewMultiStepConfig}
-          onQuizModeChange={setPreviewQuizMode}
-          onLimitOneResponseChange={setLimitOneResponse}
-          onSaveAndEditChange={setSaveAndEdit}
-          onSave={handleSave}
-          onCancel={startOver}
-          saving={false}
-        />
+      <DragDropFormBuilder
+        formTitle={previewTitle}
+        fields={previewFields}
+        styling={previewStyling}
+        notifications={previewNotifications}
+        multiStepConfig={previewMultiStepConfig}
+        quizMode={previewQuizMode}
+        limitOneResponse={limitOneResponse}
+        saveAndEdit={saveAndEdit}
+        currentFormId={null} // No ID yet as it's not saved
+        onFormTitleChange={setPreviewTitle}
+        onFieldsChange={setPreviewFields}
+        onStylingChange={setPreviewStyling}
+        onNotificationsChange={setPreviewNotifications}
+        onMultiStepConfigChange={setPreviewMultiStepConfig}
+        onQuizModeChange={setPreviewQuizMode}
+        onLimitOneResponseChange={setLimitOneResponse}
+        onSaveAndEditChange={setSaveAndEdit}
+        onSave={handleSave}
+        onCancel={startOver}
+        saving={false}
+      />
     );
   }
 
@@ -572,12 +572,12 @@ ${additionalContext}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide mb-8">
               The AI Form Builder
             </div>
-            
+
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
               Stop building <RotatingText words={["forms", "quizzes", "surveys", "tests", "questionnaires"]} className="text-blue-600" />. <br />
               <span className="text-gray-500">Just describe them.</span>
             </h1>
-            
+
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
               Create complex, validated forms in seconds using natural language. No drag-and-drop required.
             </p>
@@ -607,7 +607,7 @@ ${additionalContext}
               >
                 {/* Main button background */}
                 <div className="absolute inset-0 bg-white border-2 border-gray-200 group-hover:border-gray-800 transition-all duration-300 group-hover:bg-gray-900" />
-                
+
                 {/* Shimmer effect on hover */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
                   style={{
@@ -615,7 +615,7 @@ ${additionalContext}
                     animation: 'shimmer 2s infinite'
                   }}
                 />
-                
+
                 {/* Content */}
                 <div className="relative flex items-center gap-4 z-10">
                   <div className="relative flex-shrink-0">
@@ -624,18 +624,18 @@ ${additionalContext}
                       👻
                     </div>
                   </div>
-                  
+
                   <div className="text-left">
                     <div className="text-gray-900 font-bold text-base group-hover:text-white transition-colors duration-300 leading-tight">Go Ghost Mode</div>
                     <div className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors duration-300 font-normal">Try it instantly, no signup needed</div>
                   </div>
-                  
+
                   {/* Arrow animation */}
                   <div className="ml-2 text-gray-400 group-hover:text-white transition-all duration-300 group-hover:translate-x-3">
                     <ArrowRight className="w-5 h-5" />
                   </div>
                 </div>
-                
+
                 {/* Add keyframes animation */}
                 <style jsx>{`
                   @keyframes shimmer {
@@ -654,14 +654,14 @@ ${additionalContext}
             </div>
 
             {/* Hero Input */}
-            <div className="max-w-2xl mx-auto mb-16 relative">
-              <div className="relative bg-white rounded-xl shadow-lg border border-gray-200 p-2">
+            <div className="max-w-2xl mx-auto mb-12 relative">
+              <div className="relative bg-gray-50 rounded-xl border border-gray-200 p-2">
                 <CreationMethodSelector
                   selectedMethod={creationMethod}
                   onMethodChange={setCreationMethod}
                   disabled={loading}
                 />
-                
+
                 {/* Onboarding tooltip for first-time users */}
                 {!hasCreatedForm && !showMethodTooltip && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
@@ -677,7 +677,7 @@ ${additionalContext}
                     </div>
                   </div>
                 )}
-                
+
                 {creationMethod === 'prompt' && (
                   <form onSubmit={handleSubmit} className="mt-4">
                     <div className="relative">
@@ -690,7 +690,7 @@ ${additionalContext}
                       >
                         <HelpCircle className="w-5 h-5" />
                       </button>
-                      
+
                       <textarea
                         id="landing-prompt-input"
                         value={query}
@@ -737,11 +737,10 @@ ${additionalContext}
                           />
                           <label
                             htmlFor="landing-attach-file"
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border cursor-pointer transition-colors ${
-                              attachedFile 
-                                ? "bg-blue-50 border-blue-200 text-blue-700" 
-                                : "hover:bg-gray-50 border-gray-200 text-gray-600"
-                            }`}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border cursor-pointer transition-colors ${attachedFile
+                              ? "bg-blue-50 border-blue-200 text-blue-700"
+                              : "hover:bg-gray-50 border-gray-200 text-gray-600"
+                              }`}
                           >
                             <Upload className="w-4 h-4" />
                             {attachedFile ? attachedFile.name : "Attach File"}
@@ -752,11 +751,10 @@ ${additionalContext}
                         <button
                           type="button"
                           onClick={() => setShowUrlInput(!showUrlInput)}
-                          className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
-                            attachedUrl 
-                              ? "bg-blue-50 border-blue-200 text-blue-700" 
-                              : "hover:bg-gray-50 border-gray-200 text-gray-600"
-                          }`}
+                          className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${attachedUrl
+                            ? "bg-blue-50 border-blue-200 text-blue-700"
+                            : "hover:bg-gray-50 border-gray-200 text-gray-600"
+                            }`}
                         >
                           <Globe className="w-4 h-4" />
                           {attachedUrl ? "URL Attached" : "Attach URL"}
@@ -787,7 +785,7 @@ ${additionalContext}
                           )}
                         </div>
                       )}
-                      
+
                       {isListening && autoSubmitCountdown !== null && (
                         <div className="text-center text-sm font-medium animate-pulse text-blue-600 mb-2">
                           Auto-generating in {autoSubmitCountdown}s...
@@ -814,10 +812,10 @@ ${additionalContext}
                     </div>
                   </form>
                 )}
-                
+
                 {/* Other Input Methods (File, URL, etc) */}
                 <div className="px-4 pb-4">
-                   {creationMethod === 'file' && (
+                  {creationMethod === 'file' && (
                     <div className="mt-4">
                       <InlineFileUpload
                         onFileSelect={handleFileUpload}
@@ -878,219 +876,119 @@ ${additionalContext}
               </div>
             </div>
 
-            {/* Template Cards */}
-            <div className="max-w-4xl mx-auto mt-16">
-              <h3 className="text-center text-sm font-medium text-gray-500 uppercase tracking-wide mb-6">Or start with a template</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {templateCards.map((template) => (
-                  <button
-                    key={template.title}
-                    onClick={() => {
-                      setQuery(template.query);
-                      generateForm(template.query);
-                    }}
-                    disabled={loading}
-                    className="group relative p-5 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-lg transition-all duration-200 text-left disabled:opacity-50"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="text-3xl">{template.icon}</span>
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                        {template.fields} fields
-                      </span>
-                    </div>
-                    <h4 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                      {template.title}
-                    </h4>
-                    <p className="text-sm text-gray-500">{template.description}</p>
-                    <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-blue-500 transition-colors pointer-events-none" />
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
         {/* Why AnyForm Section */}
-        <section className="py-20 bg-gray-50 border-t border-gray-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Why AnyForm?</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Three powerful reasons teams are switching to AI-powered form building
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* Differentiator 1: Speed */}
-              <div className="relative p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
-                <div className="absolute -top-4 -right-4 w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
-                  <Clock className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">10x Faster Creation</h3>
-                <p className="text-gray-600 mb-4">
-                  What takes 10 minutes in Google Forms takes 30 seconds here. Just describe what you need.
-                </p>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded font-medium">Before: 10 min</span>
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded font-medium">Now: 30 sec</span>
-                </div>
-              </div>
+        <section className="py-16 bg-white border-t border-gray-100">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-10 text-center">Why AnyForm?</h2>
 
-              {/* Differentiator 2: Intelligence */}
-              <div className="relative p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
-                <div className="absolute -top-4 -right-4 w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-md">
-                  <Brain className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Context-Aware AI</h3>
-                <p className="text-gray-600 mb-4">
-                  Our AI understands your intent. It auto-detects field types, validation rules, and conditional logic.
-                </p>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Smart Validation</span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Auto Field Types</span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Logic Detection</span>
-                </div>
-              </div>
-
-              {/* Differentiator 3: Multiple Input Methods */}
-              <div className="relative p-8 rounded-2xl bg-white border border-gray-200 shadow-sm">
-                <div className="absolute -top-4 -right-4 w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
-                  <FileText className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 mt-4">Create Your Way</h3>
-                <p className="text-gray-600 mb-4">
-                  Type, speak, upload a file, scan a document, or paste a URL. We turn anything into a form.
-                </p>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><Mic className="w-3 h-3" /> Voice</span>
-                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><Upload className="w-3 h-3" /> Upload</span>
-                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><ScanLine className="w-3 h-3" /> Scan</span>
-                  <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded flex items-center gap-1"><Globe className="w-3 h-3" /> URL</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Detailed Comparison Table */}
-        <section id="comparison" className="py-24 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Why switch from Google Forms?</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Google Forms is stuck in 2014. We built a tool for 2024 that understands context, logic, and design automatically.
-              </p>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <div className="inline-block min-w-full align-middle">
-                <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm bg-white">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th scope="col" className="py-5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900">Feature</th>
-                        <th scope="col" className="px-3 py-5 text-left text-sm font-medium text-gray-500">Google Forms</th>
-                        <th scope="col" className="px-3 py-5 text-left text-sm font-bold text-blue-600 bg-blue-50/50">AnyForm (Our Tool)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
-                      {/* Row 1: Speed */}
-                      <tr>
-                        <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">Creation Speed</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">5-10 minutes (Manual)</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900 bg-blue-50/10">30 seconds (AI)</td>
-                      </tr>
-                      
-                      {/* Row 2: Input Method */}
-                      <tr>
-                        <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">Input Method</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">Click & Type (Slow)</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900 bg-blue-50/10">Voice, Text, URL, File</td>
-                      </tr>
-
-                      {/* Row 3: Intelligence */}
-                      <tr>
-                        <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">Context Awareness</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">None (Dumb Canvas)</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900 bg-blue-50/10">Auto-detects logic & fields</td>
-                      </tr>
-
-                      {/* Row 4: File Imports */}
-                      <tr>
-                        <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">File Imports</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          <span className="inline-flex items-center gap-1.5 text-red-500">
-                            <Minus className="w-4 h-4" /> Not Supported
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900 bg-blue-50/10">
-                          <span className="inline-flex items-center gap-1.5 text-green-600">
-                            <Check className="w-4 h-4" /> PDF / Word / Excel
-                          </span>
-                        </td>
-                      </tr>
-
-                      {/* Row 5: Design */}
-                      <tr>
-                        <td className="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-gray-900">Design Quality</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">Generic &quot;Purple Header&quot;</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900 bg-blue-50/10">Professional & Clean</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Grid */}
-        <section id="features" className="py-24 bg-white">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-3 gap-12">
+            <div className="grid md:grid-cols-3 gap-10">
+              {/* Speed */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 mb-6 mx-auto border border-gray-100">
-                  <Mic className="w-6 h-6" />
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-5 h-5 text-gray-700" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Voice Input</h3>
-                <p className="text-gray-600 leading-relaxed">Dictate your form requirements while walking or driving. We&apos;ll handle the structure.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">10x Faster</h3>
+                <p className="text-sm text-gray-600">30 seconds instead of 10 minutes. Just describe what you need.</p>
               </div>
 
+              {/* Intelligence */}
               <div className="text-center">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 mb-6 mx-auto border border-gray-100">
-                  <UploadCloud className="w-6 h-6" />
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Brain className="w-5 h-5 text-gray-700" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">File to Form</h3>
-                <p className="text-gray-600 leading-relaxed">Upload a PDF or Word doc. We&apos;ll extract the questions and logic automatically.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Context-Aware</h3>
+                <p className="text-sm text-gray-600">Auto-detects field types, validation, and conditional logic.</p>
               </div>
 
-               <div className="text-center">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 mb-6 mx-auto border border-gray-100">
-                  <BarChart3 className="w-6 h-6" />
+              {/* Multiple Inputs */}
+              <div className="text-center">
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-5 h-5 text-gray-700" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Instant Analytics</h3>
-                <p className="text-gray-600 leading-relaxed">Get insights immediately. Visualize your response data without exporting.</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Any Input</h3>
+                <p className="text-sm text-gray-600">Voice, files, documents, URLs—we turn anything into a form.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-24 bg-gray-50 border-t border-gray-200">
+        {/* Comparison Section */}
+        <section id="comparison" className="py-14 bg-gray-50 border-t border-gray-100">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">vs Google Forms</h2>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-700">Creation Speed</span>
+                <div className="flex gap-6 text-sm">
+                  <span className="text-gray-400 w-28 text-right">5-10 min</span>
+                  <span className="text-gray-900 font-medium w-28 text-right">30 sec</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-700">Input Methods</span>
+                <div className="flex gap-6 text-sm">
+                  <span className="text-gray-400 w-28 text-right">Click only</span>
+                  <span className="text-gray-900 font-medium w-28 text-right">Voice, File, URL</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <span className="text-sm font-medium text-gray-700">AI Detection</span>
+                <div className="flex gap-6 text-sm">
+                  <span className="text-gray-400 w-28 text-right flex justify-end"><Minus className="w-4 h-4" /></span>
+                  <span className="text-gray-900 font-medium w-28 text-right flex justify-end"><Check className="w-4 h-4 text-green-600" /></span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <span className="text-sm font-medium text-gray-700">File Imports</span>
+                <div className="flex gap-6 text-sm">
+                  <span className="text-gray-400 w-28 text-right flex justify-end"><Minus className="w-4 h-4" /></span>
+                  <span className="text-gray-900 font-medium w-28 text-right flex justify-end"><Check className="w-4 h-4 text-green-600" /></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section id="features" className="py-14 bg-white border-t border-gray-100">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+              <div>
+                <Mic className="w-5 h-5 text-gray-500 mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">Voice Input</h3>
+                <p className="text-xs text-gray-500">Dictate while walking or driving</p>
+              </div>
+              <div>
+                <UploadCloud className="w-5 h-5 text-gray-500 mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">File to Form</h3>
+                <p className="text-xs text-gray-500">PDF, Word docs auto-extracted</p>
+              </div>
+              <div>
+                <BarChart3 className="w-5 h-5 text-gray-500 mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">Analytics</h3>
+                <p className="text-xs text-gray-500">Real-time response insights</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-14 bg-gray-50 border-t border-gray-100">
           <div className="max-w-4xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900">Ready to build?</h2>
-            <p className="text-lg text-gray-600 mb-8">It takes less than 30 seconds to get started.</p>
-            
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Ready to build?</h2>
             <button
-               onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  const input = document.getElementById('landing-prompt-input');
-                  if (input) input.focus();
-                }}
-              className="bg-gray-900 text-white hover:bg-gray-800 px-8 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const input = document.getElementById('landing-prompt-input');
+                if (input) input.focus();
+              }}
+              className="bg-gray-900 text-white hover:bg-gray-800 px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
             >
-              Start Building Now
+              Start Now
             </button>
           </div>
         </section>
@@ -1131,7 +1029,7 @@ ${additionalContext}
                   </div>
                 </div>
               ))}
-              
+
               <div className="pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">💡 Pro Tips</h4>
                 <ul className="text-sm text-gray-600 space-y-2">

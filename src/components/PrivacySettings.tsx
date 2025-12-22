@@ -40,7 +40,7 @@ export default function PrivacySettings() {
         body: JSON.stringify({ action: "export" }),
       });
       const result = await res.json();
-      
+
       const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -48,7 +48,7 @@ export default function PrivacySettings() {
       a.download = `my-data-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      
+
       setMessage({ type: "success", text: "Data exported!" });
     } catch {
       setMessage({ type: "error", text: "Export failed" });
@@ -73,12 +73,12 @@ export default function PrivacySettings() {
           },
         }),
       });
-      
+
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error);
       }
-      
+
       if (type === "account") {
         window.location.href = "/";
       } else {
@@ -105,8 +105,8 @@ export default function PrivacySettings() {
           <Shield className="w-12 h-12 mx-auto mb-4 text-gray-400" />
           <h2 className="text-xl font-semibold mb-2 text-gray-900">Sign In Required</h2>
           <p className="mb-4 text-gray-500">Sign in to manage your privacy settings.</p>
-          <a 
-            href="/auth/signin" 
+          <a
+            href="/auth/signin"
             className="inline-block px-6 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700"
           >
             Sign In
@@ -118,24 +118,23 @@ export default function PrivacySettings() {
 
   return (
     <div className="min-h-screen py-8 px-4 pt-24 bg-white">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <Shield className="w-8 h-8 text-blue-600" />
+        <div className="flex items-center gap-3 mb-8">
+          <Shield className="w-6 h-6 text-gray-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Privacy Settings</h1>
-            <p className="text-gray-500">Manage your data and privacy preferences.</p>
+            <h1 className="text-xl font-semibold text-gray-900">Privacy Settings</h1>
+            <p className="text-sm text-gray-500">Manage your data and privacy preferences.</p>
           </div>
         </div>
 
         {/* Messages */}
         {message && (
-          <div 
-            className={`p-4 rounded-lg flex items-center justify-between border ${
-              message.type === "success" 
-                ? "bg-green-50 border-green-200 text-green-700" 
-                : "bg-red-50 border-red-200 text-red-700"
-            }`}
+          <div
+            className={`p-3 rounded-lg flex items-center justify-between mb-6 text-sm ${message.type === "success"
+              ? "bg-green-50 text-green-700"
+              : "bg-red-50 text-red-700"
+              }`}
           >
             <span>{message.text}</span>
             <button onClick={() => setMessage(null)} className="font-bold">×</button>
@@ -144,68 +143,68 @@ export default function PrivacySettings() {
 
         {/* Data Summary */}
         {data && (
-          <div className="card p-6">
-            <h2 className="font-semibold mb-4 text-gray-900">Your Data</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-2xl font-bold text-blue-600">{data.dataSummary.formsCreated}</p>
-                <p className="text-sm text-gray-500">Forms</p>
+          <div className="mb-8">
+            <h2 className="text-sm font-medium text-gray-900 mb-4">Your Data</h2>
+            <div className="flex gap-8 mb-3">
+              <div>
+                <p className="text-2xl font-semibold text-gray-900">{data.dataSummary.formsCreated}</p>
+                <p className="text-xs text-gray-500">Forms</p>
               </div>
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-2xl font-bold text-blue-600">{data.dataSummary.submissionsReceived}</p>
-                <p className="text-sm text-gray-500">Submissions</p>
+              <div>
+                <p className="text-2xl font-semibold text-gray-900">{data.dataSummary.submissionsReceived}</p>
+                <p className="text-xs text-gray-500">Submissions</p>
               </div>
             </div>
-            <p className="text-sm text-gray-500">
-              Member since: {new Date(data.user.memberSince).toLocaleDateString()}
+            <p className="text-xs text-gray-400">
+              Member since {new Date(data.user.memberSince).toLocaleDateString()}
             </p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="card p-6">
-          <h2 className="font-semibold mb-4 text-gray-900">Data Actions</h2>
-          
+        <div className="border-t border-gray-100 pt-6">
+          <h2 className="text-sm font-medium text-gray-900 mb-4">Data Actions</h2>
+
           <button
             onClick={handleExport}
             disabled={actionLoading === "export"}
-            className="w-full flex items-center gap-3 p-4 rounded-lg mb-3 border border-gray-200 hover:border-blue-300 hover:bg-gray-50 transition"
+            className="w-full flex items-center gap-3 py-3 text-left hover:bg-gray-50 transition rounded-lg"
           >
             {actionLoading === "export" ? (
               <Spinner size="sm" />
             ) : (
-              <Download className="w-5 h-5 text-blue-600" />
+              <Download className="w-4 h-4 text-gray-500" />
             )}
-            <span className="font-medium text-gray-900">Export My Data</span>
+            <span className="text-sm text-gray-900">Export My Data</span>
           </button>
 
           <button
             onClick={() => setShowDelete(!showDelete)}
-            className="w-full flex items-center gap-3 p-4 rounded-lg border border-gray-200 hover:border-red-300 hover:bg-gray-50 transition"
+            className="w-full flex items-center gap-3 py-3 text-left hover:bg-gray-50 transition rounded-lg"
           >
-            <Trash2 className="w-5 h-5 text-red-600" />
-            <span className="font-medium text-gray-900">Delete Data</span>
+            <Trash2 className="w-4 h-4 text-red-500" />
+            <span className="text-sm text-gray-900">Delete Data</span>
           </button>
 
           {showDelete && (
-            <div className="mt-4 p-4 rounded-lg border border-red-200 bg-red-50">
-              <div className="space-y-3">
+            <div className="mt-4 py-4 border-t border-gray-100">
+              <div className="space-y-2">
                 <button
                   onClick={() => handleDelete("submissions")}
                   disabled={!!actionLoading}
-                  className="w-full text-left p-3 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-900"
+                  className="w-full text-left py-2 px-3 rounded text-sm text-gray-700 hover:bg-gray-50"
                 >
                   Delete all submissions
                 </button>
                 <button
                   onClick={() => handleDelete("forms")}
                   disabled={!!actionLoading}
-                  className="w-full text-left p-3 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-900"
+                  className="w-full text-left py-2 px-3 rounded text-sm text-gray-700 hover:bg-gray-50"
                 >
                   Delete all forms
                 </button>
-                <div className="pt-3 border-t border-red-200">
-                  <p className="text-sm font-medium mb-2 text-red-600">
+                <div className="pt-4 mt-4 border-t border-gray-100">
+                  <p className="text-xs font-medium mb-2 text-red-600">
                     Delete Account (Permanent)
                   </p>
                   <input
@@ -213,12 +212,12 @@ export default function PrivacySettings() {
                     placeholder="Type your email to confirm"
                     value={confirmEmail}
                     onChange={(e) => setConfirmEmail(e.target.value)}
-                    className="w-full p-2 rounded mb-2 border border-gray-200 bg-white text-gray-900"
+                    className="w-full p-2 text-sm rounded border border-gray-200 bg-white text-gray-900 mb-2"
                   />
                   <button
                     onClick={() => handleDelete("account")}
                     disabled={!!actionLoading || !confirmEmail}
-                    className="w-full p-2 rounded font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                    className="w-full py-2 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                   >
                     {actionLoading === "account" ? "Deleting..." : "Delete My Account"}
                   </button>
@@ -229,8 +228,8 @@ export default function PrivacySettings() {
         </div>
 
         {/* Privacy Policy Link */}
-        <div className="text-center">
-          <a href="/privacy" className="text-blue-600 hover:underline">
+        <div className="text-center mt-8 pt-6 border-t border-gray-100">
+          <a href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
             Read our Privacy Policy →
           </a>
         </div>

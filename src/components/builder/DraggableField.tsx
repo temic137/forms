@@ -104,11 +104,10 @@ export default function DraggableField({
     <div
       ref={setNodeRef}
       style={dragStyle}
-      className={`group relative rounded-2xl border bg-white p-4 shadow-sm transition-all ${
-        isSelected
-          ? "border-blue-500 ring-2 ring-blue-500/10"
-          : "border-gray-100 hover:border-blue-300 hover:shadow-md"
-      } ${isDragging ? "opacity-80" : ""}`}
+      className={`group relative rounded-lg border bg-white p-4 transition-all ${isSelected
+          ? "border-blue-500"
+          : "border-gray-200 hover:border-gray-300"
+        } ${isDragging ? "opacity-80" : ""}`}
       onClick={onSelect}
       role="presentation"
     >
@@ -386,11 +385,11 @@ function FieldEditor({
 
       const data = await response.json();
       const currentImages = field.optionImages ? [...field.optionImages] : [];
-      
+
       // Ensure array is long enough
       const currentOptions = field.options && field.options.length > 0 ? field.options : resolvedOptions;
       while (currentImages.length < currentOptions.length) currentImages.push("");
-      
+
       currentImages[index] = data.url;
       onUpdate({ optionImages: currentImages });
     } catch (error) {
@@ -413,14 +412,14 @@ function FieldEditor({
       field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
     const next = current.filter((_, idx) => idx !== index);
     if (next.length === 0) return;
-    
+
     const updates: Partial<Field> = { options: next };
     if (field.optionImages) {
       updates.optionImages = field.optionImages.filter((_, idx) => idx !== index);
     }
-    
+
     onUpdate(updates);
-    
+
     if (isBrowser) {
       window.setTimeout(() => {
         const target = optionRefs.current.get(
@@ -436,19 +435,19 @@ function FieldEditor({
       field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
     const insertAt = typeof index === "number" ? index + 1 : current.length;
     current.splice(insertAt, 0, `Option ${current.length + 1}`);
-    
+
     const updates: Partial<Field> = { options: current };
-    
+
     if (field.type === "picture-choice") {
-       const currentImages = field.optionImages ? [...field.optionImages] : [];
-       // Pad images array if needed
-       while (currentImages.length < current.length - 1) currentImages.push("");
-       currentImages.splice(insertAt, 0, "");
-       updates.optionImages = currentImages;
+      const currentImages = field.optionImages ? [...field.optionImages] : [];
+      // Pad images array if needed
+      while (currentImages.length < current.length - 1) currentImages.push("");
+      currentImages.splice(insertAt, 0, "");
+      updates.optionImages = currentImages;
     }
-    
+
     onUpdate(updates);
-    
+
     if (isBrowser) {
       window.setTimeout(() => {
         const target = optionRefs.current.get(insertAt);
@@ -568,11 +567,10 @@ function FieldEditor({
               e.stopPropagation();
               onUpdate({ required: !field.required });
             }}
-            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-              field.required
+            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${field.required
                 ? "border-blue-200 bg-blue-50 text-blue-700"
                 : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
-            }`}
+              }`}
             type="button"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,29 +654,29 @@ function FieldEditor({
                     }
                   }}
                 />
-                
+
                 {field.type === "picture-choice" && field.optionImages?.[idx] && (
-                    <div className="h-8 w-8 relative rounded overflow-hidden border border-gray-200 shrink-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={field.optionImages[idx]} alt="Option" className="h-full w-full object-cover" />
-                    </div>
+                  <div className="h-8 w-8 relative rounded overflow-hidden border border-gray-200 shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={field.optionImages[idx]} alt="Option" className="h-full w-full object-cover" />
+                  </div>
                 )}
 
                 {field.type === "picture-choice" && (
-                    <label className="cursor-pointer rounded-md border border-gray-200 p-1.5 text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Upload image">
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleImageUpload(idx, file);
-                            }}
-                        />
-                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </label>
+                  <label className="cursor-pointer rounded-md border border-gray-200 p-1.5 text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Upload image">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(idx, file);
+                      }}
+                    />
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </label>
                 )}
 
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -740,48 +738,48 @@ function FieldEditor({
 
       {field.type === "image" && (
         <div className="space-y-2 mb-4">
-            <label className="block text-sm font-medium text-gray-700">Image</label>
-            <div className="flex items-center gap-4">
-                {field.imageUrl || field.helpText ? (
-                    <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
-                            src={field.imageUrl || field.helpText} 
-                            alt="Field image" 
-                            className="w-full h-auto object-contain"
-                        />
-                        <button
-                            onClick={() => onUpdate({ imageUrl: undefined, helpText: undefined })}
-                            className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition-colors"
-                            title="Remove image"
-                            type="button"
-                        >
-                            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                ) : (
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg className="w-8 h-8 mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                            <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF</p>
-                        </div>
-                        <input 
-                            type="file" 
-                            className="hidden" 
-                            accept="image/*"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleFieldImageUpload(file);
-                            }}
-                        />
-                    </label>
-                )}
-            </div>
+          <label className="block text-sm font-medium text-gray-700">Image</label>
+          <div className="flex items-center gap-4">
+            {field.imageUrl || field.helpText ? (
+              <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={field.imageUrl || field.helpText}
+                  alt="Field image"
+                  className="w-full h-auto object-contain"
+                />
+                <button
+                  onClick={() => onUpdate({ imageUrl: undefined, helpText: undefined })}
+                  className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition-colors"
+                  title="Remove image"
+                  type="button"
+                >
+                  <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg className="w-8 h-8 mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                  </svg>
+                  <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                  <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF</p>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFieldImageUpload(file);
+                  }}
+                />
+              </label>
+            )}
+          </div>
         </div>
       )}
 
@@ -801,7 +799,7 @@ function FieldEditor({
               </div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Quiz Answer</h4>
             </div>
-            
+
             <label className="flex items-center gap-2 cursor-pointer">
               <span className="text-xs font-medium text-gray-500">Grade this field</span>
               <div className="relative inline-flex items-center cursor-pointer">
@@ -826,7 +824,7 @@ function FieldEditor({
               </div>
             </label>
           </div>
-          
+
           {(field.quizConfig?.correctAnswer !== undefined && field.quizConfig?.correctAnswer !== null) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Points */}
@@ -845,7 +843,7 @@ function FieldEditor({
               {/* Correct Answer */}
               <div className="sm:col-span-2">
                 <label className="block text-xs font-medium text-gray-500 mb-1">Correct Answer</label>
-                
+
                 {/* Text Fields */}
                 {["short-answer", "long-answer", "text", "textarea", "email", "url", "tel"].includes(field.type) && (
                   <div className="space-y-2">
@@ -928,7 +926,7 @@ function FieldEditor({
                     })}
                   </div>
                 )}
-                
+
                 {/* Date */}
                 {["date", "date-picker"].includes(field.type) && (
                   <input

@@ -71,9 +71,9 @@ export default function FormPreviewPage() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen py-12 px-4 sm:px-6 lg:px-8"
-      style={{ 
+      style={{
         background: previewData.styling?.backgroundColor || 'var(--background)',
       }}
     >
@@ -92,7 +92,7 @@ export default function FormPreviewPage() {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Builder</span>
           </button>
-          <div 
+          <div
             className="px-3 py-1.5 text-xs font-medium rounded-md"
             style={{
               background: previewData.styling?.primaryColor || 'rgba(0, 0, 0, 0.05)',
@@ -104,15 +104,13 @@ export default function FormPreviewPage() {
         </div>
 
         {/* Form Container */}
-        <div 
-          className="border p-8"
+        <div
+          className="border p-8 rounded-lg"
           style={{
             background: previewData.styling?.backgroundColor === '#f3f4f6' || !previewData.styling?.backgroundColor
               ? 'var(--card-bg)'
               : previewData.styling.backgroundColor,
             borderColor: 'var(--card-border)',
-            borderRadius: 'var(--card-radius-lg)',
-            boxShadow: 'var(--card-shadow)'
           }}
         >
           <FormRenderer

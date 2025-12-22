@@ -8,40 +8,40 @@
   --foreground: #202124;
   --foreground-muted: #5f6368;
   --foreground-subtle: #80868b;
-  
-  /* Card Design */
+
+  /* Card Design - Flat */
   --card-bg: #ffffff;
-  --card-bg-hover: #f8f9fa;
-  --card-border: #e8eaed;
-  --card-border-hover: #dadce0;
-  --card-radius: 12px;
-  --card-radius-lg: 16px;
-  --card-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-  --card-shadow-hover: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
-  
+  --card-bg-hover: #fafafa;
+  --card-border: #e5e5e5;
+  --card-border-hover: #d4d4d4;
+  --card-radius: 8px;
+  --card-radius-lg: 12px;
+  --card-shadow: none;
+  --card-shadow-hover: none;
+
   /* Accent Colors - Blue */
   --accent: #1a73e8;
   --accent-hover: #1765cc;
   --accent-light: rgba(26, 115, 232, 0.1);
   --accent-dark: #ffffff;
-  
+
   /* Status Colors */
   --success: #1e8e3e;
   --success-hover: #188038;
   --success-light: rgba(30, 142, 62, 0.1);
-  
+
   --error: #d93025;
   --error-hover: #c5221f;
   --error-light: rgba(217, 48, 37, 0.1);
-  
+
   --warning: #f9ab00;
   --warning-hover: #ea8600;
   --warning-light: rgba(249, 171, 0, 0.1);
-  
+
   /* Dividers & Borders */
   --divider: #e8eaed;
   --divider-subtle: #f1f3f4;
-  
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -49,7 +49,7 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
   --spacing-2xl: 48px;
-  
+
   /* Typography */
   --font-body: "Roboto", "Google Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-heading: "Roboto", "Google Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -57,19 +57,16 @@
 
 /* Removed @theme - using standard CSS custom properties */
 
-/* Modern Card-Based Design Utilities */
+/* Flat Card Design Utilities */
 .card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .card:hover {
-  background: var(--card-bg-hover);
   border-color: var(--card-border-hover);
-  box-shadow: var(--card-shadow-hover);
 }
 
 .card-lg {
@@ -116,8 +113,8 @@
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.15s ease;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
   border: none;
   white-space: nowrap;
@@ -363,13 +360,25 @@ select:focus {
 
 /* Demo typing animation */
 @keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+  from {
+    width: 0
+  }
+
+  to {
+    width: 100%
+  }
 }
 
 @keyframes blink-caret {
-  from, to { opacity: 1 }
-  50% { opacity: 0 }
+
+  from,
+  to {
+    opacity: 1
+  }
+
+  50% {
+    opacity: 0
+  }
 }
 
 .demo-typing {
@@ -381,8 +390,15 @@ select:focus {
 
 /* Animate pulse once for demo result */
 @keyframes pulse-once {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-pulse-once {
