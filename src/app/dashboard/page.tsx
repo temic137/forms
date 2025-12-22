@@ -12,7 +12,9 @@ import ShareButton from "@/components/ShareButton";
 // import IntegrationButton from "@/components/IntegrationButton";
 // Lazy load the heavy builder component
 const DragDropFormBuilder = lazy(() => import("@/components/builder/DragDropFormBuilder"));
-import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus } from "lucide-react";
+import AnimatedFormTitle from "@/components/AnimatedFormTitle";
+import AnimatedDashboardSubtitle from "@/components/AnimatedDashboardSubtitle";
+import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
@@ -23,6 +25,12 @@ import {
   addFormToCache,
   revalidateForms
 } from "@/hooks/useForms";
+import {
+  FileAttachment,
+  parseFileWithTimeout,
+  formatFileContext,
+  MAX_TOTAL_SIZE
+} from "@/lib/client-file-parser";
 
 export default function DashboardPage() {
   const { status, data: session } = useSession();
@@ -57,7 +65,7 @@ export default function DashboardPage() {
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
   // Attachment state
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<FileAttachment[]>([]);
   const [attachedUrl, setAttachedUrl] = useState<string>("");
   const [showUrlInput, setShowUrlInput] = useState(false);
 
@@ -142,6 +150,9 @@ export default function DashboardPage() {
     }
     setAutoSubmitCountdown(null);
 
+    // Don't auto-submit if files are parsing
+    if (attachedFiles.some(f => f.status === 'parsing')) return;
+
     if (isListening && query.trim() && query !== lastTranscriptRef.current) {
       lastTranscriptRef.current = query;
 
@@ -169,7 +180,7 @@ export default function DashboardPage() {
 
       return () => clearInterval(countdownInterval);
     }
-  }, [query, isListening, stopListening]);
+  }, [query, isListening, stopListening, attachedFiles]);
 
   const handleVoiceClick = async () => {
     if (isListening) {
@@ -188,6 +199,83 @@ export default function DashboardPage() {
     }
   };
 
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    // Convert to array
+    const newFiles = Array.from(files);
+
+    // 1. Validation Logic
+
+    // Check count limit
+    if (attachedFiles.length + newFiles.length > 5) {
+      toast.error("You can attach a maximum of 5 files.");
+      return;
+    }
+
+    // Process each new file
+    const validNewFiles: FileAttachment[] = [];
+
+    for (const file of newFiles) {
+      // Check for duplicates
+      const isDuplicate = attachedFiles.some(f =>
+        f.file.name === file.name && f.file.size === file.size
+      );
+      if (isDuplicate) {
+        toast.warning(`${file.name} is already attached.`);
+        continue;
+      }
+
+      // Initialize attachment object
+      const attachment: FileAttachment = {
+        id: Math.random().toString(36).substring(7),
+        file,
+        status: 'parsing'
+      };
+
+      validNewFiles.push(attachment);
+    }
+
+    if (validNewFiles.length === 0) return;
+
+    // Update state to show loading immediately
+    setAttachedFiles(prev => [...prev, ...validNewFiles]);
+
+    // Check Total Size
+    const currentTotalSize = attachedFiles.reduce((acc, f) => acc + f.file.size, 0);
+    const newTotalSize = validNewFiles.reduce((acc, f) => acc + f.file.size, 0);
+
+    if (currentTotalSize + newTotalSize > MAX_TOTAL_SIZE) {
+      // Revert addition if size exceeded
+      setAttachedFiles(prev => prev.filter(f => !validNewFiles.find(vf => vf.id === f.id)));
+      toast.error(`Total file size exceeds 25MB limit.`);
+      return;
+    }
+
+    // Trigger parsing for each new file
+    validNewFiles.forEach(async (attachment) => {
+      try {
+        const text = await parseFileWithTimeout(attachment.file);
+        setAttachedFiles(prev => prev.map(f =>
+          f.id === attachment.id
+            ? { ...f, status: 'success', content: text }
+            : f
+        ));
+      } catch (error) {
+        setAttachedFiles(prev => prev.map(f =>
+          f.id === attachment.id
+            ? { ...f, status: 'error', errorMessage: error instanceof Error ? error.message : 'Parsing failed' }
+            : f
+        ));
+      }
+    });
+  };
+
+  const removeFile = (id: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim() && !generatingForm) {
@@ -196,24 +284,34 @@ export default function DashboardPage() {
   };
 
   async function generateForm(brief: string) {
+    // Check if any files are still parsing
+    if (attachedFiles.some(f => f.status === 'parsing')) {
+      toast.warning("Please wait for files to finish processing.");
+      return;
+    }
+
+    // Handle failed files
+    const failedFiles = attachedFiles.filter(f => f.status === 'error');
+    if (failedFiles.length > 0) {
+      const confirmed = await confirm(
+        "Parsing Errors",
+        `${failedFiles.length} file(s) failed to parse. Generate form with valid files only?`,
+        { variant: 'warning', confirmText: "Generate Anyway" }
+      );
+      if (!confirmed) return;
+    }
+
     setGeneratingForm(true);
     try {
       let referenceData = "";
 
-      // Process File - extract content as reference data (NOT part of the prompt)
-      if (attachedFile) {
-        const formData = new FormData();
-        formData.append("file", attachedFile);
-        const res = await fetch("/api/utils/parse-file", {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) throw new Error("Failed to parse file");
-        const data = await res.json();
-        referenceData += `Content from uploaded file (${attachedFile.name}):\n${data.text}`;
+      // Append File Content
+      const fileContext = formatFileContext(attachedFiles);
+      if (fileContext) {
+        referenceData += fileContext;
       }
 
-      // Process URL - extract content as reference data (NOT part of the prompt)
+      // Process URL - extract content
       if (attachedUrl) {
         const res = await fetch("/api/utils/scrape-url", {
           method: "POST",
@@ -227,8 +325,6 @@ export default function DashboardPage() {
       }
 
       // Use generate-enhanced for better results with context
-      // IMPORTANT: User's prompt (brief) is passed as 'content' for form type detection
-      // File/URL content is passed as 'referenceData' which is source material only
       const res = await fetch("/api/ai/generate-enhanced", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -256,7 +352,6 @@ export default function DashboardPage() {
         placeholder: f.placeholder,
         helpText: f.helpText,
         validation: f.validation,
-        // Preserve quizConfig for quiz questions with default points of 1
         quizConfig: f.quizConfig ? {
           correctAnswer: f.quizConfig.correctAnswer || '',
           points: f.quizConfig.points || 1,
@@ -277,7 +372,7 @@ export default function DashboardPage() {
       setEditingFormId(null); // This is a new form
       setShowBuilder(true); // Use drag-drop builder instead of old preview
       setQuery("");
-      setAttachedFile(null);
+      setAttachedFiles([]);
       setAttachedUrl("");
       setShowUrlInput(false);
     } catch (error) {
@@ -606,7 +701,7 @@ export default function DashboardPage() {
             >
               {forms.length === 0
                 ? "Let's create your first form. Just describe what you need, and AI will build it for you."
-                : "Manage your forms or create a new one in seconds."}
+                : <AnimatedDashboardSubtitle />}
             </p>
           </div>
 
@@ -614,10 +709,7 @@ export default function DashboardPage() {
           <div className="max-w-3xl mx-auto mb-16">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                  <h2 className="text-lg font-medium" style={{ color: 'var(--foreground)' }}>Create a Form</h2>
-                </div>
+                <AnimatedFormTitle />
 
               </div>
             </div>
@@ -668,110 +760,169 @@ export default function DashboardPage() {
               </div>
 
               {/* Attachments Area */}
-              <div className="flex flex-wrap gap-2">
-                {/* File Attachment Button */}
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="attach-file"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                    }}
-                    accept=".pdf,.txt,.csv,.json"
-                  />
-                  <label
-                    htmlFor="attach-file"
-                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {/* File Attachment Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="attach-file"
+                      className="hidden"
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                      accept=".pdf,.txt,.csv,.json"
+                      multiple
+                      disabled={generatingForm}
+                    />
+                    <label
+                      htmlFor="attach-file"
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"} ${attachedFiles.length > 0
+                        ? "bg-blue-50 text-blue-700"
+                        : ""
+                        }`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      Attach File
+                    </label>
+                  </div>
+
+                  {/* Scan Document Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="scan-doc"
+                      className="hidden"
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                      accept="image/*"
+                      capture="environment"
+                      multiple
+                      disabled={generatingForm}
+                    />
+                    <label
+                      htmlFor="scan-doc"
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
+                    >
+                      <Camera className="w-4 h-4" />
+                      Scan Doc
+                    </label>
+                  </div>
+
+                  {/* Import JSON Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="import-json"
+                      className="hidden"
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                      accept=".json"
+                      multiple
+                      disabled={generatingForm}
+                    />
+                    <label
+                      htmlFor="import-json"
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
+                    >
+                      <FileJson className="w-4 h-4" />
+                      Import JSON
+                    </label>
+                  </div>
+
+                  {/* URL Attachment Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    disabled={generatingForm}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
                       ? "bg-blue-50 text-blue-700"
                       : "hover:bg-gray-100 text-gray-600"
                       }`}
                   >
-                    <Upload className="w-4 h-4" />
-                    {attachedFile ? attachedFile.name : "Attach File"}
-                  </label>
-                </div>
+                    <Globe className="w-4 h-4" />
+                    {attachedUrl ? "URL Attached" : "Attach URL"}
+                  </button>
 
-                {/* Scan Document Button */}
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="scan-doc"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                    }}
-                    accept="image/*"
-                    capture="environment"
-                  />
-                  <label
-                    htmlFor="scan-doc"
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-gray-100 text-gray-600"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Scan Doc
-                  </label>
-                </div>
-
-                {/* Import JSON Button */}
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="import-json"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                    }}
-                    accept=".json"
-                  />
-                  <label
-                    htmlFor="import-json"
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-gray-100 text-gray-600"
-                  >
-                    <FileJson className="w-4 h-4" />
-                    Import JSON
-                  </label>
-                </div>
-
-                {/* URL Attachment Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowUrlInput(!showUrlInput)}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
-                    ? "bg-blue-50 text-blue-700"
-                    : "hover:bg-gray-100 text-gray-600"
-                    }`}
-                >
-                  <Globe className="w-4 h-4" />
-                  {attachedUrl ? "URL Attached" : "Attach URL"}
-                </button>
-              </div>
-
-              {/* URL Input Field */}
-              {(showUrlInput || attachedUrl) && (
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={attachedUrl}
-                    onChange={(e) => setAttachedUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ background: 'var(--background-subtle)', border: 'none' }}
-                  />
-                  {attachedUrl && (
+                  {attachedFiles.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setAttachedUrl("");
-                        setShowUrlInput(false);
-                      }}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                      onClick={() => setAttachedFiles([])}
+                      disabled={generatingForm}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 ml-auto transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" />
+                      Clear All
                     </button>
                   )}
                 </div>
-              )}
+
+                {/* Attached Files List */}
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachedFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-all ${file.status === 'error'
+                          ? 'bg-red-50 border-red-200 text-red-700'
+                          : file.status === 'parsing'
+                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                            : 'bg-white border-gray-200 text-gray-700'
+                          }`}
+                        title={file.errorMessage}
+                      >
+                        <div className="flex-1 flex items-center gap-2">
+                          {file.status === 'parsing' ? (
+                            <Spinner size="xs" variant="primary" />
+                          ) : file.status === 'error' ? (
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                          ) : (
+                            <FileText className="w-4 h-4 shrink-0 text-gray-400" />
+                          )}
+
+                          <div className="flex flex-col min-w-0 max-w-[150px]">
+                            <span className="truncate font-medium">{file.file.name}</span>
+                            <span className="text-xs opacity-70">{(file.file.size / 1024 / 1024).toFixed(2)} MB</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeFile(file.id)}
+                          disabled={generatingForm}
+                          className="p-1 rounded-md hover:bg-black/5 text-current opacity-60 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* URL Input Field */}
+                {(showUrlInput || attachedUrl) && (
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={attachedUrl}
+                      onChange={(e) => setAttachedUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ background: 'var(--background-subtle)', border: 'none' }}
+                      disabled={generatingForm}
+                    />
+                    {attachedUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttachedUrl("");
+                          setShowUrlInput(false);
+                        }}
+                        disabled={generatingForm}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {isListening && autoSubmitCountdown !== null && (
                 <div className="text-center text-sm font-medium animate-pulse" style={{ color: 'var(--accent)' }}>
@@ -792,7 +943,7 @@ export default function DashboardPage() {
                   {generatingForm ? (
                     <>
                       <Spinner size="sm" variant="current" />
-                      <span>Generating...</span>
+                      <span>{attachedFiles.some(f => f.status === 'parsing') ? 'Processing Files...' : 'Generating...'}</span>
                     </>
                   ) : (
                     <>
@@ -801,149 +952,90 @@ export default function DashboardPage() {
                     </>
                   )}
                 </button>
-
-                <button
-                  type="button"
-                  onClick={openBuilderForCreate}
-                  className="px-5 py-3 rounded-lg font-medium transition-colors"
-                  style={{
-                    background: 'var(--background-subtle)',
-                    color: 'var(--foreground-muted)',
-                  }}
-                  title="Build manually"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
               </div>
             </form>
-
-
-
-
-            {/* Success Message */}
-            {showSuccess && newFormId && (
-              <div
-                className="mt-4 p-4 rounded-lg"
-                style={{
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  color: '#22c55e'
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-full bg-green-100 text-green-600">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <span className="font-medium">Form created!</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/forms/${newFormId}/submissions`}
-                      className="px-3 py-1 rounded text-sm font-medium hover:bg-green-100 transition-colors"
-                    >
-                      View
-                    </Link>
-                    <button
-                      onClick={() => {
-                        const link = `${window.location.origin}/f/${newFormId}`;
-                        navigator.clipboard.writeText(link);
-                        toast.success('Link copied!');
-                      }}
-                      className="px-3 py-1 rounded text-sm font-medium hover:bg-green-100 transition-colors"
-                    >
-                      Copy Link
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
           </div>
 
-          <div className="max-w-3xl mx-auto">
-            <div className="mb-6 flex items-center justify-between">
-              <h2
-                className="text-2xl font-bold"
-                style={{ color: 'var(--foreground)' }}
+          <div className="flex flex-col gap-4 max-w-3xl mx-auto w-full">
+            {/* Header for the list */}
+            <div className="flex items-center justify-between mb-2 px-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Your Forms</h3>
+              <button
+                onClick={openBuilderForCreate}
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
               >
-                Your Forms
-              </h2>
-              {forms.length > 0 && (
-                <button
-                  onClick={openBuilderForCreate}
-                  className="text-sm font-medium hover:underline flex items-center gap-1"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Manually
-                </button>
-              )}
+                <Plus className="w-4 h-4" />
+                Create From Scratch
+              </button>
             </div>
 
-            {forms.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="mb-4">
-                  <FileText className="w-8 h-8 mx-auto mb-4" style={{ color: 'var(--foreground-muted)' }} />
-                  <h3 className="text-lg font-medium mb-1" style={{ color: 'var(--foreground)' }}>No forms yet</h3>
-                  <p style={{ color: 'var(--foreground-muted)' }}>Create your first form above!</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {forms.map((form) => (
-                  <div
-                    key={form.id}
-                    className="flex items-center justify-between py-4 group"
-                    style={{ borderBottom: '1px solid var(--divider-subtle)' }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate" style={{ color: 'var(--foreground)' }}>{form.title}</h3>
-                      <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                        <span>{form._count.submissions} responses</span>
-                        <span>·</span>
-                        <span>{new Date(form.updatedAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
+            {/* Existing Forms List */}
+            {forms.map((form) => (
+              <div
+                key={form.id}
+                className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg transition-all duration-200 hover:bg-black/5"
+                style={{
+                  color: 'var(--foreground)',
+                }}
+              >
+                <Link href={`/forms/${form.id}/submissions`} className="flex-1 flex items-start sm:items-center gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                    <FileText className="w-5 h-5" />
+                  </div>
 
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link
-                        href={`/forms/${form.id}/submissions`}
-                        className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-                        style={{ color: 'var(--foreground-muted)' }}
-                        title="View Results"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                      </Link>
-                      <button
-                        onClick={() => openBuilderForEdit(form.id)}
-                        disabled={loadingFormId === form.id}
-                        className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-                        style={{ color: 'var(--foreground-muted)' }}
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <ShareButton
-                        url={`${typeof window !== "undefined" ? window.location.origin : ""}/f/${form.id}`}
-                        label=""
-                        variant="icon-only"
-                        size="sm"
-                        formTitle={form.title}
-                      />
-                      <button
-                        onClick={() => deleteForm(form.id)}
-                        disabled={deletingFormId === form.id}
-                        className="p-2 rounded-md hover:bg-red-50 transition-colors text-red-500"
-                        title="Delete form"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-base truncate pr-2" style={{ color: 'var(--foreground)' }}>
+                      {form.title}
+                    </h3>
+                    <div className="flex items-center gap-3 text-sm mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                      <span className="flex items-center gap-1">
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        {form._count?.submissions || 0}
+                      </span>
+                      <span>•</span>
+                      <span>
+                        {new Date(form.updatedAt).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
-                ))}
+                </Link>
+
+                <div className="flex items-center gap-1 mt-3 sm:mt-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent Link navigation
+                      openBuilderForEdit(form.id)
+                    }}
+                    className="p-2 rounded-lg hover:bg-black/5 transition-colors text-gray-500"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <ShareButton url={`/f/${form.id}`} formTitle={form.title} variant="icon-only" />
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteForm(form.id)
+                    }}
+                    className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Visual loading overlay for deleting/loading */}
+                {(deletingFormId === form.id || loadingFormId === form.id) && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 backdrop-blur-sm rounded-lg">
+                    <Spinner size="md" variant="primary" />
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>

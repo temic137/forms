@@ -29,7 +29,7 @@ export function processTranscript(
   if (alternatives && alternatives.length > 1) {
     const fuzzyResult = fuzzyCorrectTranscript(processed, alternatives);
     processed = fuzzyResult.corrected;
-    
+
     // Add fuzzy corrections to our list
     fuzzyResult.corrections.forEach(corr => {
       corrections.push(
@@ -41,7 +41,7 @@ export function processTranscript(
   // 3. Context analysis (understand if it's really a form request)
   const context = analyzeTranscriptContext(processed);
   if (context.suggestedCorrections.length > 0) {
-    console.log('Suggested corrections:', context.suggestedCorrections);
+
   }
 
   // 4. Grammar and punctuation improvements
@@ -49,12 +49,12 @@ export function processTranscript(
 
   // 5. Adjust confidence based on context and corrections
   let adjustedConfidence = confidence || 0.8;
-  
+
   // Boost confidence if it's clearly a form request
   if (context.isFormRequest && context.confidence > 0.5) {
     adjustedConfidence = Math.min(1.0, adjustedConfidence + 0.1);
   }
-  
+
   // Reduce confidence slightly for corrections, but intelligently
   if (corrections.length > 0) {
     // High-confidence corrections don't reduce overall confidence much
@@ -74,21 +74,21 @@ export function processTranscript(
  */
 function basicCleanup(text: string): string {
   let cleaned = text.trim();
-  
+
   // Normalize whitespace
   cleaned = cleaned.replace(/\s+/g, ' ');
-  
+
   // Remove common filler words that don't add meaning
   const fillers = /\b(um|uh|like|you know|sort of|kind of)\b/gi;
   cleaned = cleaned.replace(fillers, '');
-  
+
   // Clean up extra spaces after punctuation
   cleaned = cleaned.replace(/\s+([,.!?])/g, '$1');
   cleaned = cleaned.replace(/([,.!?])\s+/g, '$1 ');
-  
+
   // Trim again after cleanup
   cleaned = cleaned.trim();
-  
+
   return cleaned;
 }
 
@@ -99,23 +99,23 @@ function basicCleanup(text: string): string {
  */
 function improveGrammar(text: string): string {
   let improved = text;
-  
+
   // Capitalize first letter
   improved = improved.charAt(0).toUpperCase() + improved.slice(1);
-  
+
   // Ensure proper spacing around common conjunctions
   improved = improved.replace(/\s*(,)\s*/g, ', ');
-  
+
   // Add period at the end if missing
   if (!/[.!?]$/.test(improved)) {
     improved += '.';
   }
-  
+
   // Capitalize after sentence endings
   improved = improved.replace(/([.!?])\s+([a-z])/g, (match, p1, p2) => {
     return p1 + ' ' + p2.toUpperCase();
   });
-  
+
   return improved;
 }
 
@@ -132,13 +132,13 @@ export function analyzeTranscriptQuality(
 } {
   const suggestions: string[] = [];
   let quality: 'high' | 'medium' | 'low' = 'high';
-  
+
   // Check length
   if (transcript.length < 10) {
     quality = 'low';
     suggestions.push('Transcript is very short. Try speaking more clearly and providing more details.');
   }
-  
+
   // Check confidence
   if (confidence < 0.5) {
     quality = 'low';
@@ -147,17 +147,17 @@ export function analyzeTranscriptQuality(
     quality = 'medium';
     suggestions.push('Medium confidence. Consider speaking more clearly for better results.');
   }
-  
+
   // Check for form-related keywords
   const hasFormKeywords = /\b(form|field|input|create|name|email|phone|message|address)\b/i.test(transcript);
   if (!hasFormKeywords) {
     quality = quality === 'high' ? 'medium' : 'low';
     suggestions.push('No form-related keywords detected. Describe what fields you want in your form.');
   }
-  
+
   // Determine if we should ask for clarification
   const shouldAskForClarification = quality === 'low' || (quality === 'medium' && confidence < 0.6);
-  
+
   return {
     quality,
     suggestions,
@@ -173,7 +173,7 @@ export function enhanceTranscriptForAI(transcript: string): string {
   if (transcript.length < 20 || !/\b(form|field)\b/i.test(transcript)) {
     return `Create a form with these requirements: ${transcript}`;
   }
-  
+
   return transcript;
 }
 

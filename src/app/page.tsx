@@ -9,8 +9,17 @@ import { useVoiceInput } from "@/hooks/useVoiceInput";
 
 import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
 import { Spinner } from "@/components/ui/Spinner";
-import { Mic, Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight } from "lucide-react";
+import { Mic, Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
+import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
+import AnimatedFormTitle from "@/components/AnimatedFormTitle";
+import AnimatedLandingDescription from "@/components/AnimatedLandingDescription";
+import {
+  FileAttachment,
+  parseFileWithTimeout,
+  formatFileContext,
+  MAX_TOTAL_SIZE
+} from "@/lib/client-file-parser";
 
 // Example prompts for help popup
 const examplePrompts = [
@@ -31,8 +40,6 @@ const placeholderExamples = [
   "Product order form with quantity and shipping...",
 ];
 
-
-
 export default function Home() {
   const router = useRouter();
   const toast = useToastContext();
@@ -51,8 +58,8 @@ export default function Home() {
   const [limitOneResponse, setLimitOneResponse] = useState(false);
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
-  // Creation method state
-
+  // Dialog state
+  const { confirm, dialogState } = useConfirmDialog();
 
   // Help popup and onboarding state
   const [showHelpPopup, setShowHelpPopup] = useState(false);
@@ -68,7 +75,7 @@ export default function Home() {
   }, []);
 
   // Attachment state
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<FileAttachment[]>([]);
   const [attachedUrl, setAttachedUrl] = useState<string>("");
   const [showUrlInput, setShowUrlInput] = useState(false);
 
@@ -91,25 +98,112 @@ export default function Home() {
     },
   });
 
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    // Convert to array
+    const newFiles = Array.from(files);
+
+    // 1. Validation Logic
+
+    // Check count limit
+    if (attachedFiles.length + newFiles.length > 5) {
+      toast.error("You can attach a maximum of 5 files.");
+      return;
+    }
+
+    // Process each new file
+    const validNewFiles: FileAttachment[] = [];
+
+    for (const file of newFiles) {
+      // Check for duplicates
+      const isDuplicate = attachedFiles.some(f =>
+        f.file.name === file.name && f.file.size === file.size
+      );
+      if (isDuplicate) {
+        toast.warning(`${file.name} is already attached.`);
+        continue;
+      }
+
+      // Initialize attachment object
+      const attachment: FileAttachment = {
+        id: Math.random().toString(36).substring(7),
+        file,
+        status: 'parsing'
+      };
+
+      validNewFiles.push(attachment);
+    }
+
+    if (validNewFiles.length === 0) return;
+
+    // Update state to show loading immediately
+    setAttachedFiles(prev => [...prev, ...validNewFiles]);
+
+    // Check Total Size
+    const currentTotalSize = attachedFiles.reduce((acc, f) => acc + f.file.size, 0);
+    const newTotalSize = validNewFiles.reduce((acc, f) => acc + f.file.size, 0);
+
+    if (currentTotalSize + newTotalSize > MAX_TOTAL_SIZE) {
+      // Revert addition if size exceeded
+      setAttachedFiles(prev => prev.filter(f => !validNewFiles.find(vf => vf.id === f.id)));
+      toast.error(`Total file size exceeds 25MB limit.`);
+      return;
+    }
+
+    // Trigger parsing for each new file
+    validNewFiles.forEach(async (attachment) => {
+      try {
+        const text = await parseFileWithTimeout(attachment.file);
+        setAttachedFiles(prev => prev.map(f =>
+          f.id === attachment.id
+            ? { ...f, status: 'success', content: text }
+            : f
+        ));
+      } catch (error) {
+        setAttachedFiles(prev => prev.map(f =>
+          f.id === attachment.id
+            ? { ...f, status: 'error', errorMessage: error instanceof Error ? error.message : 'Parsing failed' }
+            : f
+        ));
+      }
+    });
+  };
+
+  const removeFile = (id: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+
   const generateForm = useCallback(async (brief: string) => {
+    // Check if any files are still parsing
+    if (attachedFiles.some(f => f.status === 'parsing')) {
+      toast.warning("Please wait for files to finish processing.");
+      return;
+    }
+
+    // Handle failed files
+    const failedFiles = attachedFiles.filter(f => f.status === 'error');
+    if (failedFiles.length > 0) {
+      const confirmed = await confirm(
+        "Parsing Errors",
+        `${failedFiles.length} file(s) failed to parse. Generate form with valid files only?`,
+        { variant: 'warning', confirmText: "Generate Anyway" }
+      );
+      if (!confirmed) return;
+    }
+
     setLoading(true);
     try {
       let referenceData = "";
 
-      // Process File - extract content as reference data (NOT part of the prompt)
-      if (attachedFile) {
-        const formData = new FormData();
-        formData.append("file", attachedFile);
-        const res = await fetch("/api/utils/parse-file", {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) throw new Error("Failed to parse file");
-        const data = await res.json();
-        referenceData += `Content from uploaded file (${attachedFile.name}):\n${data.text}`;
+      // Append File Content
+      const fileContext = formatFileContext(attachedFiles);
+      if (fileContext) {
+        referenceData += fileContext;
       }
 
-      // Process URL - extract content as reference data (NOT part of the prompt)
+      // Process URL - extract content
       if (attachedUrl) {
         const res = await fetch("/api/utils/scrape-url", {
           method: "POST",
@@ -123,8 +217,6 @@ export default function Home() {
       }
 
       // Use generate-enhanced for better results with context
-      // IMPORTANT: User's prompt (brief) is passed as 'content' for form type detection
-      // File/URL content is passed as 'referenceData' which is source material only
       const res = await fetch("/api/ai/generate-enhanced", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,7 +235,7 @@ export default function Home() {
 
       const data = await res.json();
 
-      // Normalize fields consistent with Dashboard implementation
+      // Normalize fields...
       const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
         id: f.id || `field_${Date.now()}_${idx}`,
         label: f.label || "Field",
@@ -153,7 +245,6 @@ export default function Home() {
         placeholder: f.placeholder,
         helpText: f.helpText,
         validation: f.validation,
-        // Preserve quizConfig for quiz questions with default points of 1
         quizConfig: f.quizConfig ? {
           correctAnswer: f.quizConfig.correctAnswer || '',
           points: f.quizConfig.points || 1,
@@ -170,12 +261,13 @@ export default function Home() {
       setPreviewMultiStepConfig(undefined);
       setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
       setShowBuilder(true);
-      setAttachedFile(null);
+
+      // Clear attachments on success
+      setAttachedFiles([]);
       setAttachedUrl("");
       setShowUrlInput(false);
       setQuery("");
 
-      // Mark that user has created their first form (for progressive disclosure)
       if (typeof window !== 'undefined') {
         localStorage.setItem('hasCreatedForm', 'true');
         setHasCreatedForm(true);
@@ -185,7 +277,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [attachedFile, attachedUrl, toast]);
+  }, [attachedFiles, attachedUrl, toast, confirm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,6 +304,9 @@ export default function Home() {
       clearTimeout(silenceTimerRef.current);
     }
     setAutoSubmitCountdown(null);
+
+    // Don't auto-submit if files are parsing
+    if (attachedFiles.some(f => f.status === 'parsing')) return;
 
     if (isListening && query.trim() && query !== lastTranscriptRef.current) {
       lastTranscriptRef.current = query;
@@ -240,7 +335,7 @@ export default function Home() {
 
       return () => clearInterval(countdownInterval);
     }
-  }, [query, isListening, stopListening, generateForm]);
+  }, [query, isListening, stopListening, generateForm, attachedFiles]);
 
   // Handle voice button click
   const handleVoiceClick = async () => {
@@ -376,9 +471,17 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* 
-        NOTE: Navigation is handled globally in src/components/layout/Navigation.tsx 
-      */}
+
+      <ConfirmationDialog
+        isOpen={dialogState.isOpen}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        variant={dialogState.variant}
+        onConfirm={dialogState.onConfirm}
+        onCancel={dialogState.onCancel}
+      />
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -392,12 +495,7 @@ export default function Home() {
               Skip the grunt work
             </h1>
 
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Create forms, quizzes, surveys, and tests in seconds using AI. Then customize with drag-and-drop
-            </p>
-
-            {/* Value Proposition Badges */}
-
+            <AnimatedLandingDescription />
 
             {/* Ghost Access Button - Subtle Version */}
             <div className="mb-10 flex justify-center">
@@ -417,10 +515,7 @@ export default function Home() {
             <div className="max-w-3xl mx-auto mb-12 relative">
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-blue-600" />
-                    <h2 className="text-lg font-medium text-gray-900">Create a Form</h2>
-                  </div>
+                  <AnimatedFormTitle />
 
                 </div>
               </div>
@@ -433,9 +528,12 @@ export default function Home() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={placeholderExamples[placeholderIndex]}
-                    className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-gray-50 border-0 text-gray-900"
+                    className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     style={{
                       minHeight: '120px',
+                      background: 'var(--background-subtle)',
+                      border: 'none',
+                      color: 'var(--foreground)'
                     }}
                     disabled={loading}
                   />
@@ -445,8 +543,8 @@ export default function Home() {
                       onClick={handleVoiceClick}
                       className="absolute right-3 bottom-3 p-2.5 rounded-full transition-colors"
                       style={{
-                        background: isListening ? '#ef4444' : '#f3f4f6',
-                        color: isListening ? '#fff' : '#4b5563',
+                        background: isListening ? '#ef4444' : 'var(--background)',
+                        color: isListening ? '#fff' : 'var(--foreground-muted)',
                       }}
                       title={isListening ? 'Stop recording' : 'Start voice input'}
                     >
@@ -456,115 +554,168 @@ export default function Home() {
                 </div>
 
                 {/* Attachments Area */}
-                <div className="flex flex-wrap gap-2">
-                  {/* File Attachment Button */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="landing-attach-file"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                      }}
-                      accept=".pdf,.txt,.csv,.json"
-                    />
-                    <label
-                      htmlFor="landing-attach-file"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {/* File Attachment Button */}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="landing-attach-file"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e.target.files)}
+                        accept=".pdf,.txt,.csv,.json"
+                        multiple
+                        disabled={loading}
+                      />
+                      <label
+                        htmlFor="landing-attach-file"
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"} ${attachedFiles.length > 0
+                          ? "bg-blue-50 text-blue-700"
+                          : ""
+                          }`}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Attach File
+                      </label>
+                    </div>
+
+                    {/* Scan Document Button */}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="landing-scan-doc"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e.target.files)}
+                        accept="image/*"
+                        capture="environment"
+                        multiple
+                        disabled={loading}
+                      />
+                      <label
+                        htmlFor="landing-scan-doc"
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
+                      >
+                        <Camera className="w-4 h-4" />
+                        Scan Doc
+                      </label>
+                    </div>
+
+                    {/* Import JSON Button */}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="landing-import-json"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e.target.files)}
+                        accept=".json"
+                        multiple
+                        disabled={loading}
+                      />
+                      <label
+                        htmlFor="landing-import-json"
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
+                      >
+                        <FileJson className="w-4 h-4" />
+                        Import JSON
+                      </label>
+                    </div>
+
+                    {/* URL Attachment Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowUrlInput(!showUrlInput)}
+                      disabled={loading}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
                         ? "bg-blue-50 text-blue-700"
                         : "hover:bg-gray-100 text-gray-600"
                         }`}
                     >
-                      <Upload className="w-4 h-4" />
-                      {attachedFile ? attachedFile.name : "Attach File"}
-                    </label>
-                  </div>
+                      <Globe className="w-4 h-4" />
+                      {attachedUrl ? "URL Attached" : "Attach URL"}
+                    </button>
 
-                  {/* Scan Document Button */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="landing-scan-doc"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                      }}
-                      accept="image/*"
-                      capture="environment"
-                    />
-                    <label
-                      htmlFor="landing-scan-doc"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
-                        ? "bg-blue-50 text-blue-700"
-                        : "hover:bg-gray-100 text-gray-600"
-                        }`}
-                    >
-                      <Camera className="w-4 h-4" />
-                      Scan Doc
-                    </label>
-                  </div>
-
-                  {/* Import JSON Button */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="landing-import-json"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                      }}
-                      accept=".json"
-                    />
-                    <label
-                      htmlFor="landing-import-json"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
-                        ? "bg-blue-50 text-blue-700"
-                        : "hover:bg-gray-100 text-gray-600"
-                        }`}
-                    >
-                      <FileJson className="w-4 h-4" />
-                      Import JSON
-                    </label>
-                  </div>
-
-                  {/* URL Attachment Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowUrlInput(!showUrlInput)}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
-                      ? "bg-blue-50 text-blue-700"
-                      : "hover:bg-gray-100 text-gray-600"
-                      }`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    {attachedUrl ? "URL Attached" : "Attach URL"}
-                  </button>
-                </div>
-
-                {/* URL Input Field */}
-                {(showUrlInput || attachedUrl) && (
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={attachedUrl}
-                      onChange={(e) => setAttachedUrl(e.target.value)}
-                      placeholder="https://example.com"
-                      className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border-0"
-                    />
-                    {attachedUrl && (
+                    {attachedFiles.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setAttachedUrl("");
-                          setShowUrlInput(false);
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                        onClick={() => setAttachedFiles([])}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 ml-auto transition-colors disabled:opacity-50"
                       >
                         <Trash2 className="w-4 h-4" />
+                        Clear All
                       </button>
                     )}
                   </div>
-                )}
+
+                  {/* Attached Files List */}
+                  {attachedFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {attachedFiles.map((file) => (
+                        <div
+                          key={file.id}
+                          className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-all ${file.status === 'error'
+                            ? 'bg-red-50 border-red-200 text-red-700'
+                            : file.status === 'parsing'
+                              ? 'bg-blue-50 border-blue-200 text-blue-700'
+                              : 'bg-white border-gray-200 text-gray-700'
+                            }`}
+                          title={file.errorMessage}
+                        >
+                          <div className="flex-1 flex items-center gap-2">
+                            {file.status === 'parsing' ? (
+                              <Spinner size="xs" variant="primary" />
+                            ) : file.status === 'error' ? (
+                              <AlertCircle className="w-4 h-4 shrink-0" />
+                            ) : (
+                              <FileText className="w-4 h-4 shrink-0 text-gray-400" />
+                            )}
+
+                            <div className="flex flex-col min-w-0 max-w-[150px]">
+                              <span className="truncate font-medium">{file.file.name}</span>
+                              <span className="text-xs opacity-70">{(file.file.size / 1024 / 1024).toFixed(2)} MB</span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => removeFile(file.id)}
+                            disabled={loading}
+                            className="p-1 rounded-md hover:bg-black/5 text-current opacity-60 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* URL Input Field */}
+                  {(showUrlInput || attachedUrl) && (
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={attachedUrl}
+                        onChange={(e) => setAttachedUrl(e.target.value)}
+                        placeholder="https://example.com"
+                        className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border-0"
+                        disabled={loading}
+                      />
+                      {attachedUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAttachedUrl("");
+                            setShowUrlInput(false);
+                          }}
+                          disabled={loading}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {isListening && autoSubmitCountdown !== null && (
                   <div className="text-center text-sm font-medium animate-pulse text-blue-600">
@@ -581,7 +732,7 @@ export default function Home() {
                     {loading ? (
                       <>
                         <Spinner size="sm" variant="white" />
-                        <span>Generating...</span>
+                        <span>{attachedFiles.some(f => f.status === 'parsing') ? 'Processing Files...' : 'Generating...'}</span>
                       </>
                     ) : (
                       <>
@@ -604,9 +755,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-
-
 
 
         {/* Comparison Section */}

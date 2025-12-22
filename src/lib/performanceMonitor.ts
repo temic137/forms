@@ -30,25 +30,25 @@ class PerformanceMonitor {
     try {
       performance.mark(`${name}-end`);
       const measure = performance.measure(name, `${name}-start`, `${name}-end`);
-      
+
       const metric: PerformanceMetric = {
         name,
         value: measure.duration,
         timestamp: Date.now(),
       };
-      
+
       this.metrics.push(metric);
-      
+
       // Log in development
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Performance] ${name}: ${measure.duration.toFixed(2)}ms`);
+
       }
-      
+
       // Clean up marks
       performance.clearMarks(`${name}-start`);
       performance.clearMarks(`${name}-end`);
       performance.clearMeasures(name);
-      
+
       return measure.duration;
     } catch (error) {
       console.warn(`Failed to measure performance for ${name}:`, error);
@@ -67,11 +67,11 @@ class PerformanceMonitor {
       value,
       timestamp: Date.now(),
     };
-    
+
     this.metrics.push(metric);
-    
+
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Performance] ${name}: ${value.toFixed(2)}`);
+
     }
   }
 
@@ -88,7 +88,7 @@ class PerformanceMonitor {
   getAverage(name: string): number | null {
     const filtered = this.metrics.filter(m => m.name === name);
     if (filtered.length === 0) return null;
-    
+
     const sum = filtered.reduce((acc, m) => acc + m.value, 0);
     return sum / filtered.length;
   }

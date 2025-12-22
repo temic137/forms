@@ -136,7 +136,7 @@ export async function getDatabaseSchema(
     if (!config.databaseId) {
       throw new Error('Database ID is required');
     }
-    
+
     const notion = getNotionClient(config.apiKey);
     const database = await notion.databases.retrieve({
       database_id: config.databaseId,
@@ -206,7 +206,7 @@ export async function createNotionPage(
       properties: notionProperties,
     });
 
-    console.log('✓ Successfully created Notion page:', response.id);
+
 
     return {
       success: true,
@@ -371,7 +371,7 @@ export function extractDatabaseId(input: string): string {
   // Extract ID from URL or use as-is
   // Notion URLs look like: https://www.notion.so/workspace/DatabaseName-abc123def456...
   // Or: https://notion.so/abc123def456...
-  
+
   // Try to extract from full URL
   const urlMatch = input.match(/notion\.so\/(?:[^/]+\/)?([a-zA-Z0-9]{32})/);
   if (urlMatch) {

@@ -63,7 +63,7 @@ export async function sendEmailNotification(
 
   // Check rate limiting for batched notifications
   if (formId && !shouldSendNotification(formId, config)) {
-    console.log(`Notification skipped for form ${formId} due to rate limiting (${config.frequency})`);
+
     return;
   }
 
@@ -95,6 +95,6 @@ export async function sendEmailNotification(
     throw new Error(`Resend API error: ${result.error.message}`);
   }
 
-  console.log(`✓ Email notification sent to ${config.recipients.length} recipient(s)`);
+
 }
 

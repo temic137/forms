@@ -64,6 +64,6 @@ export async function sendWebhookNotification(
     throw new Error(`Webhook error: ${response.status} ${errorText}`);
   }
 
-  console.log(`✓ Webhook notification sent to ${config.url}`);
+
 }
 

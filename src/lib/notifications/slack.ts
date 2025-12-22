@@ -23,8 +23,8 @@ export async function sendSlackNotification(
   const filesText =
     data.files && data.files.length > 0
       ? `\n\n*Attached Files:*\n${data.files
-          .map((file) => `• ${file.fieldLabel}: <${file.downloadUrl}|${file.filename}>`)
-          .join("\n")}`
+        .map((file) => `• ${file.fieldLabel}: <${file.downloadUrl}|${file.filename}>`)
+        .join("\n")}`
       : "";
 
   // Build Slack message payload
@@ -61,14 +61,14 @@ export async function sendSlackNotification(
       },
       ...(data.customMessage
         ? [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `*Custom Message:*\n${data.customMessage}`,
-              },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*Custom Message:*\n${data.customMessage}`,
             },
-          ]
+          },
+        ]
         : []),
       {
         type: "section",
@@ -106,6 +106,6 @@ export async function sendSlackNotification(
     throw new Error(`Slack webhook error: ${response.status} ${errorText}`);
   }
 
-  console.log("✓ Slack notification sent successfully");
+
 }
 

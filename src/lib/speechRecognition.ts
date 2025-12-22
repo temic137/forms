@@ -8,15 +8,15 @@ function isMobileDevice(): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return false;
   }
-  
+
   const userAgent = navigator.userAgent || navigator.vendor || (window as unknown as { opera?: string }).opera || '';
-  
+
   // Check for mobile user agents
   const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-  
+
   // Also check for touch capability as a secondary indicator
   const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  
+
   return mobileRegex.test(userAgent) || (hasTouch && window.innerWidth < 768);
 }
 
@@ -27,12 +27,12 @@ function isIOSSafari(): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return false;
   }
-  
+
   const userAgent = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
   const isWebkit = /WebKit/.test(userAgent);
   const isNotChrome = !/CriOS/.test(userAgent);
-  
+
   return isIOS && isWebkit && isNotChrome;
 }
 
@@ -69,18 +69,18 @@ export class SpeechRecognitionService {
     const hasSpeechRecognition =
       typeof window !== 'undefined' &&
       ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-    
+
     const hasWebAudioAPI =
       typeof window !== 'undefined' &&
       ('AudioContext' in window || 'webkitAudioContext' in window);
-    
+
     const hasLocalStorage = typeof Storage !== 'undefined';
 
     let recommendedBrowser: string | undefined;
     if (!hasSpeechRecognition) {
       recommendedBrowser = 'Chrome or Edge';
     }
-    
+
     // Add mobile-specific information
     const isMobileBrowser = this.isMobile;
 
@@ -118,14 +118,14 @@ export class SpeechRecognitionService {
         window.webkitSpeechRecognition;
 
       this.recognition = new SpeechRecognitionConstructor();
-      
+
       // Configure recognition settings with enhanced accuracy
       // MOBILE FIX: On mobile devices, continuous mode is unreliable
       // We handle this by auto-restarting when recognition ends unexpectedly
       this.recognition.continuous = config.continuous;
       this.recognition.interimResults = config.interimResults;
       this.recognition.lang = config.language;
-      
+
       // IMPROVED: Request multiple alternatives for better accuracy (3-5 alternatives)
       // This allows us to choose the best interpretation or combine them
       if ('maxAlternatives' in this.recognition) {
@@ -153,7 +153,7 @@ export class SpeechRecognitionService {
       this.isListening = true;
       this.shouldAutoRestart = true;
       this.restartAttempts = 0;
-      
+
       if (this.callbacks.onStart) {
         this.callbacks.onStart();
       }
@@ -168,7 +168,7 @@ export class SpeechRecognitionService {
       // Process all results from the event
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        
+
         // IMPROVED: Get all alternatives and pass them to callback
         // This allows the hook to intelligently choose or combine alternatives
         const alternatives: Array<{ transcript: string; confidence: number }> = [];
@@ -178,7 +178,7 @@ export class SpeechRecognitionService {
             confidence: result[j].confidence,
           });
         }
-        
+
         // Pass primary transcript (highest confidence) and all alternatives
         const transcript = result[0].transcript;
         const isFinal = result.isFinal;
@@ -190,22 +190,22 @@ export class SpeechRecognitionService {
 
     this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       const error = createVoiceError(event);
-      
+
       // MOBILE FIX: Don't stop on 'no-speech' error on mobile - just restart
       // Mobile browsers often fire this error prematurely
       if (this.isMobile && event.error === 'no-speech') {
-        console.log('Mobile: no-speech error, will auto-restart');
+
         // Don't call onError for no-speech on mobile, let it restart silently
         return;
       }
-      
+
       // MOBILE FIX: On 'aborted' error, try to restart on mobile
       if (this.isMobile && event.error === 'aborted' && this.shouldAutoRestart) {
-        console.log('Mobile: aborted error, will auto-restart');
+
         this.attemptRestart();
         return;
       }
-      
+
       if (this.callbacks.onError) {
         this.callbacks.onError(error);
       }
@@ -218,34 +218,34 @@ export class SpeechRecognitionService {
     this.recognition.onend = () => {
       const wasListening = this.isListening;
       this.isListening = false;
-      
+
       // MOBILE FIX: Auto-restart on mobile devices when recognition ends unexpectedly
       // Mobile browsers (especially iOS Safari) stop recognition after each utterance
       // even when continuous mode is enabled
       if (this.isMobile && this.shouldAutoRestart && wasListening) {
-        console.log('Mobile: recognition ended, attempting auto-restart');
+
         this.attemptRestart();
         return;
       }
-      
+
       if (this.callbacks.onEnd) {
         this.callbacks.onEnd();
       }
     };
-    
+
     // MOBILE FIX: Add additional event handlers for better mobile support
     // onspeechstart helps us know when speech is detected
     if ('onspeechstart' in this.recognition) {
       (this.recognition as SpeechRecognition & { onspeechstart: (() => void) | null }).onspeechstart = () => {
-        console.log('Speech detected');
+
         this.restartAttempts = 0;
       };
     }
-    
+
     // onaudiostart helps us know when audio capture has started
     if ('onaudiostart' in this.recognition) {
       (this.recognition as SpeechRecognition & { onaudiostart: (() => void) | null }).onaudiostart = () => {
-        console.log('Audio capture started');
+
       };
     }
   }
@@ -259,23 +259,23 @@ export class SpeechRecognitionService {
     if (this.restartTimeout) {
       clearTimeout(this.restartTimeout);
     }
-    
+
     if (this.restartAttempts >= this.maxRestartAttempts) {
-      console.log('Mobile: max restart attempts reached');
+
       this.shouldAutoRestart = false;
       if (this.callbacks.onEnd) {
         this.callbacks.onEnd();
       }
       return;
     }
-    
+
     this.restartAttempts++;
-    
+
     // Small delay before restarting to avoid rapid restart loops
     this.restartTimeout = setTimeout(() => {
       if (this.shouldAutoRestart && this.recognition && this.config) {
         try {
-          console.log(`Mobile: restarting recognition (attempt ${this.restartAttempts})`);
+
           this.recognition.start();
           this.isListening = true;
         } catch (error) {
@@ -336,19 +336,19 @@ export class SpeechRecognitionService {
       const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
       this.audioContext = new AudioContextConstructor();
       this.analyser = this.audioContext.createAnalyser();
-      
+
       // Optimize FFT size for performance (smaller = faster)
       // 128 is sufficient for audio level visualization
       this.analyser.fftSize = 128;
       this.analyser.smoothingTimeConstant = 0.8; // Smooth out rapid changes
-      
+
       // Connect microphone to analyser
       this.microphone = this.audioContext.createMediaStreamSource(stream);
       this.microphone.connect(this.analyser);
 
       // Pre-allocate data array to avoid repeated allocations
       const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-      
+
       // Start monitoring audio levels with optimized calculation
       this.audioLevelInterval = setInterval(() => {
         if (!this.analyser || !this.isListening) return;
@@ -363,7 +363,7 @@ export class SpeechRecognitionService {
         for (let i = 0; i < length; i++) {
           sum += dataArray[i];
         }
-        
+
         // Calculate normalized level (0-100)
         // Use bitwise operations for faster division
         const average = sum / length;
@@ -407,13 +407,13 @@ export class SpeechRecognitionService {
   stop(): void {
     // Disable auto-restart when explicitly stopping
     this.shouldAutoRestart = false;
-    
+
     // Clear any pending restart timeout
     if (this.restartTimeout) {
       clearTimeout(this.restartTimeout);
       this.restartTimeout = null;
     }
-    
+
     if (this.recognition && this.isListening) {
       try {
         this.recognition.stop();
@@ -430,13 +430,13 @@ export class SpeechRecognitionService {
   abort(): void {
     // Disable auto-restart when aborting
     this.shouldAutoRestart = false;
-    
+
     // Clear any pending restart timeout
     if (this.restartTimeout) {
       clearTimeout(this.restartTimeout);
       this.restartTimeout = null;
     }
-    
+
     if (this.recognition && this.isListening) {
       try {
         this.recognition.abort();
@@ -488,7 +488,7 @@ export class SpeechRecognitionService {
   getIsListening(): boolean {
     return this.isListening;
   }
-  
+
   /**
    * Check if running on a mobile device
    */
@@ -502,13 +502,13 @@ export class SpeechRecognitionService {
   dispose(): void {
     // Disable auto-restart
     this.shouldAutoRestart = false;
-    
+
     // Clear any pending restart timeout
     if (this.restartTimeout) {
       clearTimeout(this.restartTimeout);
       this.restartTimeout = null;
     }
-    
+
     this.abort();
     this.stopAudioLevelMonitoring();
     this.callbacks = {};

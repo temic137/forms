@@ -16,15 +16,15 @@ export interface MultiModelConfig {
 export const GROQ_MODELS = {
   // Largest, most capable - use for complex analysis
   LLAMA_70B: 'llama-3.3-70b-versatile',
-  
+
   // Fast and efficient - use for simple tasks
   LLAMA_8B: 'llama-3.1-8b-instant',
-  
+
   // New high-performance models
   LLAMA_4_MAVERICK: 'meta-llama/llama-4-maverick-17b-128e-instruct',
   LLAMA_4_SCOUT: 'meta-llama/llama-4-scout-17b-16e-instruct',
   QWEN_32B: 'qwen/qwen3-32b',
-  
+
   // Use versatile for structured output (specdec removed as it's not in supported list)
   LLAMA_70B_VERSATILE: 'llama-3.3-70b-versatile',
 } as const;
@@ -73,8 +73,8 @@ export class MultiModelAnalyzer {
 
     // Select primary model based on complexity
     const primaryModel = this.selectPrimaryModel(complexity);
-    
-    console.log(`Using ${primaryModel} for primary analysis (complexity: ${complexity})`);
+
+
 
     // Stage 1: Primary Analysis
     const primaryAnalysis = await this.performPrimaryAnalysis(
@@ -127,13 +127,13 @@ export class MultiModelAnalyzer {
     const length = content.length;
     const sentences = content.split(/[.!?]+/).length;
     const uniqueWords = new Set(content.toLowerCase().split(/\s+/)).size;
-    
+
     // Simple: Short, straightforward
     if (length < 200 && sentences < 5) return 'simple';
-    
+
     // Complex: Long, detailed, multiple topics
     if (length > 1000 || uniqueWords > 200 || sentences > 20) return 'complex';
-    
+
     // Moderate: Everything else
     return 'moderate';
   }
@@ -190,11 +190,11 @@ export class MultiModelAnalyzer {
     primaryAnalysis: any
   ): Promise<{ consensus: ConsensusResult; confidence: Record<string, number> }> {
     const groq = getGroqClient();
-    
+
     // Use a different model for second opinion
     const secondaryModel = GROQ_MODELS.QWEN_32B;
-    
-    console.log(`Getting second opinion from ${secondaryModel}`);
+
+
 
     const secondaryResponse = await groq.chat.completions.create({
       model: secondaryModel,
@@ -226,7 +226,7 @@ Provide your own analysis and note where you agree or disagree.`
 
     // Combine results
     const consensus = this.buildConsensus(primaryAnalysis, secondaryAnalysis);
-    
+
     return {
       consensus,
       confidence: {
@@ -243,11 +243,11 @@ Provide your own analysis and note where you agree or disagree.`
     analysis: any
   ): Promise<ValidationResult> {
     const groq = getGroqClient();
-    
+
     // Use fastest model for validation
     const validatorModel = GROQ_MODELS.LLAMA_8B;
-    
-    console.log(`Validating with ${validatorModel}`);
+
+
 
     const response = await groq.chat.completions.create({
       model: validatorModel,
@@ -303,11 +303,11 @@ Check for:
     }
 
     const groq = getGroqClient();
-    
+
     // Use best model for refinement
     const refinerModel = GROQ_MODELS.LLAMA_70B;
-    
-    console.log(`Refining analysis with ${refinerModel}`);
+
+
 
     const response = await groq.chat.completions.create({
       model: refinerModel,
@@ -351,13 +351,13 @@ Provide an improved analysis that addresses these issues.`
 
     // Compare analyses and find agreements/conflicts
     // Simplified for now - would need deep comparison logic
-    
+
     const primaryFields = primary.questions || primary.fields || [];
     const secondaryFields = secondary.questions || secondary.fields || [];
 
     // Fields both models agree on
     primaryFields.forEach((pField: any) => {
-      const match = secondaryFields.find((sField: any) => 
+      const match = secondaryFields.find((sField: any) =>
         this.fieldsSimilar(pField, sField)
       );
       if (match) {
@@ -366,15 +366,15 @@ Provide an improved analysis that addresses these issues.`
     });
 
     // Calculate confidence based on agreement
-    const agreementRate = primaryFields.length > 0 
-      ? agreedFields.length / primaryFields.length 
+    const agreementRate = primaryFields.length > 0
+      ? agreedFields.length / primaryFields.length
       : 0;
 
     return {
       agreedFields,
       conflicts,
-      recommendedApproach: agreementRate > 0.7 
-        ? "Models largely agree - use primary analysis" 
+      recommendedApproach: agreementRate > 0.7
+        ? "Models largely agree - use primary analysis"
         : "Models disagree - review both carefully",
       confidenceScore: agreementRate
     };
@@ -385,14 +385,14 @@ Provide an improved analysis that addresses these issues.`
    */
   private fieldsSimilar(field1: any, field2: any): boolean {
     const normalize = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '');
-    
+
     const label1 = normalize(field1.label || field1.question || '');
     const label2 = normalize(field2.label || field2.question || '');
-    
+
     // Simple similarity check
-    return label1 === label2 || 
-           label1.includes(label2) || 
-           label2.includes(label1);
+    return label1 === label2 ||
+      label1.includes(label2) ||
+      label2.includes(label1);
   }
 
   /**
@@ -403,15 +403,15 @@ Provide an improved analysis that addresses these issues.`
 
     // Has title
     if (analysis.title) score += 0.1;
-    
+
     // Has fields/questions
     const fieldCount = (analysis.fields || analysis.questions || []).length;
     if (fieldCount > 0) score += 0.1;
     if (fieldCount > 3) score += 0.1;
-    
+
     // Has understanding
     if (analysis.understanding) score += 0.1;
-    
+
     // Has metadata
     if (analysis.metadata) score += 0.1;
 
@@ -538,7 +538,7 @@ export async function generateWithMultipleModels(
   analysis: EnhancedAnalysis;
 }> {
   const analyzer = new MultiModelAnalyzer();
-  
+
   // Get enhanced analysis from multiple models
   const enhancedAnalysis = await analyzer.analyzeWithMultipleModels(
     content,
@@ -564,14 +564,14 @@ async function generateFormFromEnhancedAnalysis(
 ): Promise<any> {
   const groq = getGroqClient();
 
-  const isQuiz = analysis?.understanding?.isQuiz || 
-                 content.toLowerCase().includes('quiz') || 
-                 content.toLowerCase().includes('test') ||
-                 content.toLowerCase().includes('exam');
+  const isQuiz = analysis?.understanding?.isQuiz ||
+    content.toLowerCase().includes('quiz') ||
+    content.toLowerCase().includes('test') ||
+    content.toLowerCase().includes('exam');
 
   const isSurvey = analysis?.understanding?.isSurvey ||
-                   content.toLowerCase().includes('survey') ||
-                   content.toLowerCase().includes('questionnaire');
+    content.toLowerCase().includes('survey') ||
+    content.toLowerCase().includes('questionnaire');
 
   // Use specialized model for final form generation
   const response = await groq.chat.completions.create({

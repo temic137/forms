@@ -17,7 +17,7 @@ export function saveTranscriptionExample(transcript: string, language: string): 
   };
 
   const success = transcriptionStorage.save(session);
-  
+
   if (!success) {
     console.warn('Failed to save transcription. Storage may be full.');
     // Fallback: Continue with in-memory storage only
@@ -29,12 +29,12 @@ export function saveTranscriptionExample(transcript: string, language: string): 
  */
 export function restoreTranscriptionExample(): string | null {
   const session = transcriptionStorage.load();
-  
+
   if (session) {
-    console.log(`Restored session from ${new Date(session.timestamp).toLocaleString()}`);
+
     return session.transcript;
   }
-  
+
   return null;
 }
 
@@ -43,7 +43,7 @@ export function restoreTranscriptionExample(): string | null {
  */
 export function clearTranscriptionExample(): void {
   transcriptionStorage.clear();
-  console.log('Transcription cleared after successful form generation');
+
 }
 
 /**
@@ -56,7 +56,7 @@ export function setupAutoSave(
   const intervalId = setInterval(() => {
     const transcript = getTranscript();
     const language = getLanguage();
-    
+
     if (transcript.trim()) {
       const session: TranscriptionSession = {
         id: `session-${Date.now()}`,
@@ -64,7 +64,7 @@ export function setupAutoSave(
         language,
         timestamp: Date.now(),
       };
-      
+
       transcriptionStorage.save(session);
     }
   }, 5000); // Save every 5 seconds
@@ -89,14 +89,14 @@ export function checkStorageExample(): boolean {
  */
 export function getSessionAgeDisplay(): string | null {
   const age = transcriptionStorage.getSessionAge();
-  
+
   if (age === null) {
     return null;
   }
-  
+
   const minutes = Math.floor(age / 60000);
   const hours = Math.floor(minutes / 60);
-  
+
   if (hours > 0) {
     return `${hours} hour${hours > 1 ? 's' : ''} ago`;
   } else if (minutes > 0) {

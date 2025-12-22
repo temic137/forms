@@ -1,3 +1,7 @@
+/**
+ * @deprecated This endpoint is being replaced by client-side parsing using pdfjs-dist.
+ * It is kept for backward compatibility but should be removed in future versions.
+ */
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";

@@ -51,12 +51,12 @@ export async function sendDiscordNotification(
           },
           ...(data.customMessage
             ? [
-                {
-                  name: "Custom Message",
-                  value: data.customMessage,
-                  inline: false,
-                },
-              ]
+              {
+                name: "Custom Message",
+                value: data.customMessage,
+                inline: false,
+              },
+            ]
             : []),
           ...fields,
         ],
@@ -82,6 +82,6 @@ export async function sendDiscordNotification(
     throw new Error(`Discord webhook error: ${response.status} ${errorText}`);
   }
 
-  console.log("✓ Discord notification sent successfully");
+
 }
 

@@ -192,7 +192,12 @@ export default function ShareButton({
   }, []);
 
   const effectiveUrl = useMemo(() => {
-    if (url) return url;
+    if (url) {
+      if (url.startsWith('/') && typeof window !== 'undefined') {
+        return `${window.location.origin}${url}`;
+      }
+      return url;
+    }
     if (typeof window !== "undefined") {
       return window.location.href;
     }
