@@ -3,17 +3,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+
 import { Field, FormStyling, NotificationConfig, MultiStepConfig, QuizModeConfig } from "@/types/form";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
-import RotatingText from "@/components/RotatingText";
-import CreationMethodSelector, { CreationMethodInline } from "@/components/CreationMethodSelector";
-import InlineFileUpload from "@/components/InlineFileUpload";
-import InlineDocumentScanner from "@/components/InlineDocumentScanner";
-import InlineJSONImport from "@/components/InlineJSONImport";
-import InlineURLScraper from "@/components/InlineURLScraper";
+
 import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
 import { Spinner } from "@/components/ui/Spinner";
-import { Mic, Sparkles, UploadCloud, Globe, Trash2, BarChart3, Check, Minus, Upload, ArrowRight, Clock, Brain, FileText, ScanLine, Lock, HelpCircle, X, Languages, GraduationCap } from "lucide-react";
+import { Mic, Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 
 // Example prompts for help popup
@@ -35,30 +31,7 @@ const placeholderExamples = [
   "Product order form with quantity and shipping...",
 ];
 
-// Template cards data
-const templateCards = [
-  {
-    title: "Contact Form",
-    description: "Name, email, phone & message",
-    fields: 4,
-    icon: "📧",
-    query: "contact form with name, email, phone number, and message fields",
-  },
-  {
-    title: "Event Registration",
-    description: "Attendee info & preferences",
-    fields: 6,
-    icon: "🎉",
-    query: "event registration form with name, email, company, dietary restrictions, session preferences, and special requirements",
-  },
-  {
-    title: "Customer Feedback",
-    description: "NPS score & detailed feedback",
-    fields: 5,
-    icon: "⭐",
-    query: "customer feedback survey with NPS score rating, what did you like most, what can we improve, would you recommend us, and additional comments",
-  },
-];
+
 
 export default function Home() {
   const router = useRouter();
@@ -79,12 +52,12 @@ export default function Home() {
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
   // Creation method state
-  const [creationMethod, setCreationMethod] = useState<CreationMethodInline>("prompt");
+
 
   // Help popup and onboarding state
   const [showHelpPopup, setShowHelpPopup] = useState(false);
   const [hasCreatedForm, setHasCreatedForm] = useState(false);
-  const [showMethodTooltip, setShowMethodTooltip] = useState(false);
+
 
   // Check if user has created a form before (for progressive disclosure)
   useEffect(() => {
@@ -121,9 +94,9 @@ export default function Home() {
   const generateForm = useCallback(async (brief: string) => {
     setLoading(true);
     try {
-      let additionalContext = "";
+      let referenceData = "";
 
-      // Process File
+      // Process File - extract content as reference data (NOT part of the prompt)
       if (attachedFile) {
         const formData = new FormData();
         formData.append("file", attachedFile);
@@ -133,10 +106,10 @@ export default function Home() {
         });
         if (!res.ok) throw new Error("Failed to parse file");
         const data = await res.json();
-        additionalContext += `\n\nContext from uploaded file (${attachedFile.name}):\n${data.text}`;
+        referenceData += `Content from uploaded file (${attachedFile.name}):\n${data.text}`;
       }
 
-      // Process URL
+      // Process URL - extract content as reference data (NOT part of the prompt)
       if (attachedUrl) {
         const res = await fetch("/api/utils/scrape-url", {
           method: "POST",
@@ -145,20 +118,19 @@ export default function Home() {
         });
         if (!res.ok) throw new Error("Failed to scrape URL");
         const data = await res.json();
-        additionalContext += `\n\nContext from URL (${attachedUrl}):\n${data.content}`;
+        if (referenceData) referenceData += "\n\n";
+        referenceData += `Content from URL (${attachedUrl}):\n${data.content}`;
       }
 
-      const fullContent = `
-User Request: Create a form.
-User Description: ${brief}
-${additionalContext}
-      `.trim();
-
+      // Use generate-enhanced for better results with context
+      // IMPORTANT: User's prompt (brief) is passed as 'content' for form type detection
+      // File/URL content is passed as 'referenceData' which is source material only
       const res = await fetch("/api/ai/generate-enhanced", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: fullContent,
+          content: brief, // User's prompt - used for form type detection
+          referenceData: referenceData || undefined, // File/URL content - source material only
           sourceType: "text",
           userContext: "The user wants to create a form.",
           options: {
@@ -222,189 +194,9 @@ ${additionalContext}
     }
   };
 
-  async function handleFileUpload(file: File) {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
 
-      const response = await fetch("/api/ai/import-file", {
-        method: "POST",
-        body: formData,
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to process file");
-      }
 
-      const data = await response.json();
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        quizConfig: f.quizConfig ? {
-          correctAnswer: f.quizConfig.correctAnswer || '',
-          points: f.quizConfig.points || 1,
-          explanation: f.quizConfig.explanation || ''
-        } : undefined,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(data.title || "Imported Form");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined);
-      setPreviewMultiStepConfig(undefined);
-      setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
-      setShowBuilder(true);
-      setCreationMethod("prompt");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload file");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleDocumentScan(file: File) {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/ai/scan-form", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to scan document");
-      }
-
-      const data = await response.json();
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(data.title || "Scanned Form");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined);
-      setShowBuilder(true);
-      setCreationMethod("prompt");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to scan document");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleJSONImport(jsonData: { title?: string; fields: Array<Partial<Field>> }) {
-    setLoading(true);
-    try {
-      const normalizedFields = jsonData.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || f.label?.toLowerCase().replace(/\s+/g, "_") || `field_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(jsonData.title || "Imported Form");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined);
-      setPreviewMultiStepConfig(undefined);
-      setShowBuilder(true);
-      setCreationMethod("prompt");
-    } catch {
-      toast.error("Failed to import JSON");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleURLScrape(url: string) {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/ai/generate-from-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(errorData.error || "Failed to scrape URL and generate form");
-      }
-
-      const data = await response.json();
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        helpText: f.helpText,
-        quizConfig: f.quizConfig ? {
-          correctAnswer: f.quizConfig.correctAnswer || '',
-          points: f.quizConfig.points || 1,
-          explanation: f.quizConfig.explanation || ''
-        } : undefined,
-        order: f.order || idx,
-        conditionalLogic: f.conditionalLogic || [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(data.title || "Form from URL");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined);
-      setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
-      setPreviewMultiStepConfig(undefined);
-      setShowBuilder(true);
-      setCreationMethod("prompt");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to scrape URL and generate form");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleGuestSignIn = async () => {
-    try {
-      setLoading(true);
-      const result = await signIn("anonymous", {
-        redirect: false,
-      });
-
-      if (result?.error) {
-        toast.error("Failed to sign in anonymously");
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Anonymous sign in failed:", error);
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Rotate placeholder text
   useEffect(() => {
@@ -468,6 +260,14 @@ ${additionalContext}
     }
   };
 
+  const openBuilderForCreate = () => {
+    setPreviewTitle("Untitled Form");
+    setPreviewFields([]);
+    setPreviewStyling(undefined);
+    setPreviewMultiStepConfig(undefined);
+    setShowBuilder(true);
+  };
+
   function startOver() {
     setShowBuilder(false);
     setPreviewTitle("");
@@ -498,13 +298,28 @@ ${additionalContext}
     }
   };
 
-  const quickActions = [
-    { label: "Wedding RSVP", query: "wedding rsvp with meal preference and plus one" },
-    { label: "Job Application", query: "job application with resume upload and cover letter" },
-    { label: "Customer Feedback", query: "product feedback survey with nps score" },
-    { label: "Event Registration", query: "conference registration with dietary restrictions" },
-    { label: "Quiz", query: "trivia quiz about general knowledge with 5 questions" },
-  ];
+  const handleGuestSignIn = async () => {
+    try {
+      setLoading(true);
+      const result = await signIn("anonymous", {
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error("Failed to sign in anonymously");
+      } else {
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Anonymous sign in failed:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   // Show form editor if form exists
   if (showBuilder) {
@@ -574,346 +389,225 @@ ${additionalContext}
             </div>
 
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 mb-8 leading-tight">
-              Stop building <RotatingText words={["forms", "quizzes", "surveys", "tests", "questionnaires"]} className="text-blue-600" />. <br />
-              <span className="text-gray-500">Just describe them.</span>
+              Skip the grunt work
             </h1>
 
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Create complex, validated forms in seconds using natural language. No drag-and-drop required.
+              Create forms, quizzes, surveys, and tests in seconds using AI. Then customize with drag-and-drop
             </p>
 
             {/* Value Proposition Badges */}
-            <div className="flex flex-wrap justify-center gap-3 mb-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm">
-                <Check className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700">AI-Powered Generation</span>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm">
-                <ScanLine className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700">Document Scanning/OCR</span>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm">
-                <GraduationCap className="w-4 h-4 text-blue-600" />
-                <span className="text-gray-700">Quiz Mode with Auto-Grading</span>
-              </div>
-            </div>
 
-            {/* Ghost Access Button - Try Without Signup */}
-            <div className="mb-12 flex justify-center">
+
+            {/* Ghost Access Button - Subtle Version */}
+            <div className="mb-10 flex justify-center">
               <button
                 onClick={handleGuestSignIn}
                 disabled={loading}
-                className="relative group overflow-hidden px-8 py-5 rounded-2xl font-semibold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 text-sm font-medium transition-all duration-200 border border-gray-200 hover:border-gray-300"
               >
-                {/* Main button background */}
-                <div className="absolute inset-0 bg-white border-2 border-gray-200 group-hover:border-gray-800 transition-all duration-300 group-hover:bg-gray-900" />
-
-                {/* Shimmer effect on hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
-                    animation: 'shimmer 2s infinite'
-                  }}
-                />
-
-                {/* Content */}
-                <div className="relative flex items-center gap-4 z-10">
-                  <div className="relative flex-shrink-0">
-                    {/* Ghost icon with animation */}
-                    <div className="text-4xl group-hover:scale-125 transition-transform duration-300 group-hover:animate-bounce origin-center">
-                      👻
-                    </div>
-                  </div>
-
-                  <div className="text-left">
-                    <div className="text-gray-900 font-bold text-base group-hover:text-white transition-colors duration-300 leading-tight">Go Ghost Mode</div>
-                    <div className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors duration-300 font-normal">Try it instantly, no signup needed</div>
-                  </div>
-
-                  {/* Arrow animation */}
-                  <div className="ml-2 text-gray-400 group-hover:text-white transition-all duration-300 group-hover:translate-x-3">
-                    <ArrowRight className="w-5 h-5" />
-                  </div>
-                </div>
-
-                {/* Add keyframes animation */}
-                <style jsx>{`
-                  @keyframes shimmer {
-                    0% {
-                      transform: translateX(-100%);
-                    }
-                    100% {
-                      transform: translateX(100%);
-                    }
-                  }
-                  button:hover {
-                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-                  }
-                `}</style>
+                <span className="text-lg">👻</span>
+                <span>Try Ghost Mode</span>
+                <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
               </button>
             </div>
 
-            {/* Hero Input */}
-            <div className="max-w-2xl mx-auto mb-12 relative">
-              <div className="relative bg-gray-50 rounded-xl border border-gray-200 p-2">
-                <CreationMethodSelector
-                  selectedMethod={creationMethod}
-                  onMethodChange={setCreationMethod}
-                  disabled={loading}
-                />
 
-                {/* Onboarding tooltip for first-time users */}
-                {!hasCreatedForm && !showMethodTooltip && (
-                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                    <div className="flex items-start gap-2">
-                      <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">First time here? Start simple!</p>
-                        <p className="text-blue-600 mt-1">Just describe your form in plain English below. Try: &quot;job application with resume upload&quot;</p>
-                      </div>
-                      <button onClick={() => setShowMethodTooltip(true)} className="text-blue-400 hover:text-blue-600 ml-auto">
-                        <X className="w-4 h-4" />
+            {/* Hero Input - Dashboard Style */}
+            <div className="max-w-3xl mx-auto mb-12 relative">
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-blue-600" />
+                    <h2 className="text-lg font-medium text-gray-900">Create a Form</h2>
+                  </div>
+
+                </div>
+              </div>
+
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                  <textarea
+                    id="landing-prompt-input"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={placeholderExamples[placeholderIndex]}
+                    className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-gray-50 border-0 text-gray-900"
+                    style={{
+                      minHeight: '120px',
+                    }}
+                    disabled={loading}
+                  />
+                  {isSupported && (
+                    <button
+                      type="button"
+                      onClick={handleVoiceClick}
+                      className="absolute right-3 bottom-3 p-2.5 rounded-full transition-colors"
+                      style={{
+                        background: isListening ? '#ef4444' : '#f3f4f6',
+                        color: isListening ? '#fff' : '#4b5563',
+                      }}
+                      title={isListening ? 'Stop recording' : 'Start voice input'}
+                    >
+                      <Mic className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Attachments Area */}
+                <div className="flex flex-wrap gap-2">
+                  {/* File Attachment Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="landing-attach-file"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
+                      }}
+                      accept=".pdf,.txt,.csv,.json"
+                    />
+                    <label
+                      htmlFor="landing-attach-file"
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
+                        ? "bg-blue-50 text-blue-700"
+                        : "hover:bg-gray-100 text-gray-600"
+                        }`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      {attachedFile ? attachedFile.name : "Attach File"}
+                    </label>
+                  </div>
+
+                  {/* Scan Document Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="landing-scan-doc"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
+                      }}
+                      accept="image/*"
+                      capture="environment"
+                    />
+                    <label
+                      htmlFor="landing-scan-doc"
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
+                        ? "bg-blue-50 text-blue-700"
+                        : "hover:bg-gray-100 text-gray-600"
+                        }`}
+                    >
+                      <Camera className="w-4 h-4" />
+                      Scan Doc
+                    </label>
+                  </div>
+
+                  {/* Import JSON Button */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="landing-import-json"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
+                      }}
+                      accept=".json"
+                    />
+                    <label
+                      htmlFor="landing-import-json"
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
+                        ? "bg-blue-50 text-blue-700"
+                        : "hover:bg-gray-100 text-gray-600"
+                        }`}
+                    >
+                      <FileJson className="w-4 h-4" />
+                      Import JSON
+                    </label>
+                  </div>
+
+                  {/* URL Attachment Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
+                      ? "bg-blue-50 text-blue-700"
+                      : "hover:bg-gray-100 text-gray-600"
+                      }`}
+                  >
+                    <Globe className="w-4 h-4" />
+                    {attachedUrl ? "URL Attached" : "Attach URL"}
+                  </button>
+                </div>
+
+                {/* URL Input Field */}
+                {(showUrlInput || attachedUrl) && (
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={attachedUrl}
+                      onChange={(e) => setAttachedUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border-0"
+                    />
+                    {attachedUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttachedUrl("");
+                          setShowUrlInput(false);
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                    </div>
+                    )}
                   </div>
                 )}
 
-                {creationMethod === 'prompt' && (
-                  <form onSubmit={handleSubmit} className="mt-4">
-                    <div className="relative">
-                      {/* Help button */}
-                      <button
-                        type="button"
-                        onClick={() => setShowHelpPopup(true)}
-                        className="absolute left-3 top-3 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors z-10"
-                        title="What can I say?"
-                      >
-                        <HelpCircle className="w-5 h-5" />
-                      </button>
-
-                      <textarea
-                        id="landing-prompt-input"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder={placeholderExamples[placeholderIndex]}
-                        className="w-full pl-12 pr-4 py-4 text-lg bg-transparent border-0 focus:ring-0 placeholder:text-gray-400 placeholder:transition-opacity text-gray-900 font-medium resize-none"
-                        style={{ minHeight: '120px' }}
-                      />
-                      {isSupported && (
-                        <div className="absolute right-3 bottom-3 flex items-center gap-2 z-10">
-                          <span className="hidden sm:flex items-center gap-1 text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
-                            <Lock className="w-3 h-3" />
-                            Processed locally
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleVoiceClick}
-                            className="p-3 rounded-full transition-all shadow-sm hover:shadow-md"
-                            style={{
-                              background: isListening ? '#ef4444' : '#f3f4f6',
-                              color: isListening ? '#fff' : '#4b5563',
-                            }}
-                            title={isListening ? 'Stop recording' : 'Start voice input'}
-                          >
-                            <Mic className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Attachments Area */}
-                    <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {/* File Attachment Button */}
-                        <div className="relative">
-                          <input
-                            type="file"
-                            id="landing-attach-file"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                            }}
-                            accept=".pdf,.txt,.csv,.json"
-                          />
-                          <label
-                            htmlFor="landing-attach-file"
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border cursor-pointer transition-colors ${attachedFile
-                              ? "bg-blue-50 border-blue-200 text-blue-700"
-                              : "hover:bg-gray-50 border-gray-200 text-gray-600"
-                              }`}
-                          >
-                            <Upload className="w-4 h-4" />
-                            {attachedFile ? attachedFile.name : "Attach File"}
-                          </label>
-                        </div>
-
-                        {/* URL Attachment Button */}
-                        <button
-                          type="button"
-                          onClick={() => setShowUrlInput(!showUrlInput)}
-                          className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${attachedUrl
-                            ? "bg-blue-50 border-blue-200 text-blue-700"
-                            : "hover:bg-gray-50 border-gray-200 text-gray-600"
-                            }`}
-                        >
-                          <Globe className="w-4 h-4" />
-                          {attachedUrl ? "URL Attached" : "Attach URL"}
-                        </button>
-                      </div>
-
-                      {/* URL Input Field */}
-                      {(showUrlInput || attachedUrl) && (
-                        <div className="flex gap-2 mb-4">
-                          <input
-                            type="url"
-                            value={attachedUrl}
-                            onChange={(e) => setAttachedUrl(e.target.value)}
-                            placeholder="https://example.com"
-                            className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          {attachedUrl && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAttachedUrl("");
-                                setShowUrlInput(false);
-                              }}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-
-                      {isListening && autoSubmitCountdown !== null && (
-                        <div className="text-center text-sm font-medium animate-pulse text-blue-600 mb-2">
-                          Auto-generating in {autoSubmitCountdown}s...
-                        </div>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={(!query.trim() && !attachedFile && !attachedUrl) || loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-lg transition-all disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
-                      >
-                        {loading ? (
-                          <>
-                            <Spinner size="sm" variant="white" />
-                            Creating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-5 h-5" />
-                            Create Form
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </form>
+                {isListening && autoSubmitCountdown !== null && (
+                  <div className="text-center text-sm font-medium animate-pulse text-blue-600">
+                    Auto-generating in {autoSubmitCountdown}s...
+                  </div>
                 )}
 
-                {/* Other Input Methods (File, URL, etc) */}
-                <div className="px-4 pb-4">
-                  {creationMethod === 'file' && (
-                    <div className="mt-4">
-                      <InlineFileUpload
-                        onFileSelect={handleFileUpload}
-                        onCancel={() => setCreationMethod('prompt')}
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-                  {creationMethod === 'scan' && (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mb-3 bg-green-50 py-2 rounded-lg border border-green-100">
-                        <Lock className="w-3 h-3 text-green-600" />
-                        <span className="text-green-700">🔒 Your documents are processed securely and not stored</span>
-                      </div>
-                      <InlineDocumentScanner
-                        onFileSelect={handleDocumentScan}
-                        onCancel={() => setCreationMethod('prompt')}
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-                  {creationMethod === 'json' && (
-                    <div className="mt-4">
-                      <InlineJSONImport
-                        onImport={handleJSONImport}
-                        onCancel={() => setCreationMethod('prompt')}
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-                  {creationMethod === 'url' && (
-                    <div className="mt-4">
-                      <InlineURLScraper
-                        onURLSubmit={handleURLScrape}
-                        onCancel={() => setCreationMethod('prompt')}
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Suggestions */}
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <span className="text-sm text-gray-500 py-1">Try:</span>
-                {quickActions.slice(0, 3).map((action) => (
+                <div className="flex gap-3">
                   <button
-                    key={action.label}
-                    onClick={() => {
-                      setQuery(action.query);
-                      generateForm(action.query);
-                    }}
-                    className="text-sm text-gray-600 bg-gray-50 border border-gray-200 hover:border-gray-300 hover:text-gray-900 px-3 py-1 rounded-md transition-all"
+                    type="submit"
+                    disabled={!query.trim() || loading}
+                    className="flex-1 py-3 px-6 rounded-lg font-medium text-base transition-colors disabled:opacity-50 flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
                   >
-                    {action.label}
+                    {loading ? (
+                      <>
+                        <Spinner size="sm" variant="white" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Form
+                      </>
+                    )}
                   </button>
-                ))}
-              </div>
-            </div>
 
-          </div>
-        </section>
-
-        {/* Why AnyForm Section */}
-        <section className="py-16 bg-white border-t border-gray-100">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-10 text-center">Why AnyForm?</h2>
-
-            <div className="grid md:grid-cols-3 gap-10">
-              {/* Speed */}
-              <div className="text-center">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-5 h-5 text-gray-700" />
+                  <button
+                    type="button"
+                    onClick={openBuilderForCreate}
+                    className="px-5 py-3 rounded-lg font-medium transition-colors bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                    title="Build manually"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">10x Faster</h3>
-                <p className="text-sm text-gray-600">30 seconds instead of 10 minutes. Just describe what you need.</p>
-              </div>
-
-              {/* Intelligence */}
-              <div className="text-center">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Brain className="w-5 h-5 text-gray-700" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Context-Aware</h3>
-                <p className="text-sm text-gray-600">Auto-detects field types, validation, and conditional logic.</p>
-              </div>
-
-              {/* Multiple Inputs */}
-              <div className="text-center">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-5 h-5 text-gray-700" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Any Input</h3>
-                <p className="text-sm text-gray-600">Voice, files, documents, URLs—we turn anything into a form.</p>
-              </div>
+              </form>
             </div>
           </div>
         </section>
+
+
+
+
 
         {/* Comparison Section */}
         <section id="comparison" className="py-14 bg-gray-50 border-t border-gray-100">
@@ -951,110 +645,72 @@ ${additionalContext}
               </div>
             </div>
           </div>
-        </section>
-
-        {/* Features */}
-        <section id="features" className="py-14 bg-white border-t border-gray-100">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-3 gap-8 text-center">
-              <div>
-                <Mic className="w-5 h-5 text-gray-500 mx-auto mb-3" />
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">Voice Input</h3>
-                <p className="text-xs text-gray-500">Dictate while walking or driving</p>
-              </div>
-              <div>
-                <UploadCloud className="w-5 h-5 text-gray-500 mx-auto mb-3" />
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">File to Form</h3>
-                <p className="text-xs text-gray-500">PDF, Word docs auto-extracted</p>
-              </div>
-              <div>
-                <BarChart3 className="w-5 h-5 text-gray-500 mx-auto mb-3" />
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">Analytics</h3>
-                <p className="text-xs text-gray-500">Real-time response insights</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-14 bg-gray-50 border-t border-gray-100">
-          <div className="max-w-4xl mx-auto px-4 text-center">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Ready to build?</h2>
-            <button
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                const input = document.getElementById('landing-prompt-input');
-                if (input) input.focus();
-              }}
-              className="bg-gray-900 text-white hover:bg-gray-800 px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
-            >
-              Start Now
-            </button>
-          </div>
-        </section>
-      </main>
+        </section >
+      </main >
 
       {/* What Can I Say? Help Popup */}
-      {showHelpPopup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowHelpPopup(false)}>
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">What can I say?</h3>
-                  <p className="text-sm text-gray-500 mt-1">Just describe your form naturally. Here are some examples:</p>
-                </div>
-                <button onClick={() => setShowHelpPopup(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
-              {examplePrompts.map((category) => (
-                <div key={category.category}>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">{category.category}</h4>
-                  <div className="space-y-2">
-                    {category.prompts.map((prompt) => (
-                      <button
-                        key={prompt}
-                        onClick={() => {
-                          setQuery(prompt);
-                          setShowHelpPopup(false);
-                        }}
-                        className="w-full text-left p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm text-gray-700 hover:text-blue-700 transition-colors"
-                      >
-                        &quot;{prompt}&quot;
-                      </button>
-                    ))}
+      {
+        showHelpPopup && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowHelpPopup(false)}>
+            <div className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">What can I say?</h3>
+                    <p className="text-sm text-gray-500 mt-1">Just describe your form naturally. Here are some examples:</p>
                   </div>
+                  <button onClick={() => setShowHelpPopup(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
                 </div>
-              ))}
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+                {examplePrompts.map((category) => (
+                  <div key={category.category}>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">{category.category}</h4>
+                    <div className="space-y-2">
+                      {category.prompts.map((prompt) => (
+                        <button
+                          key={prompt}
+                          onClick={() => {
+                            setQuery(prompt);
+                            setShowHelpPopup(false);
+                          }}
+                          className="w-full text-left p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-sm text-gray-700 hover:text-blue-700 transition-colors"
+                        >
+                          &quot;{prompt}&quot;
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
 
-              <div className="pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">💡 Pro Tips</h4>
-                <ul className="text-sm text-gray-600 space-y-2">
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <span>Mention specific field types: &quot;email&quot;, &quot;phone number&quot;, &quot;date picker&quot;</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <span>Specify if fields are required: &quot;required email address&quot;</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <span>Add validation: &quot;phone number with US format&quot;</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <span>For quizzes: &quot;quiz with 5 multiple choice questions about [topic]&quot;</span>
-                  </li>
-                </ul>
+                <div className="pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">💡 Pro Tips</h4>
+                  <ul className="text-sm text-gray-600 space-y-2">
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span>Mention specific field types: &quot;email&quot;, &quot;phone number&quot;, &quot;date picker&quot;</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span>Specify if fields are required: &quot;required email address&quot;</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span>Add validation: &quot;phone number with US format&quot;</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <span>For quizzes: &quot;quiz with 5 multiple choice questions about [topic]&quot;</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <footer className="bg-white border-t border-gray-200 py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1070,6 +726,6 @@ ${additionalContext}
           </div>
         </div>
       </footer>
-    </div>
+    </div >
   );
 }

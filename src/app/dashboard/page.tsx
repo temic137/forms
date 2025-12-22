@@ -8,11 +8,6 @@ import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { Field, FormStyling, NotificationConfig, MultiStepConfig, QuizModeConfig } from "@/types/form";
-import { CreationMethodInline } from "@/components/CreationMethodSelector";
-import InlineFileUpload from "@/components/InlineFileUpload";
-import InlineDocumentScanner from "@/components/InlineDocumentScanner";
-import InlineJSONImport from "@/components/InlineJSONImport";
-import InlineURLScraper from "@/components/InlineURLScraper";
 import ShareButton from "@/components/ShareButton";
 // import IntegrationButton from "@/components/IntegrationButton";
 // Lazy load the heavy builder component
@@ -47,8 +42,7 @@ export default function DashboardPage() {
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
   const [loadingFormId, setLoadingFormId] = useState<string | null>(null);
 
-  // Creation method state
-  const [creationMethod, setCreationMethod] = useState<CreationMethodInline>("prompt");
+
 
   // Builder state (used for both AI-generated and manual creation)
   const [showBuilder, setShowBuilder] = useState(false);
@@ -294,174 +288,7 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleFileUpload(file: File) {
-    setGeneratingForm(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
 
-      const response = await fetch("/api/ai/import-file", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to process file");
-      }
-
-      const data = await response.json();
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        // Preserve quizConfig with default points of 1
-        quizConfig: f.quizConfig ? {
-          correctAnswer: f.quizConfig.correctAnswer || '',
-          points: f.quizConfig.points || 1,
-          explanation: f.quizConfig.explanation || ''
-        } : undefined,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(data.title || "Imported Form");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined); // Use defaults from StyleEditor
-      setPreviewMultiStepConfig(undefined);
-      // Set quiz mode if API returned it
-      setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
-      setEditingFormId(null);
-      setShowBuilder(true); // Use drag-drop builder
-      setCreationMethod("prompt");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload file");
-    } finally {
-      setGeneratingForm(false);
-    }
-  }
-
-  async function handleDocumentScan(file: File) {
-    setGeneratingForm(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/ai/scan-form", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to scan document");
-      }
-
-      const data = await response.json();
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(data.title || "Scanned Form");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined); // Use defaults from StyleEditor
-      setEditingFormId(null);
-      setShowBuilder(true); // Use drag-drop builder
-      setCreationMethod("prompt");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to scan document");
-    } finally {
-      setGeneratingForm(false);
-    }
-  }
-
-  async function handleJSONImport(jsonData: { title?: string; fields: Array<Partial<Field>> }) {
-    setGeneratingForm(true);
-    try {
-      const normalizedFields = jsonData.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || f.label?.toLowerCase().replace(/\s+/g, "_") || `field_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(jsonData.title || "Imported Form");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined); // Use defaults from StyleEditor
-      setPreviewMultiStepConfig(undefined);
-      setEditingFormId(null);
-      setShowBuilder(true); // Use drag-drop builder
-      setCreationMethod("prompt");
-    } finally {
-      setGeneratingForm(false);
-    }
-  }
-
-  async function handleURLScrape(url: string) {
-    setGeneratingForm(true);
-    try {
-      const response = await fetch("/api/ai/generate-from-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(errorData.error || "Failed to scrape URL and generate form");
-      }
-
-      const data = await response.json();
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        helpText: f.helpText,
-        // Preserve quizConfig with default points of 1
-        quizConfig: f.quizConfig ? {
-          correctAnswer: f.quizConfig.correctAnswer || '',
-          points: f.quizConfig.points || 1,
-          explanation: f.quizConfig.explanation || ''
-        } : undefined,
-        order: f.order || idx,
-        conditionalLogic: f.conditionalLogic || [],
-        color: '#ffffff',
-      }));
-
-      setPreviewTitle(data.title || "Form from URL");
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined); // Use defaults from StyleEditor
-      // Set quiz mode if API returned it
-      setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
-      setPreviewMultiStepConfig(undefined);
-      setEditingFormId(null);
-      setShowBuilder(true); // Use drag-drop builder
-      setCreationMethod("prompt");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to scrape URL and generate form");
-    } finally {
-      setGeneratingForm(false);
-    }
-  }
 
   // Old publishForm, updateField, removeField, addField functions removed
   // Now using the drag-drop builder for all form editing
@@ -791,211 +618,207 @@ export default function DashboardPage() {
                   <Sparkles className="w-5 h-5" style={{ color: 'var(--accent)' }} />
                   <h2 className="text-lg font-medium" style={{ color: 'var(--foreground)' }}>Create a Form</h2>
                 </div>
-                {creationMethod !== 'prompt' && (
-                  <button
-                    onClick={() => setCreationMethod('prompt')}
-                    className="text-sm hover:underline"
-                    style={{ color: 'var(--accent)' }}
-                  >
-                    Back to AI Generator
-                  </button>
-                )}
+
               </div>
             </div>
 
-            {/* AI Prompt Method (Default) */}
-            {creationMethod === "prompt" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="relative">
-                  <textarea
-                    id="prompt"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
-                    className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    style={{
-                      minHeight: '120px',
-                      background: 'var(--background-subtle)',
-                      border: 'none',
-                      color: 'var(--foreground)'
-                    }}
-                    disabled={generatingForm}
-                  />
-                  {isSupported && (
-                    <button
-                      type="button"
-                      onClick={handleVoiceClick}
-                      className="absolute right-3 bottom-3 p-2.5 rounded-full transition-colors"
-                      style={{
-                        background: isListening ? '#ef4444' : 'var(--background)',
-                        color: isListening ? '#fff' : 'var(--foreground-muted)',
-                      }}
-                      title={isListening ? 'Stop recording' : 'Start voice input'}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill={isListening ? 'currentColor' : 'none'}
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                </div>
 
-                {/* Attachments Area */}
-                <div className="flex flex-wrap gap-2">
-                  {/* File Attachment Button */}
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="attach-file"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
-                      }}
-                      accept=".pdf,.txt,.csv,.json"
-                    />
-                    <label
-                      htmlFor="attach-file"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
-                        ? "bg-blue-50 text-blue-700"
-                        : "hover:bg-gray-100 text-gray-600"
-                        }`}
-                    >
-                      <Upload className="w-4 h-4" />
-                      {attachedFile ? attachedFile.name : "Attach File"}
-                    </label>
-                  </div>
-
-                  {/* URL Attachment Button */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="relative">
+                <textarea
+                  id="prompt"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
+                  className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  style={{
+                    minHeight: '120px',
+                    background: 'var(--background-subtle)',
+                    border: 'none',
+                    color: 'var(--foreground)'
+                  }}
+                  disabled={generatingForm}
+                />
+                {isSupported && (
                   <button
                     type="button"
-                    onClick={() => setShowUrlInput(!showUrlInput)}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
+                    onClick={handleVoiceClick}
+                    className="absolute right-3 bottom-3 p-2.5 rounded-full transition-colors"
+                    style={{
+                      background: isListening ? '#ef4444' : 'var(--background)',
+                      color: isListening ? '#fff' : 'var(--foreground-muted)',
+                    }}
+                    title={isListening ? 'Stop recording' : 'Start voice input'}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill={isListening ? 'currentColor' : 'none'}
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Attachments Area */}
+              <div className="flex flex-wrap gap-2">
+                {/* File Attachment Button */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="attach-file"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
+                    }}
+                    accept=".pdf,.txt,.csv,.json"
+                  />
+                  <label
+                    htmlFor="attach-file"
+                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${attachedFile
                       ? "bg-blue-50 text-blue-700"
                       : "hover:bg-gray-100 text-gray-600"
                       }`}
                   >
-                    <Globe className="w-4 h-4" />
-                    {attachedUrl ? "URL Attached" : "Attach URL"}
-                  </button>
+                    <Upload className="w-4 h-4" />
+                    {attachedFile ? attachedFile.name : "Attach File"}
+                  </label>
                 </div>
 
-                {/* URL Input Field */}
-                {(showUrlInput || attachedUrl) && (
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={attachedUrl}
-                      onChange={(e) => setAttachedUrl(e.target.value)}
-                      placeholder="https://example.com"
-                      className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ background: 'var(--background-subtle)', border: 'none' }}
-                    />
-                    {attachedUrl && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAttachedUrl("");
-                          setShowUrlInput(false);
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-md"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {isListening && autoSubmitCountdown !== null && (
-                  <div className="text-center text-sm font-medium animate-pulse" style={{ color: 'var(--accent)' }}>
-                    Auto-generating in {autoSubmitCountdown}s...
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={!query.trim() || generatingForm}
-                    className="flex-1 py-3 px-6 rounded-lg font-medium text-base transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{
-                      background: 'var(--accent)',
-                      color: '#ffffff',
+                {/* Scan Document Button */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="scan-doc"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
                     }}
+                    accept="image/*"
+                    capture="environment"
+                  />
+                  <label
+                    htmlFor="scan-doc"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-gray-100 text-gray-600"
                   >
-                    {generatingForm ? (
-                      <>
-                        <Spinner size="sm" variant="current" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        Generate Form
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={openBuilderForCreate}
-                    className="px-5 py-3 rounded-lg font-medium transition-colors"
-                    style={{
-                      background: 'var(--background-subtle)',
-                      color: 'var(--foreground-muted)',
-                    }}
-                    title="Build manually"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
+                    <Camera className="w-4 h-4" />
+                    Scan Doc
+                  </label>
                 </div>
-              </form>
-            )}
 
-            {/* Other Methods */}
-            {creationMethod === "file" && (
-              <InlineFileUpload
-                onFileSelect={handleFileUpload}
-                onCancel={() => setCreationMethod("prompt")}
-                disabled={generatingForm}
-              />
-            )}
+                {/* Import JSON Button */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="import-json"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setAttachedFile(e.target.files[0]);
+                    }}
+                    accept=".json"
+                  />
+                  <label
+                    htmlFor="import-json"
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors hover:bg-gray-100 text-gray-600"
+                  >
+                    <FileJson className="w-4 h-4" />
+                    Import JSON
+                  </label>
+                </div>
 
-            {creationMethod === "scan" && (
-              <InlineDocumentScanner
-                onFileSelect={handleDocumentScan}
-                onCancel={() => setCreationMethod("prompt")}
-                disabled={generatingForm}
-              />
-            )}
-
-            {creationMethod === "json" && (
-              <InlineJSONImport
-                onImport={handleJSONImport}
-                onCancel={() => setCreationMethod("prompt")}
-                disabled={generatingForm}
-              />
-            )}
-
-            {creationMethod === "url" && (
-              <div className="space-y-4">
-                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                  Paste a website URL and our AI will analyze the content to generate an appropriate form.
-                </p>
-                <InlineURLScraper
-                  onURLSubmit={handleURLScrape}
-                  onCancel={() => setCreationMethod("prompt")}
-                  disabled={generatingForm}
-                />
+                {/* URL Attachment Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowUrlInput(!showUrlInput)}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
+                    ? "bg-blue-50 text-blue-700"
+                    : "hover:bg-gray-100 text-gray-600"
+                    }`}
+                >
+                  <Globe className="w-4 h-4" />
+                  {attachedUrl ? "URL Attached" : "Attach URL"}
+                </button>
               </div>
-            )}
+
+              {/* URL Input Field */}
+              {(showUrlInput || attachedUrl) && (
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={attachedUrl}
+                    onChange={(e) => setAttachedUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ background: 'var(--background-subtle)', border: 'none' }}
+                  />
+                  {attachedUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachedUrl("");
+                        setShowUrlInput(false);
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {isListening && autoSubmitCountdown !== null && (
+                <div className="text-center text-sm font-medium animate-pulse" style={{ color: 'var(--accent)' }}>
+                  Auto-generating in {autoSubmitCountdown}s...
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={!query.trim() || generatingForm}
+                  className="flex-1 py-3 px-6 rounded-lg font-medium text-base transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  style={{
+                    background: 'var(--accent)',
+                    color: '#ffffff',
+                  }}
+                >
+                  {generatingForm ? (
+                    <>
+                      <Spinner size="sm" variant="current" />
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Generate Form
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openBuilderForCreate}
+                  className="px-5 py-3 rounded-lg font-medium transition-colors"
+                  style={{
+                    background: 'var(--background-subtle)',
+                    color: 'var(--foreground-muted)',
+                  }}
+                  title="Build manually"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+
+
+
 
             {/* Success Message */}
             {showSuccess && newFormId && (
@@ -1035,133 +858,93 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Alternative Methods */}
-            {creationMethod === 'prompt' && (
-              <div className="flex flex-wrap items-center justify-center gap-4 text-sm mt-6">
-                <span style={{ color: 'var(--foreground-muted)' }}>Or:</span>
 
-                <button
-                  onClick={() => setCreationMethod('file')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload File
-                </button>
-
-                <button
-                  onClick={() => setCreationMethod('url')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  <Globe className="w-4 h-4" />
-                  Website URL
-                </button>
-
-                <button
-                  onClick={() => setCreationMethod('scan')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  <Camera className="w-4 h-4" />
-                  Scan Doc
-                </button>
-
-                <button
-                  onClick={() => setCreationMethod('json')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  <FileJson className="w-4 h-4" />
-                  Import JSON
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Existing Forms Section */}
-          <div className="mb-6 flex items-center justify-between">
-            <h2
-              className="text-2xl font-bold"
-              style={{ color: 'var(--foreground)' }}
-            >
-              Your Forms
-            </h2>
-            {forms.length > 0 && (
-              <button
-                onClick={openBuilderForCreate}
-                className="text-sm font-medium hover:underline flex items-center gap-1"
-                style={{ color: 'var(--accent)' }}
+          <div className="max-w-3xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <h2
+                className="text-2xl font-bold"
+                style={{ color: 'var(--foreground)' }}
               >
-                <Plus className="w-4 h-4" />
-                Create Manually
-              </button>
-            )}
-          </div>
-
-          {forms.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="mb-4">
-                <FileText className="w-8 h-8 mx-auto mb-4" style={{ color: 'var(--foreground-muted)' }} />
-                <h3 className="text-lg font-medium mb-1" style={{ color: 'var(--foreground)' }}>No forms yet</h3>
-                <p style={{ color: 'var(--foreground-muted)' }}>Create your first form above!</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {forms.map((form) => (
-                <div
-                  key={form.id}
-                  className="flex items-center justify-between py-4 group"
-                  style={{ borderBottom: '1px solid var(--divider-subtle)' }}
+                Your Forms
+              </h2>
+              {forms.length > 0 && (
+                <button
+                  onClick={openBuilderForCreate}
+                  className="text-sm font-medium hover:underline flex items-center gap-1"
+                  style={{ color: 'var(--accent)' }}
                 >
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium truncate" style={{ color: 'var(--foreground)' }}>{form.title}</h3>
-                    <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                      <span>{form._count.submissions} responses</span>
-                      <span>·</span>
-                      <span>{new Date(form.updatedAt).toLocaleDateString()}</span>
+                  <Plus className="w-4 h-4" />
+                  Create Manually
+                </button>
+              )}
+            </div>
+
+            {forms.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="mb-4">
+                  <FileText className="w-8 h-8 mx-auto mb-4" style={{ color: 'var(--foreground-muted)' }} />
+                  <h3 className="text-lg font-medium mb-1" style={{ color: 'var(--foreground)' }}>No forms yet</h3>
+                  <p style={{ color: 'var(--foreground-muted)' }}>Create your first form above!</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {forms.map((form) => (
+                  <div
+                    key={form.id}
+                    className="flex items-center justify-between py-4 group"
+                    style={{ borderBottom: '1px solid var(--divider-subtle)' }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate" style={{ color: 'var(--foreground)' }}>{form.title}</h3>
+                      <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                        <span>{form._count.submissions} responses</span>
+                        <span>·</span>
+                        <span>{new Date(form.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link
+                        href={`/forms/${form.id}/submissions`}
+                        className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                        style={{ color: 'var(--foreground-muted)' }}
+                        title="View Results"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => openBuilderForEdit(form.id)}
+                        disabled={loadingFormId === form.id}
+                        className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                        style={{ color: 'var(--foreground-muted)' }}
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <ShareButton
+                        url={`${typeof window !== "undefined" ? window.location.origin : ""}/f/${form.id}`}
+                        label=""
+                        variant="icon-only"
+                        size="sm"
+                        formTitle={form.title}
+                      />
+                      <button
+                        onClick={() => deleteForm(form.id)}
+                        disabled={deletingFormId === form.id}
+                        className="p-2 rounded-md hover:bg-red-50 transition-colors text-red-500"
+                        title="Delete form"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link
-                      href={`/forms/${form.id}/submissions`}
-                      className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-                      style={{ color: 'var(--foreground-muted)' }}
-                      title="View Results"
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => openBuilderForEdit(form.id)}
-                      disabled={loadingFormId === form.id}
-                      className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-                      style={{ color: 'var(--foreground-muted)' }}
-                      title="Edit"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <ShareButton
-                      url={`${typeof window !== "undefined" ? window.location.origin : ""}/f/${form.id}`}
-                      label=""
-                      variant="icon-only"
-                      size="sm"
-                      formTitle={form.title}
-                    />
-                    <button
-                      onClick={() => deleteForm(form.id)}
-                      disabled={deletingFormId === form.id}
-                      className="p-2 rounded-md hover:bg-red-50 transition-colors text-red-500"
-                      title="Delete form"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

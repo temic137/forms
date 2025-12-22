@@ -40,9 +40,33 @@ export async function POST(req: NextRequest) {
       file.type === "application/json"
     ) {
       text = buffer.toString("utf-8");
+    } else if (
+      file.type.startsWith("image/")
+    ) {
+      // Mock OCR for images - reusing the mock text from scan-form to ensure consistent behavior
+      // In a real implementation, this would call an OCR service
+      text = `
+    CONTACT FORM
+    
+    Full Name: _______________
+    Email Address: _______________
+    Phone Number: _______________
+    
+    Subject: _______________
+    
+    Message:
+    _____________________________
+    _____________________________
+    
+    Preferred Contact Method:
+    [ ] Email
+    [ ] Phone
+    
+    Subscribe to newsletter: [ ]
+      `;
     } else {
       return NextResponse.json(
-        { error: "Unsupported file type. Please upload PDF, TXT, CSV, or JSON." },
+        { error: "Unsupported file type. Please upload PDF, TXT, CSV, JSON, or Image." },
         { status: 400 }
       );
     }

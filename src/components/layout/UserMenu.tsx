@@ -52,11 +52,7 @@ function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-2 py-2 rounded-full transition-all"
-        style={{
-          background: 'var(--card-bg)',
-          border: '1px solid var(--card-border)',
-        }}
+        className="flex items-center gap-2 py-2 rounded-full transition-all hover:opacity-80"
         aria-label={session.user?.name ? `Open menu for ${session.user.name}` : 'Open user menu'}
       >
         {session.user?.image ? (
