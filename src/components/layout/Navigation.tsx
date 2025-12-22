@@ -1,6 +1,7 @@
 "use client";
 
 import UserMenu from "./UserMenu";
+import FeedbackButton from "@/components/FeedbackButton";
 import Logo from "./Logo";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -45,6 +46,7 @@ export default function Navigation() {
 
           <div className="flex items-center gap-4">
             {/* Show Sign In/Get Started if on landing page and not signed in (UserMenu handles signed in state internally, but we might want explicit buttons if UserMenu returns null or something, but UserMenu handles both states well actually. Let's rely on UserMenu or custom logic? UserMenu shows Sign In/Sign Up if not session. Let's just use UserMenu but maybe style it differently? UserMenu currently renders Sign In / Sign Up buttons if no session. Perfect.) */}
+            <FeedbackButton />
             <UserMenu />
           </div>
         </div>

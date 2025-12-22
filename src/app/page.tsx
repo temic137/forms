@@ -486,6 +486,7 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="pt-24 pb-20 sm:pt-32 sm:pb-24 bg-white">
+
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide mb-8">
               The AI Form Builder
