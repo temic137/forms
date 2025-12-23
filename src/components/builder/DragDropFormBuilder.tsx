@@ -643,10 +643,11 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 onCancel();
               }}
-              className="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex h-10 items-center justify-center gap-1 rounded-md px-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
               title="Back to Dashboard"
             >
               <ArrowLeft className="h-4 w-4" />
+              <span className="sr-only sm:not-sr-only sm:inline-block">Back</span>
             </button>
 
             <div className="flex-1 min-w-0">
@@ -705,10 +706,11 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 onCancel();
               }}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative shrink-0"
               title="Back to Dashboard"
             >
               <ArrowLeft className="w-4 h-4" />
+              <span>Dashboard</span>
             </button>
 
             <div className="flex-1 min-w-0">
