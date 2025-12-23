@@ -477,7 +477,7 @@ export default function ShareButton({
         {showMenu && mounted && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-50 w-72 max-w-[calc(100vw-2rem)] rounded-lg border shadow-lg transition-opacity duration-100 scrollbar-hidden"
+            className="fixed z-[150] w-72 max-w-[calc(100vw-2rem)] rounded-lg border shadow-lg transition-opacity duration-100 scrollbar-hidden"
             style={{
               background: 'var(--background)',
               borderColor: 'var(--card-border)',

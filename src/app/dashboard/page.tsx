@@ -12,6 +12,7 @@ import ShareButton from "@/components/ShareButton";
 // import IntegrationButton from "@/components/IntegrationButton";
 // Lazy load the heavy builder component
 const DragDropFormBuilder = lazy(() => import("@/components/builder/DragDropFormBuilder"));
+import PostSaveShareModal from "@/components/PostSaveShareModal";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
 import AnimatedDashboardSubtitle from "@/components/AnimatedDashboardSubtitle";
 import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X } from "lucide-react";
@@ -49,6 +50,7 @@ export default function DashboardPage() {
   const [savingForm, setSavingForm] = useState(false);
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
   const [loadingFormId, setLoadingFormId] = useState<string | null>(null);
+  const [showPostSaveModal, setShowPostSaveModal] = useState(false);
 
 
 
@@ -499,6 +501,9 @@ export default function DashboardPage() {
           setEditingFormId(data.id);
         }
 
+        // Show simplified share modal
+        setShowPostSaveModal(true);
+
         // Revalidate in background to ensure consistency
         revalidateForms();
       } else {
@@ -620,6 +625,13 @@ export default function DashboardPage() {
   if (showBuilder) {
     return (
       <>
+        <PostSaveShareModal
+          isOpen={showPostSaveModal}
+          onClose={() => setShowPostSaveModal(false)}
+          formId={editingFormId || ""}
+          formTitle={previewTitle}
+          isPublished={true}
+        />
         <ConfirmationDialog
           isOpen={dialogState.isOpen}
           title={dialogState.title}
@@ -672,6 +684,13 @@ export default function DashboardPage() {
 
   return (
     <>
+      <PostSaveShareModal
+        isOpen={showPostSaveModal}
+        onClose={() => setShowPostSaveModal(false)}
+        formId={editingFormId || ""}
+        formTitle={previewTitle}
+        isPublished={true}
+      />
       <ConfirmationDialog
         isOpen={dialogState.isOpen}
         title={dialogState.title}
