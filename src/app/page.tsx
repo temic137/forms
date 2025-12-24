@@ -652,6 +652,21 @@ export default function Home() {
             <div className="flex items-center gap-2 text-gray-900 font-bold">
               <span>AnyForm</span>
             </div>
+            {/* Product Hunt Badge - Subtle */}
+            <a
+              href="https://www.producthunt.com/products/anyform-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-anyform-2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="opacity-70 hover:opacity-100 transition-opacity"
+            >
+              <img
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1053675&theme=neutral&t=1766549102046"
+                alt="AnyForm - create forms in seconds | Product Hunt"
+                width="200"
+                height="43"
+                style={{ height: '43px', width: '200px' }}
+              />
+            </a>
             <div className="flex gap-8 text-sm text-gray-500">
               <a href="/privacy" className="hover:text-gray-900">Privacy</a>
               <a href="/terms" className="hover:text-gray-900">Terms</a>

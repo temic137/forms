@@ -15,7 +15,7 @@ const DragDropFormBuilder = lazy(() => import("@/components/builder/DragDropForm
 import PostSaveShareModal from "@/components/PostSaveShareModal";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
 import AnimatedDashboardSubtitle from "@/components/AnimatedDashboardSubtitle";
-import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X } from "lucide-react";
+import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X, UserPlus } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
@@ -32,6 +32,7 @@ import {
   formatFileContext,
   MAX_TOTAL_SIZE
 } from "@/lib/client-file-parser";
+import UpgradeAccountModal from "@/components/UpgradeAccountModal";
 
 export default function DashboardPage() {
   const { status, data: session } = useSession();
@@ -49,6 +50,10 @@ export default function DashboardPage() {
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
   const [loadingFormId, setLoadingFormId] = useState<string | null>(null);
   const [showPostSaveModal, setShowPostSaveModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Check if user is anonymous/guest
+  const isGuestUser = (session?.user as { isAnonymous?: boolean })?.isAnonymous === true;
 
   // Builder state (used for both AI-generated and manual creation)
   const [showBuilder, setShowBuilder] = useState(false);
@@ -480,10 +485,46 @@ export default function DashboardPage() {
         onConfirm={dialogState.onConfirm}
         onCancel={dialogState.onCancel}
       />
+      <UpgradeAccountModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
       <div
         className="min-h-screen"
         style={{ background: 'var(--background)' }}
       >
+        {/* Guest User Upgrade Banner */}
+        {isGuestUser && (
+          <div
+            className="border-b"
+            style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)',
+              borderColor: 'var(--card-border)'
+            }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-center sm:text-left">
+                  <UserPlus className="w-5 h-5 text-blue-500 hidden sm:block" />
+                  <p className="text-sm" style={{ color: 'var(--foreground)' }}>
+                    <span className="font-medium">You're using guest mode.</span>
+                    <span className="hidden sm:inline"> Create an account to save your forms permanently.</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                  style={{
+                    background: 'var(--foreground)',
+                    color: 'var(--background)',
+                  }}
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Welcome Header - Simplified and Friendlier */}
           <div className="mb-10 text-center">
