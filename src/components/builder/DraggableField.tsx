@@ -44,8 +44,8 @@ function normalizeOptions(options: unknown[] | undefined): string[] {
   return options.map((opt) => {
     if (typeof opt === 'string') return opt;
     if (typeof opt === 'object' && opt !== null) {
-      const optObj = opt as { value?: string; label?: string };
-      return optObj.label || optObj.value || String(opt);
+      const optObj = opt as { value?: string; label?: string; text?: string };
+      return optObj.label || optObj.value || optObj.text || String(opt);
     }
     return String(opt);
   });
@@ -105,8 +105,8 @@ export default function DraggableField({
       ref={setNodeRef}
       style={dragStyle}
       className={`group relative rounded-lg border bg-white p-4 transition-all ${isSelected
-          ? "border-blue-500"
-          : "border-gray-200 hover:border-gray-300"
+        ? "border-blue-500"
+        : "border-gray-200 hover:border-gray-300"
         } ${isDragging ? "opacity-80" : ""}`}
       onClick={onSelect}
       role="presentation"
@@ -491,11 +491,22 @@ function FieldEditor({
 
   // Handler for AI options generation
   const handleOptionsAIResult = (data: Record<string, unknown>) => {
+    const normalizeAIResponse = (items: unknown[]): string[] => {
+      return items.map(item => {
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object' && item !== null) {
+          const obj = item as any;
+          return obj.text || obj.label || obj.value || String(item);
+        }
+        return String(item);
+      });
+    };
+
     if (data.options) {
-      const options = data.options as string[];
+      const options = normalizeAIResponse(data.options as unknown[]);
       onUpdate({ options });
     } else if (data.newOptions) {
-      const newOptions = data.newOptions as string[];
+      const newOptions = normalizeAIResponse(data.newOptions as unknown[]);
       const current = field.options || resolvedOptions;
       onUpdate({ options: [...current, ...newOptions] });
     }
@@ -568,8 +579,8 @@ function FieldEditor({
               onUpdate({ required: !field.required });
             }}
             className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${field.required
-                ? "border-blue-200 bg-blue-50 text-blue-700"
-                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+              ? "border-blue-200 bg-blue-50 text-blue-700"
+              : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
               }`}
             type="button"
           >
