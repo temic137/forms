@@ -44,8 +44,8 @@ function normalizeOptions(options: unknown[] | undefined): string[] {
   return options.map((opt) => {
     if (typeof opt === 'string') return opt;
     if (typeof opt === 'object' && opt !== null) {
-      const optObj = opt as { value?: string; label?: string; text?: string };
-      return optObj.label || optObj.value || optObj.text || String(opt);
+      const optObj = opt as { value?: string; label?: string };
+      return optObj.label || optObj.value || String(opt);
     }
     return String(opt);
   });
@@ -401,7 +401,7 @@ function FieldEditor({
   const handleOptionChange = (index: number, rawValue: string) => {
     const value = normalizeEditableValue(rawValue);
     const current =
-      field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
+      field.options && field.options.length > 0 ? normalizeOptions(field.options) : [...resolvedOptions];
     if (current[index] === value) return;
     current[index] = value;
     persistOptions(current);
@@ -409,7 +409,7 @@ function FieldEditor({
 
   const handleOptionRemove = (index: number) => {
     const current =
-      field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
+      field.options && field.options.length > 0 ? normalizeOptions(field.options) : [...resolvedOptions];
     const next = current.filter((_, idx) => idx !== index);
     if (next.length === 0) return;
 
@@ -432,7 +432,7 @@ function FieldEditor({
 
   const handleOptionInsertAfter = (index?: number) => {
     const current =
-      field.options && field.options.length > 0 ? [...field.options] : [...resolvedOptions];
+      field.options && field.options.length > 0 ? normalizeOptions(field.options) : [...resolvedOptions];
     const insertAt = typeof index === "number" ? index + 1 : current.length;
     current.splice(insertAt, 0, `Option ${current.length + 1}`);
 
@@ -491,22 +491,11 @@ function FieldEditor({
 
   // Handler for AI options generation
   const handleOptionsAIResult = (data: Record<string, unknown>) => {
-    const normalizeAIResponse = (items: unknown[]): string[] => {
-      return items.map(item => {
-        if (typeof item === 'string') return item;
-        if (typeof item === 'object' && item !== null) {
-          const obj = item as any;
-          return obj.text || obj.label || obj.value || String(item);
-        }
-        return String(item);
-      });
-    };
-
     if (data.options) {
-      const options = normalizeAIResponse(data.options as unknown[]);
+      const options = data.options as string[];
       onUpdate({ options });
     } else if (data.newOptions) {
-      const newOptions = normalizeAIResponse(data.newOptions as unknown[]);
+      const newOptions = data.newOptions as string[];
       const current = field.options || resolvedOptions;
       onUpdate({ options: [...current, ...newOptions] });
     }
@@ -611,8 +600,8 @@ function FieldEditor({
       {hasOptions && (
         <div className="space-y-2">
           {resolvedOptions.map((option, idx) => {
-            const currentValue =
-              field.options && field.options[idx] !== undefined ? field.options[idx] : option;
+            // Use the normalized option value (resolvedOptions already handles object conversion)
+            const currentValue = option;
 
             return (
               <div
