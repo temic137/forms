@@ -315,11 +315,11 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
 
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+          <div className="flex gap-2 border-b overflow-x-auto scrollbar-hidden pb-1" style={{ borderColor: 'var(--card-border)' }}>
             {analytics && (
               <button
                 onClick={() => setActiveTab('overview')}
-                className="px-4 py-2 font-medium transition-all"
+                className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
                 style={{
                   color: activeTab === 'overview' ? 'var(--primary)' : 'var(--foreground-muted)',
                   borderBottom: activeTab === 'overview' ? '2px solid var(--primary)' : '2px solid transparent',
@@ -330,7 +330,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
             )}
             <button
               onClick={() => setActiveTab('responses')}
-              className="px-4 py-2 font-medium transition-all"
+              className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
               style={{
                 color: activeTab === 'responses' ? 'var(--primary)' : 'var(--foreground-muted)',
                 borderBottom: activeTab === 'responses' ? '2px solid var(--primary)' : '2px solid transparent',
@@ -342,7 +342,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               <>
                 <button
                   onClick={() => setActiveTab('fields')}
-                  className="px-4 py-2 font-medium transition-all"
+                  className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
                   style={{
                     color: activeTab === 'fields' ? 'var(--primary)' : 'var(--foreground-muted)',
                     borderBottom: activeTab === 'fields' ? '2px solid var(--primary)' : '2px solid transparent',
@@ -352,7 +352,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                 </button>
                 <button
                   onClick={() => setActiveTab('insights')}
-                  className="px-4 py-2 font-medium transition-all"
+                  className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
                   style={{
                     color: activeTab === 'insights' ? 'var(--primary)' : 'var(--foreground-muted)',
                     borderBottom: activeTab === 'insights' ? '2px solid var(--primary)' : '2px solid transparent',
@@ -633,7 +633,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
 
         {/* Export Buttons */}
         {activeTab === 'responses' && submissions.length > 0 && (
-          <div className="flex gap-3 mb-6">
+          <div className="flex flex-wrap gap-2 sm:gap-3 mb-6">
             <button
               onClick={exportToCSV}
               className="px-4 py-2 rounded-lg font-medium transition-all"

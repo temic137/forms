@@ -12,9 +12,9 @@ interface PageDropZoneProps {
   onDragLeave?: (e: React.DragEvent) => void;
 }
 
-export default function PageDropZone({ 
-  pageId, 
-  isEmpty = false, 
+export default function PageDropZone({
+  pageId,
+  isEmpty = false,
   children,
   onDrop,
   onDragOver,
@@ -67,17 +67,16 @@ export default function PageDropZone({
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      className={`min-h-[60px] rounded-lg transition-colors ${
-        isDragOver
+      className={`min-h-[60px] rounded-lg transition-colors ${isDragOver
           ? "border-2 border-blue-500 bg-blue-50"
           : isEmpty
-          ? "border-2 border-dashed border-gray-300 bg-gray-50/50"
-          : "border-2 border-dashed border-transparent"
-      } ${isEmpty ? "flex items-center justify-center" : ""}`}
+            ? "border-2 border-dashed border-gray-300 bg-gray-50/50"
+            : "border-2 border-dashed border-transparent"
+        } ${isEmpty ? "flex items-center justify-center" : ""}`}
     >
       {isEmpty && !isDragOver && (
         <div className="text-center py-8 text-sm text-gray-400">
-          Drop fields here or drag from field palette
+          Drop fields here or tap + to add fields
         </div>
       )}
       {isDragOver && (

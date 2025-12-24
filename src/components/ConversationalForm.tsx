@@ -35,12 +35,13 @@ export default function ConversationalForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState("");
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const primaryColor = styling?.primaryColor || "#3b82f6";
-  const bgColor = styling?.backgroundColor || "#f9fafb";
+  const bgColor = styling?.backgroundColor || "#ffffff";
+  const buttonColor = styling?.buttonColor || primaryColor;
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -162,59 +163,39 @@ export default function ConversationalForm({
 
   return (
     <div
-      className="rounded-xl shadow-lg"
+      className="rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col"
       style={{
         backgroundColor: bgColor,
-        color: "#1f2933",
-        minHeight: "480px",
-        display: "flex",
-        flexDirection: "column",
+        height: "500px",
+        maxHeight: "80vh",
       }}
     >
-      <div
-        className="px-6 py-4 border-b"
-        style={{
-          borderColor: "rgba(148, 163, 184, 0.2)",
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          borderTopLeftRadius: "12px",
-          borderTopRightRadius: "12px",
-        }}
-      >
-        <h2 className="text-lg font-semibold" style={{ color: "#1f2937" }}>
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-gray-100 bg-white">
+        <h2 className="text-base font-semibold text-gray-900">
           {formTitle}
         </h2>
-        <p className="text-sm" style={{ color: "#475569" }}>
+        <p className="text-xs text-gray-500 mt-1">
           Answer each question or type "skip" to move to the next one.
         </p>
       </div>
 
-      <div
-        className="flex-1 overflow-y-auto p-6 space-y-4"
-        style={{
-          background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(249,250,251,0.8) 100%)",
-        }}
-      >
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50/50">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm text-sm leading-relaxed ${
-                message.type === "user"
+              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${message.type === "user"
                   ? "text-white"
-                  : "text-slate-700"
-              }`}
+                  : "text-gray-800 bg-white border border-gray-200"
+                }`}
               style={
                 message.type === "user"
-                  ? {
-                      backgroundColor: primaryColor,
-                      boxShadow: "0 8px 24px rgba(59, 130, 246, 0.24)",
-                    }
-                  : {
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      border: "1px solid rgba(148, 163, 184, 0.25)",
-                    }
+                  ? { backgroundColor: primaryColor }
+                  : {}
               }
             >
               {message.content}
@@ -224,17 +205,10 @@ export default function ConversationalForm({
         <div ref={messagesEndRef} />
       </div>
 
-      <div
-        className="p-6 border-t"
-        style={{
-          borderColor: "rgba(148, 163, 184, 0.2)",
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          borderBottomLeftRadius: "12px",
-          borderBottomRightRadius: "12px",
-        }}
-      >
+      {/* Input Area */}
+      <div className="p-4 bg-white border-t border-gray-100">
         {error && (
-          <div className="mb-3 text-sm" style={{ color: "#ef4444" }}>
+          <div className="mb-3 text-xs font-medium text-red-500 px-1">
             {error}
           </div>
         )}
@@ -249,49 +223,36 @@ export default function ConversationalForm({
             }}
             className="flex flex-col gap-3"
           >
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <input
                 ref={inputRef}
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder={`Reply to: ${currentField?.label}`}
-                className="flex-1 px-4 py-3 text-sm rounded-xl shadow-sm"
-                style={{
-                  border: "1px solid rgba(148, 163, 184, 0.25)",
-                  backgroundColor: "rgba(255,255,255,0.94)",
-                  color: "#1f2937",
-                }}
+                placeholder={`Type your answer...`}
+                className="flex-1 px-4 py-2.5 text-sm rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-gray-300 focus:outline-none focus:ring-0 transition-colors placeholder:text-gray-400 text-gray-900"
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim()}
-                className="px-5 py-3 text-sm font-medium rounded-xl shadow-md transition-transform disabled:opacity-40"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg text-white transition-opacity disabled:opacity-50"
                 style={{
                   backgroundColor: primaryColor,
-                  color: "white",
-                  boxShadow: "0 12px 30px rgba(59, 130, 246, 0.28)",
-                  transform: inputValue.trim() ? "translateY(0)" : "translateY(2px)",
                 }}
               >
                 Send
               </button>
             </div>
 
-            <div className="flex items-center gap-3 text-xs" style={{ color: "#64748b" }}>
+            <div className="flex items-center justify-between px-1">
               <button
                 type="button"
                 onClick={() => handleUserResponse("skip")}
-                className="px-3 py-1.5 rounded-lg border text-xs font-medium"
-                style={{
-                  borderColor: primaryColor,
-                  color: primaryColor,
-                  backgroundColor: "rgba(59, 130, 246, 0.08)",
-                }}
+                className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Skip question
+                Skip this question
               </button>
-              <span>Press Enter to send • Type "skip" to move on</span>
+              <span className="text-[10px] text-gray-300">Press Enter to send</span>
             </div>
           </form>
         ) : (
@@ -299,11 +260,9 @@ export default function ConversationalForm({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-5 py-3 text-sm font-semibold rounded-xl shadow-md flex items-center justify-center gap-2"
+              className="w-full py-2.5 text-sm font-semibold rounded-lg text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-70"
               style={{
-                backgroundColor: styling?.buttonColor || primaryColor,
-                color: "white",
-                boxShadow: "0 12px 30px rgba(59, 130, 246, 0.28)",
+                backgroundColor: buttonColor,
               }}
             >
               {isSubmitting ? (
@@ -320,7 +279,7 @@ export default function ConversationalForm({
                 setMessages((prev) => prev.slice(0, 1));
                 setTimeout(() => askNextQuestion(0), 300);
               }}
-              className="text-xs font-medium"
+              className="text-xs font-medium text-center hover:underline"
               style={{
                 color: primaryColor,
               }}

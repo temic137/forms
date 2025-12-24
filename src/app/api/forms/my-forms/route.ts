@@ -28,10 +28,14 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ forms });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching forms:", error);
     return NextResponse.json(
-      { error: "Failed to fetch forms" },
+      {
+        error: "Failed to fetch forms",
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

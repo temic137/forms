@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DndContext, DragEndEvent, DragOverlay, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -10,10 +10,12 @@ import DraggableField from "./DraggableField";
 import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
 import QuizSettings from "./QuizSettings";
-import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle } from "lucide-react";
+import StyleEditor from "./StyleEditor";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle, Layout, Bell, Palette, GraduationCap, Users, ArrowUp } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 import ShareCollaboratorButton from "./ShareCollaboratorButton";
+import CollaboratorModal from "./CollaboratorModal";
 import BuilderOnboarding from "./BuilderOnboarding";
 import { Spinner } from "@/components/ui/Spinner";
 import { SingleAIButton } from "./InlineAIButton";
@@ -71,6 +73,24 @@ export default function DragDropFormBuilder({
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [hoveredDropIndex, setHoveredDropIndex] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'notifications' | 'styling' | 'quiz'>('general');
+  const [showCollaboratorModal, setShowCollaboratorModal] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (canvasRef.current) {
+        setShowScrollTop(canvasRef.current.scrollTop > 300);
+      }
+    };
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener('scroll', handleScroll);
+      return () => canvas.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   // AI suggestion states
   const [showAISuggestions, setShowAISuggestions] = useState(false);
@@ -599,6 +619,13 @@ export default function DragDropFormBuilder({
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
+      {currentFormId && (
+        <CollaboratorModal
+          formId={currentFormId}
+          isOpen={showCollaboratorModal}
+          onClose={() => setShowCollaboratorModal(false)}
+        />
+      )}
       <BuilderOnboarding isOpen={showOnboarding} onClose={handleCloseOnboarding} />
       {/* Left Sidebar - Field Palette & Theme Settings */}
       {/* Mobile backdrop */}
@@ -647,7 +674,7 @@ export default function DragDropFormBuilder({
               title="Back to Dashboard"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="sr-only sm:not-sr-only sm:inline-block">Back</span>
+              <span className="text-sm font-medium">Back</span>
             </button>
 
             <div className="flex-1 min-w-0">
@@ -730,23 +757,6 @@ export default function DragDropFormBuilder({
                 title="Add Fields"
               >
                 <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-
-              <button
-                onClick={handleToggleMultiPage}
-                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md transition-colors font-medium flex items-center gap-1 sm:gap-1.5 ${multiStepConfig?.enabled
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                title={multiStepConfig?.enabled ? "Disable Multi-Page" : "Enable Multi-Page"}
-              >
-                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Multi-Page</span>
-                {multiStepConfig?.enabled && (
-                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500 rounded">
-                    {multiStepConfig.steps.length}
-                  </span>
-                )}
               </button>
 
               {multiStepConfig?.enabled && (
@@ -840,153 +850,122 @@ export default function DragDropFormBuilder({
               onClick={() => setShowMobileActions(false)}
             />
             <div
-              className="absolute inset-x-0 bottom-0 space-y-3 rounded-t-2xl bg-white p-4 pb-6 shadow-xl"
+              className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white shadow-xl flex flex-col max-h-[85vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">Quick actions</span>
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-base font-semibold text-gray-900">Form Actions</span>
                 <button
-                  type="button"
                   onClick={() => setShowMobileActions(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800"
-                  title="Close"
+                  className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-2">
+              <div className="p-4 space-y-2 overflow-y-auto">
                 <button
-                  type="button"
                   onClick={() => {
                     setShowMobileActions(false);
                     setShowFieldPalette(true);
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
-                    <Menu className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Add fields</p>
-                    <p className="text-xs text-gray-500">Open the field library</p>
+                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                    <Menu className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Add Fields</div>
+                    <div className="text-xs text-gray-500">Open field library</div>
                   </div>
                 </button>
 
                 <button
-                  type="button"
                   onClick={() => {
                     setShowMobileActions(false);
                     handlePreview();
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
-                    <Eye className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Preview form</p>
-                    <p className="text-xs text-gray-500">Open a live preview</p>
+                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Preview</div>
+                    <div className="text-xs text-gray-500">Test your form</div>
                   </div>
                 </button>
 
                 <button
-                  type="button"
                   onClick={() => {
                     setShowMobileActions(false);
-                    handleToggleMultiPage();
+                    setShowSettings(true);
+                    setActiveSettingsTab('general');
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
-                    <FileText className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Multi-page mode</p>
-                    <p className="text-xs text-gray-500">
-                      {multiStepConfig?.enabled ? "Currently enabled" : "Currently disabled"}
-                    </p>
+                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Settings</div>
+                    <div className="text-xs text-gray-500">General, Styling, Logic</div>
                   </div>
                 </button>
 
                 {multiStepConfig?.enabled && (
                   <button
-                    type="button"
                     onClick={() => {
                       setShowMobileActions(false);
                       handleAddPage();
                     }}
-                    className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
-                      <Plus className="h-4 w-4" />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Add page</p>
-                      <p className="text-xs text-gray-500">Insert a new step</p>
+                    <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">Add Page</div>
+                      <div className="text-xs text-gray-500">Create new step</div>
+                    </div>
+                  </button>
+                )}
+
+                {currentFormId && (
+                  <button
+                    onClick={() => {
+                      setShowMobileActions(false);
+                      setShowCollaboratorModal(true);
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">Collaborate</div>
+                      <div className="text-xs text-gray-500">Invite team members</div>
                     </div>
                   </button>
                 )}
 
                 <button
-                  type="button"
                   onClick={() => {
                     setShowMobileActions(false);
-                    setShowSettings((prev) => !prev);
+                    setShowOnboarding(true);
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
-                    <Settings className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Form settings</p>
-                    <p className="text-xs text-gray-500">
-                      {showSettings ? "Hide settings panel" : "Show settings panel"}
-                    </p>
+                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">Help & Tour</div>
+                    <div className="text-xs text-gray-500">View guide</div>
                   </div>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMobileActions(false);
-                    onCancel();
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
-                >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-100 text-gray-600">
-                    <ArrowLeft className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Back to dashboard</p>
-                    <p className="text-xs text-gray-500">Leave without saving</p>
-                  </div>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!saving) {
-                      onSave();
-                    }
-                    setShowMobileActions(false);
-                  }}
-                  disabled={saving}
-                  className="flex w-full items-center gap-3 rounded-lg border border-gray-200 px-3 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-black text-white">
-                    {saving ? (
-                      <Spinner size="sm" variant="white" />
-                    ) : (
-                      <Save className="h-4 w-4" />
-                    )}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Save changes</p>
-                    <p className="text-xs text-gray-500">Apply your latest edits</p>
-                  </div>
-                </button>
               </div>
             </div>
           </div>
@@ -994,6 +973,7 @@ export default function DragDropFormBuilder({
 
         {/* Canvas Area */}
         <div
+          ref={canvasRef}
           className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8"
           style={{
             backgroundColor: styling?.backgroundColor || '#f3f4f6',
@@ -1228,6 +1208,19 @@ export default function DragDropFormBuilder({
           </div>
         </div>
 
+        {/* Scroll To Top Button */}
+        {showScrollTop && (
+          <button
+            onClick={() => {
+              canvasRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="fixed bottom-6 right-6 z-30 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-all animate-in fade-in duration-200"
+            aria-label="Scroll to top"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Settings Panel (Right Sidebar on desktop, modal on mobile) */}
         {showSettings && (
           <>
@@ -1249,86 +1242,209 @@ export default function DragDropFormBuilder({
                   </svg>
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                {/* Quiz Mode Settings */}
-                {onQuizModeChange && (
-                  <QuizSettings
-                    config={quizMode}
-                    onChange={onQuizModeChange}
-                  />
-                )}
-
-                {/* Multi-page settings - simple checkboxes */}
-                {multiStepConfig?.enabled && (
-                  <div className="border-t border-gray-200 pt-6 space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-900">Multi-Page Settings</h3>
-                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={multiStepConfig.showProgressBar}
-                        onChange={(e) =>
-                          onMultiStepConfigChange({ ...multiStepConfig, showProgressBar: e.target.checked })
-                        }
-                        className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                      Show progress bar
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={multiStepConfig.allowBackNavigation}
-                        onChange={(e) =>
-                          onMultiStepConfigChange({ ...multiStepConfig, allowBackNavigation: e.target.checked })
-                        }
-                        className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                      Allow back navigation
-                    </label>
-                  </div>
-                )}
-
-                {/* Submission Settings */}
-                {(onLimitOneResponseChange || onSaveAndEditChange) && (
-                  <div className="border-t border-gray-200 pt-6 space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-900">Submission Settings</h3>
-                    {onLimitOneResponseChange && (
-                      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={limitOneResponse || false}
-                          onChange={(e) => onLimitOneResponseChange(e.target.checked)}
-                          className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
-                        />
-                        Limit to 1 Response per person
-                      </label>
-                    )}
-                    {onSaveAndEditChange && (
-                      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={saveAndEdit || false}
-                          onChange={(e) => onSaveAndEditChange(e.target.checked)}
-                          className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500 rounded"
-                        />
-                        Allow editing after submission (via email link)
-                      </label>
-                    )}
-                  </div>
-                )}
-
-                <NotificationSettings
-                  config={notifications}
-                  onChange={onNotificationsChange}
-                />
-                {/* 
-                {currentFormId && (
-                  <div className="border-t border-gray-200 pt-6 space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-900">Integrations</h3>
-                    <div className="p-1">
-                      <GoogleSheetsIntegration formId={currentFormId} />
+              <div className="flex flex-col h-full bg-white">
+                {/* Tabs Header */}
+                <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto no-scrollbar">
+                  <button
+                    onClick={() => setActiveSettingsTab('general')}
+                    className={`flex-1 min-w-[80px] px-3 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${activeSettingsTab === 'general'
+                      ? 'text-black bg-white'
+                      : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center gap-1.5">
+                      <Settings className="w-4 h-4" />
+                      <span>General</span>
                     </div>
-                  </div>
-                )} */}
+                    {activeSettingsTab === 'general' && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSettingsTab('styling')}
+                    className={`flex-1 min-w-[80px] px-3 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${activeSettingsTab === 'styling'
+                      ? 'text-black bg-white'
+                      : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center gap-1.5">
+                      <Palette className="w-4 h-4" />
+                      <span>Styling</span>
+                    </div>
+                    {activeSettingsTab === 'styling' && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSettingsTab('notifications')}
+                    className={`flex-1 min-w-[80px] px-3 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${activeSettingsTab === 'notifications'
+                      ? 'text-black bg-white'
+                      : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center gap-1.5">
+                      <Bell className="w-4 h-4" />
+                      <span>Notify</span>
+                    </div>
+                    {activeSettingsTab === 'notifications' && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
+                    )}
+                  </button>
+
+                  {onQuizModeChange && (
+                    <button
+                      onClick={() => setActiveSettingsTab('quiz')}
+                      className={`flex-1 min-w-[80px] px-3 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${activeSettingsTab === 'quiz'
+                        ? 'text-black bg-white'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                      <div className="flex flex-col items-center gap-1.5">
+                        <GraduationCap className="w-4 h-4" />
+                        <span>Quiz</span>
+                      </div>
+                      {activeSettingsTab === 'quiz' && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Tab Content */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                  {/* General Tab */}
+                  {activeSettingsTab === 'general' && (
+                    <div className="space-y-6 animate-in fade-in duration-200">
+                      {/* Multi-page settings */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                          <Layout className="w-4 h-4" />
+                          Multi-Page Settings
+                        </h3>
+                        <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-gray-700 font-medium cursor-pointer" htmlFor="enable-multipage">
+                              Enable Multi-Page Mode
+                            </label>
+                            <button
+                              id="enable-multipage"
+                              role="switch"
+                              aria-checked={multiStepConfig?.enabled || false}
+                              onClick={handleToggleMultiPage}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${multiStepConfig?.enabled ? 'bg-black' : 'bg-gray-200'
+                                }`}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${multiStepConfig?.enabled ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                              />
+                            </button>
+                          </div>
+
+                          {multiStepConfig?.enabled && (
+                            <div className="pt-2 space-y-3 border-t border-gray-200 mt-2">
+                              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={multiStepConfig.showProgressBar}
+                                  onChange={(e) =>
+                                    onMultiStepConfigChange({ ...multiStepConfig, showProgressBar: e.target.checked })
+                                  }
+                                  className="w-4 h-4 border-gray-300 text-black focus:ring-black rounded"
+                                />
+                                Show progress bar
+                              </label>
+                              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={multiStepConfig.allowBackNavigation}
+                                  onChange={(e) =>
+                                    onMultiStepConfigChange({ ...multiStepConfig, allowBackNavigation: e.target.checked })
+                                  }
+                                  className="w-4 h-4 border-gray-300 text-black focus:ring-black rounded"
+                                />
+                                Allow back navigation
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Submission Settings */}
+                      {(onLimitOneResponseChange || onSaveAndEditChange) && (
+                        <div className="space-y-3 pt-2">
+                          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Submission Logic
+                          </h3>
+                          <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                            {onLimitOneResponseChange && (
+                              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={limitOneResponse || false}
+                                  onChange={(e) => onLimitOneResponseChange(e.target.checked)}
+                                  className="w-4 h-4 border-gray-300 text-black focus:ring-black rounded"
+                                />
+                                Limit to 1 response per person
+                              </label>
+                            )}
+                            {onSaveAndEditChange && (
+                              <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={saveAndEdit || false}
+                                  onChange={(e) => onSaveAndEditChange(e.target.checked)}
+                                  className="w-4 h-4 border-gray-300 text-black focus:ring-black rounded"
+                                />
+                                Allow editing after submission
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Styling Tab */}
+                  {activeSettingsTab === 'styling' && (
+                    <div className="animate-in fade-in duration-200">
+                      {onStylingChange && (
+                        <div className="-mt-2">
+                          <StyleEditor
+                            styling={styling}
+                            onChange={onStylingChange}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Notifications Tab */}
+                  {activeSettingsTab === 'notifications' && (
+                    <div className="animate-in fade-in duration-200">
+                      <NotificationSettings
+                        config={notifications}
+                        onChange={onNotificationsChange}
+                      />
+                    </div>
+                  )}
+
+                  {/* Quiz Tab */}
+                  {activeSettingsTab === 'quiz' && onQuizModeChange && (
+                    <div className="animate-in fade-in duration-200">
+                      <QuizSettings
+                        config={quizMode}
+                        onChange={onQuizModeChange}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
@@ -1336,99 +1452,101 @@ export default function DragDropFormBuilder({
       </div>
 
       {/* AI Suggestions Modal for Follow-up Questions */}
-      {showAISuggestions && aiSuggestions.length > 0 && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => {
-            setShowAISuggestions(false);
-            setAISuggestions([]);
-          }}
-        >
+      {
+        showAISuggestions && aiSuggestions.length > 0 && (
           <div
-            className="w-full max-w-md mx-4 bg-white rounded-lg border border-gray-200 overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => {
+              setShowAISuggestions(false);
+              setAISuggestions([]);
+            }}
           >
-            {/* Header */}
-            <div className="px-5 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-md">
-                    <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            <div
+              className="w-full max-w-md mx-4 bg-white rounded-lg border border-gray-200 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gray-100 rounded-md">
+                      <svg className="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">AI Suggested Questions</h3>
+                      <p className="text-xs text-gray-500">Click to add to your form</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAISuggestions(false);
+                      setAISuggestions([]);
+                    }}
+                    className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">AI Suggested Questions</h3>
-                    <p className="text-xs text-gray-500">Click to add to your form</p>
-                  </div>
+                  </button>
                 </div>
+              </div>
+
+              {/* Suggestions */}
+              <div className="p-4 max-h-80 overflow-y-auto">
+                <div className="space-y-2">
+                  {aiSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSelectAISuggestion(suggestion)}
+                      className="w-full text-left p-4 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{suggestion.label}</p>
+                          {suggestion.reason && (
+                            <p className="mt-1 text-xs text-gray-500">{suggestion.reason}</p>
+                          )}
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                          {suggestion.type}
+                        </span>
+                      </div>
+                      {suggestion.options && suggestion.options.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {suggestion.options.slice(0, 3).map((opt, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">
+                              {opt}
+                            </span>
+                          ))}
+                          {suggestion.options.length > 3 && (
+                            <span className="text-[10px] text-gray-400">+{suggestion.options.length - 3} more</span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t border-gray-200 flex justify-end">
                 <button
                   onClick={() => {
                     setShowAISuggestions(false);
                     setAISuggestions([]);
                   }}
-                  className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
                 >
-                  <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Cancel
                 </button>
               </div>
             </div>
-
-            {/* Suggestions */}
-            <div className="p-4 max-h-80 overflow-y-auto">
-              <div className="space-y-2">
-                {aiSuggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSelectAISuggestion(suggestion)}
-                    className="w-full text-left p-4 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{suggestion.label}</p>
-                        {suggestion.reason && (
-                          <p className="mt-1 text-xs text-gray-500">{suggestion.reason}</p>
-                        )}
-                      </div>
-                      <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                        {suggestion.type}
-                      </span>
-                    </div>
-                    {suggestion.options && suggestion.options.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {suggestion.options.slice(0, 3).map((opt, i) => (
-                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">
-                            {opt}
-                          </span>
-                        ))}
-                        {suggestion.options.length > 3 && (
-                          <span className="text-[10px] text-gray-400">+{suggestion.options.length - 3} more</span>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 py-3 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={() => {
-                  setShowAISuggestions(false);
-                  setAISuggestions([]);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
 

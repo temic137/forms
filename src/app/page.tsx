@@ -4,10 +4,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
+import dynamic from "next/dynamic";
 import { Field, FormStyling, NotificationConfig, MultiStepConfig, QuizModeConfig } from "@/types/form";
-import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { useFormGenerator } from "@/hooks/useFormGenerator";
 
-import DragDropFormBuilder from "@/components/builder/DragDropFormBuilder";
+const DragDropFormBuilder = dynamic(() => import("@/components/builder/DragDropFormBuilder"), {
+  loading: () => <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" variant="primary" /></div>,
+  ssr: false
+});
 import { Spinner } from "@/components/ui/Spinner";
 import { Mic, Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
@@ -43,9 +47,8 @@ const placeholderExamples = [
 export default function Home() {
   const router = useRouter();
   const toast = useToastContext();
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   // Form state
   const [showBuilder, setShowBuilder] = useState(false);
@@ -65,7 +68,6 @@ export default function Home() {
   const [showHelpPopup, setShowHelpPopup] = useState(false);
   const [hasCreatedForm, setHasCreatedForm] = useState(false);
 
-
   // Check if user has created a form before (for progressive disclosure)
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -74,210 +76,39 @@ export default function Home() {
     }
   }, []);
 
-  // Attachment state
-  const [attachedFiles, setAttachedFiles] = useState<FileAttachment[]>([]);
-  const [attachedUrl, setAttachedUrl] = useState<string>("");
-  const [showUrlInput, setShowUrlInput] = useState(false);
-
-  // Voice input state
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTranscriptRef = useRef<string>('');
-  const [autoSubmitCountdown, setAutoSubmitCountdown] = useState<number | null>(null);
-
   const {
+    query,
+    setQuery,
+    loading,
+    statusMessage,
+    attachedFiles,
+    attachedUrl,
+    setAttachedUrl,
+    showUrlInput,
+    setShowUrlInput,
+    handleFileSelect,
+    removeFile,
+    clearAttachments,
+    generateForm,
+    handleVoiceClick,
     isListening,
-    startListening,
-    stopListening,
-    resetTranscript,
     isSupported,
-  } = useVoiceInput({
-    continuous: true,
-    interimResults: true,
-    onTranscriptChange: (newTranscript) => {
-      setQuery(newTranscript);
-    },
-  });
-
-  const handleFileSelect = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-
-    // Convert to array
-    const newFiles = Array.from(files);
-
-    // 1. Validation Logic
-
-    // Check count limit
-    if (attachedFiles.length + newFiles.length > 5) {
-      toast.error("You can attach a maximum of 5 files.");
-      return;
-    }
-
-    // Process each new file
-    const validNewFiles: FileAttachment[] = [];
-
-    for (const file of newFiles) {
-      // Check for duplicates
-      const isDuplicate = attachedFiles.some(f =>
-        f.file.name === file.name && f.file.size === file.size
-      );
-      if (isDuplicate) {
-        toast.warning(`${file.name} is already attached.`);
-        continue;
-      }
-
-      // Initialize attachment object
-      const attachment: FileAttachment = {
-        id: Math.random().toString(36).substring(7),
-        file,
-        status: 'parsing'
-      };
-
-      validNewFiles.push(attachment);
-    }
-
-    if (validNewFiles.length === 0) return;
-
-    // Update state to show loading immediately
-    setAttachedFiles(prev => [...prev, ...validNewFiles]);
-
-    // Check Total Size
-    const currentTotalSize = attachedFiles.reduce((acc, f) => acc + f.file.size, 0);
-    const newTotalSize = validNewFiles.reduce((acc, f) => acc + f.file.size, 0);
-
-    if (currentTotalSize + newTotalSize > MAX_TOTAL_SIZE) {
-      // Revert addition if size exceeded
-      setAttachedFiles(prev => prev.filter(f => !validNewFiles.find(vf => vf.id === f.id)));
-      toast.error(`Total file size exceeds 25MB limit.`);
-      return;
-    }
-
-    // Trigger parsing for each new file
-    validNewFiles.forEach(async (attachment) => {
-      try {
-        const text = await parseFileWithTimeout(attachment.file);
-        setAttachedFiles(prev => prev.map(f =>
-          f.id === attachment.id
-            ? { ...f, status: 'success', content: text }
-            : f
-        ));
-      } catch (error) {
-        setAttachedFiles(prev => prev.map(f =>
-          f.id === attachment.id
-            ? { ...f, status: 'error', errorMessage: error instanceof Error ? error.message : 'Parsing failed' }
-            : f
-        ));
-      }
-    });
-  };
-
-  const removeFile = (id: string) => {
-    setAttachedFiles(prev => prev.filter(f => f.id !== id));
-  };
-
-
-  const generateForm = useCallback(async (brief: string) => {
-    // Check if any files are still parsing
-    if (attachedFiles.some(f => f.status === 'parsing')) {
-      toast.warning("Please wait for files to finish processing.");
-      return;
-    }
-
-    // Handle failed files
-    const failedFiles = attachedFiles.filter(f => f.status === 'error');
-    if (failedFiles.length > 0) {
-      const confirmed = await confirm(
-        "Parsing Errors",
-        `${failedFiles.length} file(s) failed to parse. Generate form with valid files only?`,
-        { variant: 'warning', confirmText: "Generate Anyway" }
-      );
-      if (!confirmed) return;
-    }
-
-    setLoading(true);
-    try {
-      let referenceData = "";
-
-      // Append File Content
-      const fileContext = formatFileContext(attachedFiles);
-      if (fileContext) {
-        referenceData += fileContext;
-      }
-
-      // Process URL - extract content
-      if (attachedUrl) {
-        const res = await fetch("/api/utils/scrape-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: attachedUrl }),
-        });
-        if (!res.ok) throw new Error("Failed to scrape URL");
-        const data = await res.json();
-        if (referenceData) referenceData += "\n\n";
-        referenceData += `Content from URL (${attachedUrl}):\n${data.content}`;
-      }
-
-      // Use generate-enhanced for better results with context
-      const res = await fetch("/api/ai/generate-enhanced", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: brief, // User's prompt - used for form type detection
-          referenceData: referenceData || undefined, // File/URL content - source material only
-          sourceType: "text",
-          userContext: "The user wants to create a form.",
-          options: {
-            formComplexity: "moderate",
-          }
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to generate form");
-
-      const data = await res.json();
-
-      // Normalize fields...
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        helpText: f.helpText,
-        validation: f.validation,
-        quizConfig: f.quizConfig ? {
-          correctAnswer: f.quizConfig.correctAnswer || '',
-          points: f.quizConfig.points || 1,
-          explanation: f.quizConfig.explanation || ''
-        } : undefined,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
+    autoSubmitCountdown
+  } = useFormGenerator({
+    confirm,
+    onSuccess: (data) => {
       setPreviewTitle(data.title);
-      setPreviewFields(normalizedFields);
+      setPreviewFields(data.fields);
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
       setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
       setShowBuilder(true);
-
-      // Clear attachments on success
-      setAttachedFiles([]);
-      setAttachedUrl("");
-      setShowUrlInput(false);
-      setQuery("");
-
       if (typeof window !== 'undefined') {
         localStorage.setItem('hasCreatedForm', 'true');
         setHasCreatedForm(true);
       }
-    } catch {
-      toast.error("Failed to generate form. Please try again.");
-    } finally {
-      setLoading(false);
     }
-  }, [attachedFiles, attachedUrl, toast, confirm]);
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,10 +117,6 @@ export default function Home() {
     }
   };
 
-
-
-
-
   // Rotate placeholder text
   useEffect(() => {
     const placeholderInterval = setInterval(() => {
@@ -297,63 +124,6 @@ export default function Home() {
     }, 3000);
     return () => clearInterval(placeholderInterval);
   }, []);
-
-  // Auto-submit after 3 seconds of silence
-  useEffect(() => {
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
-    setAutoSubmitCountdown(null);
-
-    // Don't auto-submit if files are parsing
-    if (attachedFiles.some(f => f.status === 'parsing')) return;
-
-    if (isListening && query.trim() && query !== lastTranscriptRef.current) {
-      lastTranscriptRef.current = query;
-
-      // Start 3-second countdown
-      setAutoSubmitCountdown(3);
-      let countdown = 3;
-
-      const countdownInterval = setInterval(() => {
-        countdown -= 1;
-        setAutoSubmitCountdown(countdown);
-
-        if (countdown <= 0) {
-          clearInterval(countdownInterval);
-        }
-      }, 1000);
-
-      // Auto-submit after 3 seconds
-      silenceTimerRef.current = setTimeout(() => {
-        clearInterval(countdownInterval);
-        if (query.trim()) {
-          stopListening();
-          generateForm(query);
-        }
-      }, 3000);
-
-      return () => clearInterval(countdownInterval);
-    }
-  }, [query, isListening, stopListening, generateForm, attachedFiles]);
-
-  // Handle voice button click
-  const handleVoiceClick = async () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      try {
-        // Clear previous transcript before starting new recording
-        resetTranscript();
-        setQuery('');
-        lastTranscriptRef.current = '';
-        await startListening();
-      } catch (error) {
-        console.error('Failed to start voice input:', error);
-        toast.error('Failed to start voice input. Please check microphone permissions.');
-      }
-    }
-  };
 
   const openBuilderForCreate = () => {
     setPreviewTitle("Untitled Form");
@@ -370,7 +140,7 @@ export default function Home() {
     setQuery("");
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (typeof window !== 'undefined') {
       const formData = {
         title: previewTitle,
@@ -383,19 +153,29 @@ export default function Home() {
         saveAndEdit
       };
 
-      // Save to session storage for retrieval after signup
+      // Save to session storage
       sessionStorage.setItem('pendingForm', JSON.stringify(formData));
 
-      toast.success("Please sign up to save your form!");
-      setTimeout(() => {
+      // Trigger Sign Up modal
+      const confirmed = await confirm(
+        "Create Free Account",
+        "Sign up now to save your form, collect unlimited responses, and access analytics.",
+        {
+          confirmText: "Sign Up Free",
+          cancelText: "Cancel",
+          variant: "default"
+        }
+      );
+
+      if (confirmed) {
         router.push('/auth/signup');
-      }, 1500);
+      }
     }
   };
 
   const handleGuestSignIn = async () => {
     try {
-      setLoading(true);
+      setIsSigningIn(true);
       const result = await signIn("anonymous", {
         redirect: false,
       });
@@ -410,7 +190,7 @@ export default function Home() {
       console.error("Anonymous sign in failed:", error);
       toast.error("An error occurred. Please try again.");
     } finally {
-      setLoading(false);
+      setIsSigningIn(false);
     }
   };
 
@@ -502,7 +282,7 @@ export default function Home() {
             <div className="mb-10 flex justify-center">
               <button
                 onClick={handleGuestSignIn}
-                disabled={loading}
+                disabled={isSigningIn}
                 className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 text-sm font-medium transition-all duration-200 border border-gray-200 hover:border-gray-300"
               >
                 <span className="text-lg">👻</span>
@@ -528,6 +308,7 @@ export default function Home() {
                     id="landing-prompt-input"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    onPaste={(e) => setQuery(e.currentTarget.value)}
                     placeholder={placeholderExamples[placeholderIndex]}
                     className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     style={{
@@ -576,7 +357,8 @@ export default function Home() {
                           }`}
                       >
                         <Upload className="w-4 h-4" />
-                        Attach File
+                        <span className="hidden sm:inline">Attach File</span>
+                        <span className="sm:hidden">File</span>
                       </label>
                     </div>
 
@@ -597,7 +379,8 @@ export default function Home() {
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
                       >
                         <Camera className="w-4 h-4" />
-                        Scan Doc
+                        <span className="hidden sm:inline">Scan Doc</span>
+                        <span className="sm:hidden">Scan</span>
                       </label>
                     </div>
 
@@ -617,7 +400,8 @@ export default function Home() {
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
                       >
                         <FileJson className="w-4 h-4" />
-                        Import JSON
+                        <span className="hidden sm:inline">Import JSON</span>
+                        <span className="sm:hidden">JSON</span>
                       </label>
                     </div>
 
@@ -632,13 +416,14 @@ export default function Home() {
                         }`}
                     >
                       <Globe className="w-4 h-4" />
-                      {attachedUrl ? "URL Attached" : "Attach URL"}
+                      {attachedUrl ? (<span className="hidden sm:inline">URL Attached</span>) : (<span className="hidden sm:inline">Attach URL</span>)}
+                      {attachedUrl ? (<span className="sm:hidden">URL</span>) : (<span className="sm:hidden">URL</span>)}
                     </button>
 
                     {attachedFiles.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => setAttachedFiles([])}
+                        onClick={() => clearAttachments()}
                         disabled={loading}
                         className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 ml-auto transition-colors disabled:opacity-50"
                       >
@@ -733,7 +518,7 @@ export default function Home() {
                     {loading ? (
                       <>
                         <Spinner size="sm" variant="white" />
-                        <span>{attachedFiles.some(f => f.status === 'parsing') ? 'Processing Files...' : 'Generating...'}</span>
+                        <span>{statusMessage || (attachedFiles.some(f => f.status === 'parsing') ? 'Processing Files...' : 'Generating...')}</span>
                       </>
                     ) : (
                       <>
@@ -764,32 +549,32 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">vs Google Forms</h2>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-gray-200 gap-2 sm:gap-0">
                 <span className="text-sm font-medium text-gray-700">Creation Speed</span>
-                <div className="flex gap-6 text-sm">
-                  <span className="text-gray-400 w-28 text-right">5-10 min</span>
+                <div className="flex gap-6 text-sm justify-between sm:justify-start">
+                  <span className="text-gray-400 w-28 text-left sm:text-right">5-10 min</span>
                   <span className="text-gray-900 font-medium w-28 text-right">30 sec</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-gray-200 gap-2 sm:gap-0">
                 <span className="text-sm font-medium text-gray-700">Input Methods</span>
-                <div className="flex gap-6 text-sm">
-                  <span className="text-gray-400 w-28 text-right">Click only</span>
+                <div className="flex gap-6 text-sm justify-between sm:justify-start">
+                  <span className="text-gray-400 w-28 text-left sm:text-right">Click only</span>
                   <span className="text-gray-900 font-medium w-28 text-right">Voice, File, URL</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-gray-200 gap-2 sm:gap-0">
                 <span className="text-sm font-medium text-gray-700">AI Detection</span>
-                <div className="flex gap-6 text-sm">
-                  <span className="text-gray-400 w-28 text-right flex justify-end"><Minus className="w-4 h-4" /></span>
-                  <span className="text-gray-900 font-medium w-28 text-right flex justify-end"><Check className="w-4 h-4 text-green-600" /></span>
+                <div className="flex gap-6 text-sm justify-between sm:justify-start">
+                  <span className="text-gray-400 w-28 text-left sm:text-right flex items-center sm:justify-end"><Minus className="w-4 h-4" /></span>
+                  <span className="text-gray-900 font-medium w-28 text-right flex items-center justify-end"><Check className="w-4 h-4 text-green-600" /></span>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 gap-2 sm:gap-0">
                 <span className="text-sm font-medium text-gray-700">File Imports</span>
-                <div className="flex gap-6 text-sm">
-                  <span className="text-gray-400 w-28 text-right flex justify-end"><Minus className="w-4 h-4" /></span>
-                  <span className="text-gray-900 font-medium w-28 text-right flex justify-end"><Check className="w-4 h-4 text-green-600" /></span>
+                <div className="flex gap-6 text-sm justify-between sm:justify-start">
+                  <span className="text-gray-400 w-28 text-left sm:text-right flex items-center sm:justify-end"><Minus className="w-4 h-4" /></span>
+                  <span className="text-gray-900 font-medium w-28 text-right flex items-center justify-end"><Check className="w-4 h-4 text-green-600" /></span>
                 </div>
               </div>
             </div>

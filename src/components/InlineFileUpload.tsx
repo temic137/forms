@@ -53,7 +53,7 @@ export default function InlineFileUpload({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="btn btn-secondary flex items-center gap-2"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
         >
           <Upload className="w-4 h-4" />
           Select File
@@ -61,47 +61,37 @@ export default function InlineFileUpload({
         <button
           onClick={onCancel}
           disabled={disabled}
-          className="btn btn-ghost"
+          className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
-        <span 
-          className="text-sm"
-          style={{ color: 'var(--foreground-subtle)' }}
-        >
+        <span className="text-sm text-gray-500">
           CSV, JSON, or TXT (max 5MB)
         </span>
       </div>
 
       {error && (
-        <div 
-          className="flex items-start gap-2 text-sm p-3 rounded-lg border"
-          style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            borderColor: 'rgba(239, 68, 68, 0.3)',
-            color: '#ef4444',
-          }}
-        >
+        <div className="flex items-start gap-2 text-sm p-3 rounded-lg border border-red-200 bg-red-50 text-red-600">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
-      <details className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-        <summary className="cursor-pointer hover:underline">View file format examples</summary>
+      <details className="text-sm text-gray-500">
+        <summary className="cursor-pointer hover:text-gray-900 transition-colors">View file format examples</summary>
         <div className="mt-2 space-y-2 pl-4">
           <div>
-            <strong>CSV:</strong>
-            <pre className="mt-1 text-xs p-2 rounded" style={{ background: 'var(--background-subtle)' }}>
-{`label,type,required
+            <strong className="text-gray-700 block text-xs mb-1">CSV:</strong>
+            <pre className="text-[10px] p-2 rounded bg-gray-50 border border-gray-100 font-mono text-gray-600">
+              {`label,type,required
 Full Name,text,true
 Email,email,true`}
             </pre>
           </div>
           <div>
-            <strong>JSON:</strong>
-            <pre className="mt-1 text-xs p-2 rounded" style={{ background: 'var(--background-subtle)' }}>
-{`{"fields": [
+            <strong className="text-gray-700 block text-xs mb-1">JSON:</strong>
+            <pre className="text-[10px] p-2 rounded bg-gray-50 border border-gray-100 font-mono text-gray-600">
+              {`{"fields": [
   {"label": "Name", "type": "text"},
   {"label": "Email", "type": "email"}
 ]}`}

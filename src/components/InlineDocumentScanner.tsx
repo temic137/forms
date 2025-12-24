@@ -53,7 +53,7 @@ export default function InlineDocumentScanner({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="btn btn-secondary flex items-center gap-2"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
         >
           <Camera className="w-4 h-4" />
           Select Image/PDF
@@ -61,44 +61,28 @@ export default function InlineDocumentScanner({
         <button
           onClick={onCancel}
           disabled={disabled}
-          className="btn btn-ghost"
+          className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
-        <span 
-          className="text-sm"
-          style={{ color: 'var(--foreground-subtle)' }}
-        >
+        <span className="text-sm text-gray-500">
           Image or PDF (max 10MB)
         </span>
       </div>
 
       {error && (
-        <div 
-          className="flex items-start gap-2 text-sm p-3 rounded-lg border"
-          style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            borderColor: 'rgba(239, 68, 68, 0.3)',
-            color: '#ef4444',
-          }}
-        >
+        <div className="flex items-start gap-2 text-sm p-3 rounded-lg border border-red-200 bg-red-50 text-red-600">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
-      <div 
-        className="text-xs p-3 rounded-lg"
-        style={{
-          background: 'var(--background-subtle)',
-          color: 'var(--foreground-subtle)',
-        }}
-      >
-        <strong className="block mb-1" style={{ color: 'var(--foreground-muted)' }}>
+      <div className="text-xs p-3 rounded-lg bg-gray-50 text-gray-600 border border-gray-100">
+        <strong className="block mb-1 text-gray-900">
           Tips for best results:
         </strong>
-        • Use good lighting with no shadows or glare<br/>
-        • Ensure all text is clearly visible<br/>
+        • Use good lighting with no shadows or glare<br />
+        • Ensure all text is clearly visible<br />
         • For PDFs, ensure text is selectable
       </div>
     </div>

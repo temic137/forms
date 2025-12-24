@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Spinner } from "@/components/ui/Spinner";
 import Link from "next/link";
-import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { useFormGenerator } from "@/hooks/useFormGenerator";
 import { Field, FormStyling, NotificationConfig, MultiStepConfig, QuizModeConfig } from "@/types/form";
 import ShareButton from "@/components/ShareButton";
 // import IntegrationButton from "@/components/IntegrationButton";
@@ -43,16 +43,12 @@ export default function DashboardPage() {
   const { forms, isLoading: formsLoading } = useForms();
 
   // Form generation state
-  const [query, setQuery] = useState("");
-  const [generatingForm, setGeneratingForm] = useState(false);
   const [showSuccess] = useState(false);
   const [newFormId] = useState<string | null>(null);
   const [savingForm, setSavingForm] = useState(false);
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
   const [loadingFormId, setLoadingFormId] = useState<string | null>(null);
   const [showPostSaveModal, setShowPostSaveModal] = useState(false);
-
-
 
   // Builder state (used for both AI-generated and manual creation)
   const [showBuilder, setShowBuilder] = useState(false);
@@ -66,28 +62,35 @@ export default function DashboardPage() {
   const [limitOneResponse, setLimitOneResponse] = useState(false);
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
-  // Attachment state
-  const [attachedFiles, setAttachedFiles] = useState<FileAttachment[]>([]);
-  const [attachedUrl, setAttachedUrl] = useState<string>("");
-  const [showUrlInput, setShowUrlInput] = useState(false);
-
-  // Voice input state
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTranscriptRef = useRef<string>('');
-  const [autoSubmitCountdown, setAutoSubmitCountdown] = useState<number | null>(null);
-
   const {
+    query,
+    setQuery,
+    loading: generatingForm,
+    statusMessage,
+    attachedFiles,
+    attachedUrl,
+    setAttachedUrl,
+    showUrlInput,
+    setShowUrlInput,
+    handleFileSelect,
+    removeFile,
+    clearAttachments,
+    generateForm,
+    handleVoiceClick,
     isListening,
-    startListening,
-    stopListening,
-    resetTranscript,
     isSupported,
-  } = useVoiceInput({
-    continuous: true,
-    interimResults: true,
-    onTranscriptChange: (newTranscript) => {
-      setQuery(newTranscript);
-    },
+    autoSubmitCountdown
+  } = useFormGenerator({
+    confirm,
+    onSuccess: (data) => {
+      setPreviewTitle(data.title);
+      setPreviewFields(data.fields);
+      setPreviewStyling(undefined);
+      setPreviewMultiStepConfig(undefined);
+      setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
+      setEditingFormId(null);
+      setShowBuilder(true);
+    }
   });
 
   // Real-time collaboration
@@ -145,137 +148,11 @@ export default function DashboardPage() {
     }
   }, [status, showBuilder]);
 
-  // Auto-submit after 3 seconds of silence
-  useEffect(() => {
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
-    setAutoSubmitCountdown(null);
+  // Auto-submit logic is now handled by useFormGenerator hook
 
-    // Don't auto-submit if files are parsing
-    if (attachedFiles.some(f => f.status === 'parsing')) return;
+  // Voice interaction is now handled by useFormGenerator hook
 
-    if (isListening && query.trim() && query !== lastTranscriptRef.current) {
-      lastTranscriptRef.current = query;
-
-      // Start 3-second countdown
-      setAutoSubmitCountdown(3);
-      let countdown = 3;
-
-      const countdownInterval = setInterval(() => {
-        countdown -= 1;
-        setAutoSubmitCountdown(countdown);
-
-        if (countdown <= 0) {
-          clearInterval(countdownInterval);
-        }
-      }, 1000);
-
-      // Auto-submit after 3 seconds
-      silenceTimerRef.current = setTimeout(() => {
-        clearInterval(countdownInterval);
-        if (query.trim()) {
-          stopListening();
-          generateForm(query);
-        }
-      }, 3000);
-
-      return () => clearInterval(countdownInterval);
-    }
-  }, [query, isListening, stopListening, attachedFiles]);
-
-  const handleVoiceClick = async () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      try {
-        // Clear previous transcript before starting new recording
-        resetTranscript();
-        setQuery('');
-        lastTranscriptRef.current = '';
-        await startListening();
-      } catch (error) {
-        console.error('Failed to start voice input:', error);
-        toast.error('Failed to start voice input. Please check microphone permissions.');
-      }
-    }
-  };
-
-  const handleFileSelect = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-
-    // Convert to array
-    const newFiles = Array.from(files);
-
-    // 1. Validation Logic
-
-    // Check count limit
-    if (attachedFiles.length + newFiles.length > 5) {
-      toast.error("You can attach a maximum of 5 files.");
-      return;
-    }
-
-    // Process each new file
-    const validNewFiles: FileAttachment[] = [];
-
-    for (const file of newFiles) {
-      // Check for duplicates
-      const isDuplicate = attachedFiles.some(f =>
-        f.file.name === file.name && f.file.size === file.size
-      );
-      if (isDuplicate) {
-        toast.warning(`${file.name} is already attached.`);
-        continue;
-      }
-
-      // Initialize attachment object
-      const attachment: FileAttachment = {
-        id: Math.random().toString(36).substring(7),
-        file,
-        status: 'parsing'
-      };
-
-      validNewFiles.push(attachment);
-    }
-
-    if (validNewFiles.length === 0) return;
-
-    // Update state to show loading immediately
-    setAttachedFiles(prev => [...prev, ...validNewFiles]);
-
-    // Check Total Size
-    const currentTotalSize = attachedFiles.reduce((acc, f) => acc + f.file.size, 0);
-    const newTotalSize = validNewFiles.reduce((acc, f) => acc + f.file.size, 0);
-
-    if (currentTotalSize + newTotalSize > MAX_TOTAL_SIZE) {
-      // Revert addition if size exceeded
-      setAttachedFiles(prev => prev.filter(f => !validNewFiles.find(vf => vf.id === f.id)));
-      toast.error(`Total file size exceeds 25MB limit.`);
-      return;
-    }
-
-    // Trigger parsing for each new file
-    validNewFiles.forEach(async (attachment) => {
-      try {
-        const text = await parseFileWithTimeout(attachment.file);
-        setAttachedFiles(prev => prev.map(f =>
-          f.id === attachment.id
-            ? { ...f, status: 'success', content: text }
-            : f
-        ));
-      } catch (error) {
-        setAttachedFiles(prev => prev.map(f =>
-          f.id === attachment.id
-            ? { ...f, status: 'error', errorMessage: error instanceof Error ? error.message : 'Parsing failed' }
-            : f
-        ));
-      }
-    });
-  };
-
-  const removeFile = (id: string) => {
-    setAttachedFiles(prev => prev.filter(f => f.id !== id));
-  };
+  // File handling is now handled by useFormGenerator hook
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -285,105 +162,7 @@ export default function DashboardPage() {
     }
   };
 
-  async function generateForm(brief: string) {
-    // Check if any files are still parsing
-    if (attachedFiles.some(f => f.status === 'parsing')) {
-      toast.warning("Please wait for files to finish processing.");
-      return;
-    }
-
-    // Handle failed files
-    const failedFiles = attachedFiles.filter(f => f.status === 'error');
-    if (failedFiles.length > 0) {
-      const confirmed = await confirm(
-        "Parsing Errors",
-        `${failedFiles.length} file(s) failed to parse. Generate form with valid files only?`,
-        { variant: 'warning', confirmText: "Generate Anyway" }
-      );
-      if (!confirmed) return;
-    }
-
-    setGeneratingForm(true);
-    try {
-      let referenceData = "";
-
-      // Append File Content
-      const fileContext = formatFileContext(attachedFiles);
-      if (fileContext) {
-        referenceData += fileContext;
-      }
-
-      // Process URL - extract content
-      if (attachedUrl) {
-        const res = await fetch("/api/utils/scrape-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: attachedUrl }),
-        });
-        if (!res.ok) throw new Error("Failed to scrape URL");
-        const data = await res.json();
-        if (referenceData) referenceData += "\n\n";
-        referenceData += `Content from URL (${attachedUrl}):\n${data.content}`;
-      }
-
-      // Use generate-enhanced for better results with context
-      const res = await fetch("/api/ai/generate-enhanced", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: brief, // User's prompt - used for form type detection
-          referenceData: referenceData || undefined, // File/URL content - source material only
-          sourceType: "text",
-          userContext: "The user wants to create a form.",
-          options: {
-            formComplexity: "moderate",
-          }
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to generate form");
-
-      const data = await res.json();
-
-      const normalizedFields = data.fields.map((f: Partial<Field>, idx: number) => ({
-        id: f.id || `field_${Date.now()}_${idx}`,
-        label: f.label || "Field",
-        type: f.type || "text",
-        required: f.required || false,
-        options: f.options || [],
-        placeholder: f.placeholder,
-        helpText: f.helpText,
-        validation: f.validation,
-        quizConfig: f.quizConfig ? {
-          correctAnswer: f.quizConfig.correctAnswer || '',
-          points: f.quizConfig.points || 1,
-          explanation: f.quizConfig.explanation || ''
-        } : undefined,
-        order: idx,
-        conditionalLogic: [],
-        color: '#ffffff',
-      }));
-
-      // Open builder with generated form
-      setPreviewTitle(data.title);
-      setPreviewFields(normalizedFields);
-      setPreviewStyling(undefined); // Use defaults from StyleEditor
-      setPreviewMultiStepConfig(undefined);
-      // Set quiz mode if API returned it (auto-enabled for quizzes)
-      setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
-      setEditingFormId(null); // This is a new form
-      setShowBuilder(true); // Use drag-drop builder instead of old preview
-      setQuery("");
-      setAttachedFiles([]);
-      setAttachedUrl("");
-      setShowUrlInput(false);
-    } catch (error) {
-      console.error("Error generating form:", error);
-      toast.error("Failed to generate form. Please try again.");
-    } finally {
-      setGeneratingForm(false);
-    }
-  }
+  // generateForm logic is now handled by useFormGenerator hook
 
 
 
@@ -725,7 +504,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Creation Area - Clean and Simple */}
-          <div className="max-w-3xl mx-auto mb-16">
+          <div className="max-w-5xl mx-auto mb-16">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <AnimatedFormTitle />
@@ -794,9 +573,9 @@ export default function DashboardPage() {
                     />
                     <label
                       htmlFor="attach-file"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"} ${attachedFiles.length > 0
-                        ? "bg-blue-50 text-blue-700"
-                        : ""
+                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-all border shadow-sm ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 hover:border-gray-300"} ${attachedFiles.length > 0
+                        ? "bg-blue-50 border-blue-200 text-blue-700 shadow-none"
+                        : "bg-white border-gray-200 text-gray-700"
                         }`}
                     >
                       <Upload className="w-4 h-4" />
@@ -818,7 +597,7 @@ export default function DashboardPage() {
                     />
                     <label
                       htmlFor="scan-doc"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-all border shadow-sm ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 hover:border-gray-300"} bg-white border-gray-200 text-gray-700`}
                     >
                       <Camera className="w-4 h-4" />
                       Scan Doc
@@ -838,7 +617,7 @@ export default function DashboardPage() {
                     />
                     <label
                       htmlFor="import-json"
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md cursor-pointer transition-colors ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 text-gray-600"}`}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-all border shadow-sm ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 hover:border-gray-300"} bg-white border-gray-200 text-gray-700`}
                     >
                       <FileJson className="w-4 h-4" />
                       Import JSON
@@ -850,9 +629,9 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => setShowUrlInput(!showUrlInput)}
                     disabled={generatingForm}
-                    className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${attachedUrl
-                      ? "bg-blue-50 text-blue-700"
-                      : "hover:bg-gray-100 text-gray-600"
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all border shadow-sm ${attachedUrl
+                      ? "bg-blue-50 border-blue-200 text-blue-700 shadow-none"
+                      : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
                       }`}
                   >
                     <Globe className="w-4 h-4" />
@@ -862,7 +641,7 @@ export default function DashboardPage() {
                   {attachedFiles.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setAttachedFiles([])}
+                      onClick={() => clearAttachments()}
                       disabled={generatingForm}
                       className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 ml-auto transition-colors disabled:opacity-50"
                     >
@@ -962,7 +741,7 @@ export default function DashboardPage() {
                   {generatingForm ? (
                     <>
                       <Spinner size="sm" variant="current" />
-                      <span>{attachedFiles.some(f => f.status === 'parsing') ? 'Processing Files...' : 'Generating...'}</span>
+                      <span>{statusMessage || (attachedFiles.some(f => f.status === 'parsing') ? 'Processing Files...' : 'Generating...')}</span>
                     </>
                   ) : (
                     <>
@@ -975,7 +754,7 @@ export default function DashboardPage() {
             </form>
           </div>
 
-          <div className="flex flex-col gap-4 max-w-3xl mx-auto w-full">
+          <div className="flex flex-col gap-4 max-w-5xl mx-auto w-full">
             {/* Header for the list */}
             <div className="flex items-center justify-between mb-2 px-4">
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Your Forms</h3>
