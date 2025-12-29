@@ -16,9 +16,10 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     // Verify form belongs to user and get form fields
     const form = await prisma.form.findUnique({
       where: { id: formId },
-      select: { 
+      select: {
         userId: true,
         fieldsJson: true,
+        closedSubmissionAttempts: true,
       },
     });
 
@@ -58,13 +59,13 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     const submissionsByDate: Record<string, number> = {};
     const submissionsByHour: Record<number, number> = {};
     const submissionsByDayOfWeek: Record<number, number> = {};
-    
+
     submissions.forEach((submission) => {
       const date = new Date(submission.createdAt);
       const dateStr = date.toLocaleDateString();
       const hour = date.getHours();
       const dayOfWeek = date.getDay();
-      
+
       submissionsByDate[dateStr] = (submissionsByDate[dateStr] || 0) + 1;
       submissionsByHour[hour] = (submissionsByHour[hour] || 0) + 1;
       submissionsByDayOfWeek[dayOfWeek] = (submissionsByDayOfWeek[dayOfWeek] || 0) + 1;
@@ -73,26 +74,26 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     // ===== TIME-BASED ANALYTICS =====
     const dates = Object.keys(submissionsByDate).sort();
     const avgPerDay = dates.length > 0 ? totalSubmissions / dates.length : 0;
-    
+
     // Peak submission hour
     const peakHour = Object.entries(submissionsByHour)
       .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
-    
+
     // Peak day of week (0 = Sunday, 6 = Saturday)
     const peakDayOfWeek = Object.entries(submissionsByDayOfWeek)
       .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
-    
+
     // Recent activity (last 7 days vs previous 7 days)
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const last14Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-    
+
     const recentSubmissions = submissions.filter(s => new Date(s.createdAt) >= last7Days).length;
     const previousWeekSubmissions = submissions.filter(s => {
       const date = new Date(s.createdAt);
       return date >= last14Days && date < last7Days;
     }).length;
-    
+
     const weeklyGrowth = previousWeekSubmissions > 0
       ? ((recentSubmissions - previousWeekSubmissions) / previousWeekSubmissions) * 100
       : recentSubmissions > 0 ? 100 : 0;
@@ -113,12 +114,12 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 
     // ===== FIELD-SPECIFIC ANALYTICS =====
     const fieldStats: Record<string, any> = {};
-    
+
     fields.forEach((field) => {
       const fieldId = field.id;
       const fieldType = field.type;
       const responses = submissions.map(s => (s.answersJson as Record<string, any>)[fieldId]).filter(v => v !== undefined && v !== null && v !== '');
-      
+
       const stat: any = {
         label: field.label,
         type: fieldType,
@@ -132,14 +133,14 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         const textResponses = responses.filter(r => typeof r === 'string');
         const lengths = textResponses.map(r => r.length);
         const wordCounts = textResponses.map(r => r.split(/\s+/).filter(w => w.length > 0).length);
-        
+
         stat.avgLength = lengths.length > 0 ? lengths.reduce((a, b) => a + b, 0) / lengths.length : 0;
         stat.avgWordCount = wordCounts.length > 0 ? wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length : 0;
         stat.minLength = lengths.length > 0 ? Math.min(...lengths) : 0;
         stat.maxLength = lengths.length > 0 ? Math.max(...lengths) : 0;
       } else if (fieldType === 'number') {
         const numResponses = responses.map(r => Number(r)).filter(n => !isNaN(n));
-        
+
         if (numResponses.length > 0) {
           const sorted = [...numResponses].sort((a, b) => a - b);
           stat.min = sorted[0];
@@ -156,7 +157,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
           const value = Array.isArray(r) ? r.join(', ') : String(r);
           distribution[value] = (distribution[value] || 0) + 1;
         });
-        
+
         stat.distribution = distribution;
         stat.mostPopular = Object.entries(distribution)
           .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
@@ -164,12 +165,12 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
           .sort(([, a], [, b]) => a - b)[0]?.[0] || null;
       } else if (fieldType === 'date') {
         const dateResponses = responses.map(r => new Date(String(r))).filter(d => !isNaN(d.getTime()));
-        
+
         if (dateResponses.length > 0) {
           const sorted = [...dateResponses].sort((a, b) => a.getTime() - b.getTime());
           stat.earliestDate = sorted[0].toISOString();
           stat.latestDate = sorted[sorted.length - 1].toISOString();
-          
+
           // Date distribution by month
           const monthDistribution: Record<string, number> = {};
           dateResponses.forEach(d => {
@@ -180,19 +181,19 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         }
       } else if (fieldType === 'file') {
         // File upload analytics
-        const fileUploads = submissions.flatMap(s => 
+        const fileUploads = submissions.flatMap(s =>
           s.files.filter(f => f.fieldId === fieldId)
         );
-        
+
         const fileTypes: Record<string, number> = {};
         let totalSize = 0;
-        
+
         fileUploads.forEach(file => {
           const type = file.mimeType.split('/')[0] || 'other';
           fileTypes[type] = (fileTypes[type] || 0) + 1;
           totalSize += file.size;
         });
-        
+
         stat.totalFiles = fileUploads.length;
         stat.fileTypes = fileTypes;
         stat.totalSize = totalSize;
@@ -207,7 +208,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     const requiredFields = fields.filter(f => f.required);
     let totalRequiredFieldsFilled = 0;
     let totalRequiredFieldsExpected = requiredFields.length * totalSubmissions;
-    
+
     submissions.forEach(submission => {
       const answers = submission.answersJson as Record<string, any>;
       requiredFields.forEach(field => {
@@ -217,7 +218,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         }
       });
     });
-    
+
     const overallCompletionRate = totalRequiredFieldsExpected > 0
       ? (totalRequiredFieldsFilled / totalRequiredFieldsExpected) * 100
       : 100;
@@ -235,10 +236,10 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     if (dates.length >= 10) {
       const recentDates = dates.slice(-5);
       const previousDates = dates.slice(-10, -5);
-      
+
       const recentAvg = recentDates.reduce((sum, date) => sum + submissionsByDate[date], 0) / 5;
       const previousAvg = previousDates.reduce((sum, date) => sum + submissionsByDate[date], 0) / 5;
-      
+
       if (recentAvg > previousAvg * 1.2) trendDirection = 'growing';
       else if (recentAvg < previousAvg * 0.8) trendDirection = 'declining';
     }
@@ -246,17 +247,17 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     // ===== QUIZ ANALYTICS =====
     let quizAnalytics: any = undefined;
     const scoredSubmissions = submissions.filter(s => s.score && typeof s.score === 'object');
-    
+
     if (scoredSubmissions.length > 0) {
       const scores = scoredSubmissions.map(s => (s.score as any).percentage || 0);
       const passedCount = scoredSubmissions.filter(s => (s.score as any).passed).length;
-      
+
       const scoreDistribution: Record<string, number> = {};
       // Initialize buckets
       for (let i = 0; i < 100; i += 10) {
         scoreDistribution[`${i}-${i + 10}%`] = 0;
       }
-      
+
       scores.forEach(score => {
         const rangeStart = Math.min(Math.floor(score / 10) * 10, 90);
         const bucket = `${rangeStart}-${rangeStart + 10}%`;
@@ -268,8 +269,8 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 
       quizAnalytics = {
         averageScore: Math.round(sumScores / scores.length),
-        medianScore: sortedScores.length % 2 === 0 
-          ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2 
+        medianScore: sortedScores.length % 2 === 0
+          ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
           : sortedScores[Math.floor(sortedScores.length / 2)],
         passRate: Math.round((passedCount / scoredSubmissions.length) * 100),
         topScore: sortedScores[sortedScores.length - 1],
@@ -286,7 +287,7 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
       avgPerDay: Math.round(avgPerDay * 10) / 10,
       firstSubmission: submissions[0]?.createdAt || null,
       lastSubmission: submissions[submissions.length - 1]?.createdAt || null,
-      
+
       // Time-based analytics
       timeAnalytics: {
         submissionsByHour,
@@ -299,16 +300,17 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         weeklyGrowth: Math.round(weeklyGrowth * 10) / 10,
         trendDirection,
       },
-      
+
       // Field analytics
       fieldStats,
-      
+
       // Engagement metrics
       engagementMetrics: {
         overallCompletionRate: Math.round(overallCompletionRate * 10) / 10,
         responseVelocity: Math.round(responseVelocity * 100) / 100, // submissions per hour
         totalFields: fields.length,
         requiredFields: requiredFields.length,
+        blockedAttempts: form.closedSubmissionAttempts,
       },
 
       // Quiz analytics

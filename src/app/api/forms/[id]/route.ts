@@ -8,10 +8,10 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
     const { id } = await context.params;
     const form = await prisma.form.findUnique({
       where: { id },
-      select: { 
-        id: true, 
-        title: true, 
-        fieldsJson: true, 
+      select: {
+        id: true,
+        title: true,
+        fieldsJson: true,
         conversationalMode: true,
         styling: true,
         notifications: true,
@@ -31,14 +31,27 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await context.params;
     const body = await req.json();
-    const { title, fields, conversationalMode, styling, notifications, multiStepConfig, limitOneResponse, saveAndEdit } = body;
+    const {
+      title,
+      fields,
+      conversationalMode,
+      styling,
+      notifications,
+      multiStepConfig,
+      limitOneResponse,
+      saveAndEdit,
+      closesAt,
+      opensAt,
+      isClosed,
+      closedMessage
+    } = body;
 
     // Check if form belongs to user
     const form = await prisma.form.findUnique({
@@ -64,6 +77,16 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       }
     }
 
+    // Validation: opensAt < closesAt
+    if (opensAt && closesAt) {
+      if (new Date(opensAt) >= new Date(closesAt)) {
+        return NextResponse.json(
+          { error: "Opening time must be before closing time" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update form
     const updated = await prisma.form.update({
       where: { id },
@@ -76,6 +99,12 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         ...(multiStepConfig !== undefined && { multiStepConfig: multiStepConfig || null }),
         ...(limitOneResponse !== undefined && { limitOneResponse }),
         ...(saveAndEdit !== undefined && { saveAndEdit }),
+        ...(closesAt !== undefined && { closesAt: closesAt ? new Date(closesAt) : null }),
+        ...(opensAt !== undefined && { opensAt: opensAt ? new Date(opensAt) : null }),
+        ...(isClosed !== undefined && { isClosed }),
+        ...(closedMessage !== undefined && { closedMessage }),
+        // Reset notification sent flag if closing time is updated
+        ...(closesAt !== undefined && { closedNotificationSent: false }),
       },
     });
 
@@ -88,14 +117,28 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await context.params;
     const body = await req.json();
-    const { title, fields, conversationalMode, styling, notifications, multiStepConfig, quizMode, limitOneResponse, saveAndEdit } = body;
+    const {
+      title,
+      fields,
+      conversationalMode,
+      styling,
+      notifications,
+      multiStepConfig,
+      quizMode,
+      limitOneResponse,
+      saveAndEdit,
+      closesAt,
+      opensAt,
+      isClosed,
+      closedMessage
+    } = body;
 
     // Check if form belongs to user
     const form = await prisma.form.findUnique({
@@ -118,6 +161,16 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 
       if (!collaborator) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
+    // Validation: opensAt < closesAt
+    if (opensAt && closesAt) {
+      if (new Date(opensAt) >= new Date(closesAt)) {
+        return NextResponse.json(
+          { error: "Opening time must be before closing time" },
+          { status: 400 }
+        );
       }
     }
 
@@ -134,6 +187,12 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
         ...(quizMode !== undefined && { quizMode: quizMode || null }),
         ...(limitOneResponse !== undefined && { limitOneResponse }),
         ...(saveAndEdit !== undefined && { saveAndEdit }),
+        ...(closesAt !== undefined && { closesAt: closesAt ? new Date(closesAt) : null }),
+        ...(opensAt !== undefined && { opensAt: opensAt ? new Date(opensAt) : null }),
+        ...(isClosed !== undefined && { isClosed }),
+        ...(closedMessage !== undefined && { closedMessage }),
+        // Reset notification sent flag if closing time is updated
+        ...(closesAt !== undefined && { closedNotificationSent: false }),
       },
     });
 
@@ -146,13 +205,13 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
 export async function DELETE(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await context.params;
-    
+
     // Check if form belongs to user
     const form = await prisma.form.findUnique({
       where: { id },

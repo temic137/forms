@@ -5,16 +5,16 @@ export type FieldType =
   | "long-answer"
   | "text"
   | "textarea"
-  
+
   // Contact Info
   | "email"
   | "phone"
   | "address"
-  
+
   // Numbers
   | "number"
   | "currency"
-  
+
   // Choices & Selection
   | "multiple-choice"
   | "choices"
@@ -27,7 +27,7 @@ export type FieldType =
   | "select"
   | "switch"
   | "choice-matrix"
-  
+
   // Date & Time
   | "date"
   | "time"
@@ -35,13 +35,13 @@ export type FieldType =
   | "datetime-picker"
   | "time-picker"
   | "date-range"
-  
+
   // Rating & Ranking
   | "ranking"
   | "star-rating"
   | "slider"
   | "opinion-scale"
-  
+
   // Display Elements
   | "display-text"
   | "h1"
@@ -52,11 +52,11 @@ export type FieldType =
   | "html"
   | "image"
   | "video"
-  
+
   // File Uploads
   | "file"
   | "file-uploader"
-  
+
   // Other
   | "tel"
   | "url"
@@ -261,6 +261,12 @@ export interface FormConfig {
   quizMode?: QuizModeConfig;
   limitOneResponse?: boolean;
   saveAndEdit?: boolean;
+
+  // Scheduling
+  closesAt?: string; // ISO UTC string
+  opensAt?: string; // ISO UTC string
+  isClosed?: boolean;
+  closedMessage?: string;
 }
 
 // File Upload Response

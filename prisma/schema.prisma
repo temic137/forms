@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // The output is now directed to the default location inside node_modules
   // output        = "../generated/prisma-client"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
@@ -41,18 +41,18 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  isAnonymous   Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  forms         Form[]
+  id             String         @id @default(cuid())
+  name           String?
+  email          String?        @unique
+  password       String?
+  emailVerified  DateTime?
+  image          String?
+  isAnonymous    Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  accounts       Account[]
+  sessions       Session[]
+  forms          Form[]
   collaborations Collaborator[]
 }
 
@@ -65,26 +65,34 @@ model VerificationToken {
 }
 
 model Form {
-  id                  String        @id @default(cuid())
-  userId              String?
-  title               String
-  fieldsJson          Json
-  multiStepConfig     Json?
-  styling             Json?
-  notifications       Json?
-  translations        Json?
-  templateId          String?
-  conversationalMode  Boolean       @default(false)
-  googleSheetsConfig  Json?
-  quizMode            Json?
-  limitOneResponse    Boolean       @default(false)
-  saveAndEdit         Boolean       @default(false)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String?
+  title              String
+  fieldsJson         Json
+  multiStepConfig    Json?
+  styling            Json?
+  notifications      Json?
+  translations       Json?
+  templateId         String?
+  conversationalMode Boolean  @default(false)
+  googleSheetsConfig Json?
+  quizMode           Json?
+  limitOneResponse   Boolean  @default(false)
+  saveAndEdit        Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  submissions  Submission[]
-  integrations Integration[]
+  // Scheduling & Access Control
+  closesAt                 DateTime? // UTC
+  opensAt                  DateTime? // UTC
+  isClosed                 Boolean   @default(false)
+  closedMessage            String?
+  closedNotificationSent   Boolean   @default(false)
+  closedSubmissionAttempts Int       @default(0)
+
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissions   Submission[]
+  integrations  Integration[]
   collaborators Collaborator[]
 
   // Performance indexes
@@ -111,14 +119,14 @@ model Collaborator {
 }
 
 model Submission {
-  id          String   @id @default(cuid())
-  formId      String
-  answersJson Json
-  score       Json?
+  id              String   @id @default(cuid())
+  formId          String
+  answersJson     Json
+  score           Json?
   respondentId    String?
   respondentEmail String?
   editToken       String?  @unique
-  createdAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
 
   form  Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
   files File[]

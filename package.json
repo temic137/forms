@@ -34,6 +34,8 @@
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "cohere-ai": "^7.19.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^17.2.3",
     "firebase": "^12.5.0",
     "firebase-admin": "^13.6.0",
@@ -73,6 +75,10 @@
     "eslint-config-next": "16.0.1",
     "prisma": "^6.18.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "npx -y tsx prisma/seed.ts"
   }
 }

@@ -11,7 +11,7 @@ import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
 import QuizSettings from "./QuizSettings";
 import StyleEditor from "./StyleEditor";
-import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle, Layout, Bell, Palette, GraduationCap, Users, ArrowUp } from "lucide-react";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle, Layout, Bell, Palette, GraduationCap, Users, ArrowUp, CalendarClock, History, PlayCircle, Clock } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 import ShareCollaboratorButton from "./ShareCollaboratorButton";
@@ -38,6 +38,17 @@ interface DragDropFormBuilderProps {
   onQuizModeChange?: (config: QuizModeConfig | undefined) => void;
   onLimitOneResponseChange?: (enabled: boolean) => void;
   onSaveAndEditChange?: (enabled: boolean) => void;
+
+  // Scheduling Props
+  closesAt?: string;
+  opensAt?: string;
+  isClosed?: boolean;
+  closedMessage?: string;
+  onClosesAtChange?: (date: string | undefined) => void;
+  onOpensAtChange?: (date: string | undefined) => void;
+  onIsClosedChange?: (closed: boolean) => void;
+  onClosedMessageChange?: (message: string) => void;
+
   onSave: () => void;
   onCancel: () => void;
   saving?: boolean;
@@ -64,6 +75,15 @@ export default function DragDropFormBuilder({
   onCancel,
   saving = false,
   currentFormId,
+  // Scheduling props
+  closesAt,
+  opensAt,
+  isClosed,
+  closedMessage,
+  onClosesAtChange,
+  onOpensAtChange,
+  onIsClosedChange,
+  onClosedMessageChange,
 }: DragDropFormBuilderProps) {
   const router = useRouter();
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
@@ -100,6 +120,53 @@ export default function DragDropFormBuilder({
     reason?: string;
     options?: string[];
   }>>([]);
+
+  // Local state for scheduling to handle timezone conversion
+  const [localClosesAt, setLocalClosesAt] = useState<string>("");
+  const [localOpensAt, setLocalOpensAt] = useState<string>("");
+
+  useEffect(() => {
+    // Sync local state with props when they change (convert UTC to local for input)
+    if (closesAt) {
+      const date = new Date(closesAt);
+      // Format for datetime-local input: YYYY-MM-DDThh:mm
+      const localIso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      setLocalClosesAt(localIso);
+    } else {
+      setLocalClosesAt("");
+    }
+  }, [closesAt]);
+
+  useEffect(() => {
+    // Sync local state with props when they change
+    if (opensAt) {
+      const date = new Date(opensAt);
+      const localIso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      setLocalOpensAt(localIso);
+    } else {
+      setLocalOpensAt("");
+    }
+  }, [opensAt]);
+
+  const handleClosesAtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalClosesAt(value);
+    if (!value) {
+      onClosesAtChange?.(undefined);
+    } else {
+      onClosesAtChange?.(new Date(value).toISOString());
+    }
+  };
+
+  const handleOpensAtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalOpensAt(value);
+    if (!value) {
+      onOpensAtChange?.(undefined);
+    } else {
+      onOpensAtChange?.(new Date(value).toISOString());
+    }
+  };
 
   // Handler for AI follow-up suggestions
   const handleFollowUpAIResult = (data: Record<string, unknown>) => {
@@ -677,6 +744,15 @@ export default function DragDropFormBuilder({
               <span className="text-sm font-medium">Back</span>
             </button>
 
+            {/* Status Badge (Mobile) */}
+            {isClosed && (
+              <div className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                <History className="w-3 h-3" />
+                <span>Closed</span>
+              </div>
+            )}
+
+
             <div className="flex-1 min-w-0">
               <input
                 type="text"
@@ -739,6 +815,30 @@ export default function DragDropFormBuilder({
               <ArrowLeft className="w-4 h-4" />
               <span>Dashboard</span>
             </button>
+
+            {/* Status Indicators (Desktop) */}
+            {isClosed && (
+              <div className="px-2.5 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full flex items-center gap-1.5 animate-in fade-in">
+                <History className="w-3.5 h-3.5" />
+                <span>Closed</span>
+              </div>
+            )}
+            {!isClosed && opensAt && new Date(opensAt) > new Date() && (
+              <div className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full flex items-center gap-1.5 animate-in fade-in">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Scheduled</span>
+              </div>
+            )}
+            {/* Reopen Quick Action */}
+            {isClosed && (
+              <button
+                onClick={() => onIsClosedChange?.(false)}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded-full text-xs font-medium transition-colors"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                Reopen Form
+              </button>
+            )}
 
             <div className="flex-1 min-w-0">
               <input
@@ -1372,6 +1472,125 @@ export default function DragDropFormBuilder({
                           )}
                         </div>
                       </div>
+
+                      {/* Scheduling Settings */}
+                      {(onClosesAtChange || onIsClosedChange) && (
+                        <div className="space-y-3 pt-2">
+                          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                            <CalendarClock className="w-4 h-4" />
+                            Scheduling & Access
+                          </h3>
+                          <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                            {/* Manual Close */}
+                            {onIsClosedChange && (
+                              <div className="flex items-center justify-between">
+                                <label className="text-sm text-gray-700 font-medium cursor-pointer" htmlFor="close-form-toggle">
+                                  Close Form Manually
+                                </label>
+                                <button
+                                  id="close-form-toggle"
+                                  role="switch"
+                                  aria-checked={isClosed || false}
+                                  onClick={() => onIsClosedChange(!isClosed)}
+                                  className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${isClosed ? 'bg-red-500' : 'bg-gray-200'}`}
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isClosed ? 'translate-x-4' : 'translate-x-0'}`}
+                                  />
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Schedule Open */}
+                            {onOpensAtChange && (
+                              <div className="pt-2 border-t border-gray-200 mt-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Schedule Open Date
+                                </label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="datetime-local"
+                                    value={localOpensAt}
+                                    onChange={handleOpensAtChange}
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-black focus:border-black"
+                                  />
+                                  {localOpensAt && (
+                                    <button
+                                      onClick={() => {
+                                        setLocalOpensAt("");
+                                        onOpensAtChange(undefined);
+                                      }}
+                                      className="p-2 text-gray-500 hover:text-red-500 hover:bg-gray-100 rounded-md"
+                                      title="Clear"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Form will be closed until this time.
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Schedule Close */}
+                            {onClosesAtChange && (
+                              <div className="pt-2 border-t border-gray-200 mt-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Schedule Auto-Close
+                                </label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="datetime-local"
+                                    value={localClosesAt}
+                                    onChange={handleClosesAtChange}
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-black focus:border-black"
+                                  />
+                                  {localClosesAt && (
+                                    <button
+                                      onClick={() => {
+                                        setLocalClosesAt("");
+                                        onClosesAtChange(undefined);
+                                      }}
+                                      className="p-2 text-gray-500 hover:text-red-500 hover:bg-gray-100 rounded-md"
+                                      title="Clear"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Form will automatically close at this time.
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Closed Message */}
+                            {onClosedMessageChange && (
+                              <div className="pt-2 border-t border-gray-200 mt-2">
+                                <label htmlFor="closed-message" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Closed Form Message
+                                </label>
+                                <textarea
+                                  id="closed-message"
+                                  value={closedMessage || ""}
+                                  onChange={(e) => onClosedMessageChange(e.target.value)}
+                                  rows={3}
+                                  maxLength={200}
+                                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-black focus:border-black"
+                                  placeholder="This form is no longer accepting responses."
+                                />
+                                <div className="flex justify-end">
+                                  <span className="text-xs text-gray-500">
+                                    {(closedMessage || "").length}/200
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Submission Settings */}
                       {(onLimitOneResponseChange || onSaveAndEditChange) && (

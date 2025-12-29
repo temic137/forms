@@ -5,6 +5,243 @@
 
 import { getGroqClient } from './groq';
 
+/**
+ * FIELD_TYPE_REGISTRY - Dynamic Field Type Selection System
+ * 
+ * This registry provides the AI with complete information about all available
+ * field types, their capabilities, and when to use them. The AI should scan
+ * this registry for EVERY question to select the optimal field type.
+ */
+export const FIELD_TYPE_REGISTRY = {
+  // Text Input
+  'short-answer': {
+    category: 'Text',
+    description: 'Single-line text input',
+    bestFor: ['names', 'titles', 'short responses', 'single words/phrases'],
+    signals: ['name', 'title', 'what is', 'brief', 'one word'],
+    maxLength: 'short (< 100 chars)'
+  },
+  'long-answer': {
+    category: 'Text',
+    description: 'Multi-line text area',
+    bestFor: ['explanations', 'descriptions', 'feedback', 'stories', 'detailed responses'],
+    signals: ['explain', 'describe', 'tell us', 'feedback', 'comments', 'why', 'how'],
+    maxLength: 'unlimited'
+  },
+
+  // Choices
+  'multiple-choice': {
+    category: 'Choices',
+    description: 'Single selection from options (radio buttons)',
+    bestFor: ['exclusive choices', 'single answer', 'quizzes'],
+    signals: ['choose one', 'select', 'which', 'pick one'],
+    allowsMultiple: false
+  },
+  'checkboxes': {
+    category: 'Choices',
+    description: 'Multiple selections allowed',
+    bestFor: ['multiple selections', 'check all that apply', 'preferences'],
+    signals: ['select all', 'check all', 'multiple', 'all that apply'],
+    allowsMultiple: true
+  },
+  'dropdown': {
+    category: 'Choices',
+    description: 'Compact single selection menu',
+    bestFor: ['long option lists (>5)', 'countries', 'states', 'categories'],
+    signals: ['select from list', 'choose from'],
+    allowsMultiple: false,
+    optimalWhen: 'options > 5'
+  },
+  'multiselect': {
+    category: 'Choices',
+    description: 'Compact multiple selection menu',
+    bestFor: ['multiple selections from long lists', 'tags', 'categories'],
+    signals: ['select multiple', 'choose several'],
+    allowsMultiple: true,
+    optimalWhen: 'options > 5 && multiple allowed'
+  },
+  'switch': {
+    category: 'Choices',
+    description: 'Toggle between two states',
+    bestFor: ['yes/no', 'true/false', 'on/off', 'binary choices', 'attendance'],
+    signals: ['yes/no', 'will you', 'are you', 'attending', 'agree', 'accept'],
+    allowsMultiple: false,
+    optimalWhen: 'exactly 2 options'
+  },
+  'picture-choice': {
+    category: 'Choices',
+    description: 'Visual selection with images',
+    bestFor: ['visual preferences', 'product selection', 'style choices'],
+    signals: ['which looks', 'choose design', 'select style', 'pick image'],
+    requiresImages: true
+  },
+  'choice-matrix': {
+    category: 'Choices',
+    description: 'Grid of options for multiple related questions',
+    bestFor: ['rating multiple items', 'comparing options', 'survey grids'],
+    signals: ['rate each', 'for each item', 'matrix', 'grid'],
+    structured: true
+  },
+
+  // Rating & Ranking
+  'star-rating': {
+    category: 'Rating & Ranking',
+    description: '1-5 star visual rating',
+    bestFor: ['satisfaction', 'quality', 'experience', 'reviews', 'emotional ratings'],
+    signals: ['rate', 'rating', 'how satisfied', 'quality', 'experience', 'stars'],
+    scale: '1-5',
+    visual: true
+  },
+  'opinion-scale': {
+    category: 'Rating & Ranking',
+    description: 'Numeric scale with labeled endpoints',
+    bestFor: ['agreement scales', 'likelihood', 'intensity', 'NPS', 'labeled scales'],
+    signals: ['strongly agree', 'disagree', 'likely', 'unlikely', 'scale of', 'recommend'],
+    scale: 'customizable',
+    hasLabels: true
+  },
+  'slider': {
+    category: 'Rating & Ranking',
+    description: 'Continuous numeric range selector',
+    bestFor: ['ranges', 'budgets', 'percentages', 'precise numeric input'],
+    signals: ['range', 'between', 'from X to Y', 'how much', 'percentage'],
+    scale: 'continuous',
+    precise: true
+  },
+  'ranking': {
+    category: 'Rating & Ranking',
+    description: 'Drag-and-drop ordering of items',
+    bestFor: ['prioritization', 'order of preference', 'ranking items'],
+    signals: ['rank', 'order', 'prioritize', 'preference order', 'most to least'],
+    interactive: true
+  },
+
+  // Contact Info
+  'email': {
+    category: 'Contact',
+    description: 'Email address with validation',
+    bestFor: ['email addresses'],
+    signals: ['email', 'e-mail', 'contact email'],
+    validates: 'email format',
+    autoDetect: true
+  },
+  'phone': {
+    category: 'Contact',
+    description: 'Phone number with formatting',
+    bestFor: ['phone numbers', 'mobile numbers'],
+    signals: ['phone', 'telephone', 'mobile', 'contact number', 'cell'],
+    validates: 'phone format',
+    autoDetect: true
+  },
+  'address': {
+    category: 'Contact',
+    description: 'Full address with autocomplete',
+    bestFor: ['mailing address', 'location', 'shipping address'],
+    signals: ['address', 'location', 'where do you live', 'street'],
+    validates: 'address format',
+    autoComplete: true
+  },
+
+  // Date & Time
+  'date-picker': {
+    category: 'Date & Time',
+    description: 'Calendar date selector',
+    bestFor: ['birthdates', 'event dates', 'deadlines', 'appointments'],
+    signals: ['date', 'when', 'birthday', 'deadline', 'appointment', 'born'],
+    calendar: true
+  },
+  'time-picker': {
+    category: 'Date & Time',
+    description: 'Time selector',
+    bestFor: ['appointment times', 'hours', 'meeting times'],
+    signals: ['time', 'what time', 'hour', 'when (time context)'],
+    format: '12/24 hour'
+  },
+  'datetime-picker': {
+    category: 'Date & Time',
+    description: 'Combined date and time selector',
+    bestFor: ['specific appointments', 'event scheduling', 'timestamps'],
+    signals: ['date and time', 'when exactly', 'schedule', 'appointment'],
+    combined: true
+  },
+  'date-range': {
+    category: 'Date & Time',
+    description: 'Start and end date selector',
+    bestFor: ['availability', 'vacation dates', 'project duration'],
+    signals: ['from...to', 'between dates', 'availability', 'duration', 'start and end'],
+    range: true
+  },
+
+  // Files
+  'file-uploader': {
+    category: 'Files',
+    description: 'File upload interface',
+    bestFor: ['document uploads', 'image uploads', 'attachments', 'resumes', 'portfolios'],
+    signals: ['upload', 'attach', 'resume', 'document', 'photo', 'file', 'cv', 'portfolio'],
+    accepts: 'any file type'
+  },
+
+  // Numbers
+  'number': {
+    category: 'Number',
+    description: 'Numeric input with validation',
+    bestFor: ['quantities', 'ages', 'counts', 'scores'],
+    signals: ['how many', 'quantity', 'age', 'number of', 'count', 'years old'],
+    validates: 'numeric'
+  },
+  'currency': {
+    category: 'Number',
+    description: 'Monetary amount with currency symbol',
+    bestFor: ['prices', 'budgets', 'salaries', 'costs', 'donations'],
+    signals: ['price', 'cost', 'budget', 'salary', 'amount', 'donate', 'pay', '$', '€', '£'],
+    validates: 'currency format',
+    autoFormat: true
+  },
+
+  // Display (informational only - not input fields)
+  'heading': {
+    category: 'Display',
+    description: 'Section header',
+    bestFor: ['section titles', 'form organization'],
+    isInput: false
+  },
+  'paragraph': {
+    category: 'Display',
+    description: 'Explanatory text',
+    bestFor: ['instructions', 'descriptions', 'context'],
+    isInput: false
+  },
+  'divider': {
+    category: 'Display',
+    description: 'Visual separator',
+    bestFor: ['section breaks', 'visual organization'],
+    isInput: false
+  },
+  'image': {
+    category: 'Display',
+    description: 'Display image',
+    bestFor: ['logos', 'diagrams', 'visual context'],
+    isInput: false
+  }
+} as const;
+
+// Generate field type summary for AI prompts
+export function getFieldTypeInstructions(): string {
+  const categories = new Map<string, string[]>();
+
+  for (const [fieldType, config] of Object.entries(FIELD_TYPE_REGISTRY)) {
+    const cat = config.category;
+    if (!categories.has(cat)) categories.set(cat, []);
+    categories.get(cat)!.push(`${fieldType}: ${config.description} - Best for: ${config.bestFor?.join(', ') || 'various uses'}`);
+  }
+
+  let instructions = '';
+  Array.from(categories.entries()).forEach(([category, types]) => {
+    instructions += `\n### ${category}\n${types.join('\n')}\n`;
+  });
+  return instructions;
+}
+
 export interface DynamicAnalysis {
   understanding: ContentUnderstanding;
   questions: DynamicQuestion[];
@@ -88,6 +325,15 @@ export class DynamicContentAnalyzer {
   }
 
   private getFlexibleSystemPrompt(): string {
+    // Generate dynamic field type reference from registry
+    const fieldTypeRef = Object.entries(FIELD_TYPE_REGISTRY)
+      .filter(([_, config]) => (config as { isInput?: boolean }).isInput !== false)
+      .map(([type, config]) => {
+        const c = config as { description: string; bestFor?: readonly string[]; signals?: readonly string[] };
+        return `- ${type}: ${c.description}. Best for: ${c.bestFor?.join(', ') || 'various uses'}. Signals: ${c.signals?.join(', ') || 'context-dependent'}`;
+      })
+      .join('\n');
+
     return `You are an elite form architect and data strategist with deep expertise in behavioral psychology, psychometrics, survey methodology, and UX design. Your mission is to TRANSFORM content into forms that capture MAXIMUM STRATEGIC VALUE.
 
 ═══════════════════════════════════════════════════════════════
@@ -163,7 +409,73 @@ FORBIDDEN:
 ✗ Any self-reflection or meta questions
 
 ═══════════════════════════════════════════════════════════════
-                    OUTPUT STRUCTURE
+            INTELLIGENT FIELD TYPE SELECTION (CRITICAL)
+═══════════════════════════════════════════════════════════════
+
+You have access to 25+ specialized field types. For EVERY question, you MUST:
+
+1. **ANALYZE QUESTION INTENT**
+   - What type of data is being collected? (text, number, choice, date, rating, file, contact)
+   - What is the expected response format?
+   - Are there keywords that signal specific field types?
+
+2. **SCAN AVAILABLE FIELD TYPES**
+${fieldTypeRef}
+
+3. **SELECT OPTIMAL FIELD TYPE**
+   - Choose the field type that BEST matches the question's semantic intent
+   - Prioritize user experience (e.g., switch > radio for yes/no, dropdown > radio for 10+ options)
+   - Consider validation needs (e.g., email field for emails, phone for phone numbers)
+   - Use specialized types over generic ones when appropriate
+
+4. **MANDATORY FIELD TYPE RULES**
+   - Email questions → MUST use 'email' field (NOT text)
+   - Phone questions → MUST use 'phone' field (NOT text)
+   - Yes/No or binary questions → MUST use 'switch' field (NOT radio with Yes/No options)
+   - Rating questions (1-5, satisfaction) → MUST use 'star-rating' or 'opinion-scale' (NOT number)
+   - Date questions → MUST use 'date-picker' (NOT text)
+   - Long option lists (>5 options) → MUST use 'dropdown' (NOT multiple-choice)
+   - Currency/money amounts → MUST use 'currency' (NOT number)
+   - File uploads → MUST use 'file-uploader' (NOT text)
+   - Multiple selections → MUST use 'checkboxes' or 'multiselect' (NOT single checkbox)
+   - Detailed explanations → MUST use 'long-answer' (NOT short-answer)
+   - Names, titles, brief input → MUST use 'short-answer' (NOT long-answer)
+   - Ranking/ordering items → MUST use 'ranking' (NOT text or number)
+   - NPS (0-10 recommend) → MUST use 'opinion-scale' (NOT number)
+
+5. **FIELD SELECTION EXAMPLES**
+
+❌ BAD: "What's your email?" → type: "text"
+✅ GOOD: "What's your email?" → type: "email" (validates format, better UX)
+
+❌ BAD: "Rate your satisfaction 1-5" → type: "number"
+✅ GOOD: "Rate your satisfaction 1-5" → type: "star-rating" (visual, intuitive)
+
+❌ BAD: "Will you attend?" → type: "multiple-choice", options: ["Yes", "No"]
+✅ GOOD: "Will you attend?" → type: "switch" (better UX for binary choice)
+
+❌ BAD: "Select your country" (195 options) → type: "multiple-choice"
+✅ GOOD: "Select your country" (195 options) → type: "dropdown" (compact, searchable)
+
+❌ BAD: "What's your budget range?" → type: "text"
+✅ GOOD: "What's your budget range?" → type: "slider" or "currency" (structured input)
+
+❌ BAD: "Upload your resume" → type: "text"
+✅ GOOD: "Upload your resume" → type: "file-uploader" (proper file handling)
+
+❌ BAD: "How likely are you to recommend us? (0-10)" → type: "number"
+✅ GOOD: "How likely are you to recommend us? (0-10)" → type: "opinion-scale" (better NPS UX)
+
+❌ BAD: "Order these items by preference" → type: "text"
+✅ GOOD: "Order these items by preference" → type: "ranking" (interactive drag-and-drop)
+
+❌ BAD: "Tell us about your experience" → type: "short-answer"
+✅ GOOD: "Tell us about your experience" → type: "long-answer" (allows detailed response)
+
+**CRITICAL**: DO NOT default to 'text', 'radio', or 'checkbox' when specialized types exist!
+
+═══════════════════════════════════════════════════════════════
+                        OUTPUT STRUCTURE
 ═══════════════════════════════════════════════════════════════
 
 {
@@ -190,7 +502,8 @@ FORBIDDEN:
     {
       "question": "Clear, well-crafted question",
       "rationale": "Strategic purpose of this question",
-      "suggestedFieldType": "optimal field type",
+      "suggestedFieldType": "optimal field type FROM THE REGISTRY ABOVE",
+      "fieldTypeReasoning": "Why this specific field type was chosen",
       "validationSuggestions": "validation rules",
       "placeholder": "helpful example",
       "helpText": "strategic guidance",
@@ -562,7 +875,7 @@ EXAMPLE OF CORRECT OUTPUT FORMAT:
     {
       "id": "q1",
       "label": "What is the SI unit of electric current?",
-      "type": "radio",
+      "type": "multiple-choice",
       "required": true,
       "options": ["Volt", "Ampere", "Ohm", "Watt"],
       "quizConfig": {
@@ -585,7 +898,7 @@ CRITICAL REQUIREMENTS:
   - correctAnswer: the exact text of the correct option
   - points: always set to 1 (default)
   - explanation: brief explanation of why the answer is correct
-- Use radio type for multiple choice, checkbox for multiple correct answers
+- Use 'multiple-choice' for single correct answer, 'checkboxes' for multiple correct answers
 - NO questions about user preferences, knowledge level, or learning goals
 - ALWAYS include quizMode object with enabled: true
 - Number questions from q1 to q${quizQuestionCount}`;
@@ -603,32 +916,40 @@ SURVEY DESIGN PRINCIPLES:
 3. Avoid leading, biased, or double-barreled questions
 4. Design for statistical analysis and cross-tabulation
 5. Include both quantitative and qualitative questions
-6. FIELD TYPES: Use 'radio' for single choice, 'checkboxes' for multiple choice (NOT 'checkbox')
+6. Use INTELLIGENT FIELD TYPE SELECTION based on question semantics
 
-QUESTION TYPES TO USE:
-- Likert Scale (5 or 7 point): "Strongly Disagree" to "Strongly Agree" (Type: radio)
-- Satisfaction Scale: "Very Dissatisfied" to "Very Satisfied" (Type: radio)
-- NPS (0-10): "How likely are you to recommend...?" (Type: radio)
-- Frequency: "Never" to "Always" (Type: radio)
-- Multiple Choice: "Select all that apply" (Type: checkboxes)
-- Open-ended: For rich qualitative insights (Type: textarea)
+FIELD TYPE SELECTION FOR SURVEYS:
+- Satisfaction/Experience ratings → 'star-rating' (visual, intuitive)
+- Agreement scales (Likert) → 'opinion-scale' (labeled endpoints)
+- NPS (0-10 recommend) → 'opinion-scale' (professional NPS format)
+- Frequency questions → 'opinion-scale' (Never to Always scale)
+- Importance/Priority → 'slider' (continuous range)
+- Multiple selections → 'checkboxes' (select all that apply)
+- Ranking preferences → 'ranking' (drag-and-drop ordering)
+- Open-ended feedback → 'long-answer' (detailed text area)
+- Email collection → 'email' (with validation)
 
 AVOID THESE MISTAKES:
-❌ Double-barreled: "How satisfied are you with our price and quality?"
-❌ Leading: "Don't you agree that our service is excellent?"
-❌ Vague: "How do you feel about things?"
-❌ Using 'checkbox' for list selection (Use 'checkboxes')
+❌ Using 'number' for ratings (use star-rating or opinion-scale)
+❌ Using 'text' for emails (use email field with validation)
+❌ Using generic types when specialized ones exist
 ❌ Returning empty 'options' arrays for choice questions
 
-EXAMPLE FIELD OUTPUT:
+EXAMPLE FIELD OUTPUTS:
 {
   "id": "q1",
   "label": "How likely are you to recommend us to a friend or colleague?",
-  "type": "radio",
+  "type": "opinion-scale",
   "required": true,
   "options": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-  "helpText": "0 is not likely at all, 10 is extremely likely",
-  "order": 1
+  "helpText": "0 is not likely at all, 10 is extremely likely"
+},
+{
+  "id": "q2",
+  "label": "How satisfied are you with our service?",
+  "type": "star-rating",
+  "required": true,
+  "helpText": "Rate from 1 to 5 stars"
 }
 
 Return ONLY valid JSON.`;
@@ -694,12 +1015,17 @@ RSVP FORM ESSENTIALS:
 5. Special accommodations needed
 6. Optional message to host
 
-Use appropriate field types:
-- radio for Yes/No/Maybe attendance
-- number for guest count
-- select for meal choices
-- textarea for special requests
-- checkbox for dietary restrictions (multiple selections)
+INTELLIGENT FIELD TYPE SELECTION:
+- Attendance (Yes/No) → 'switch' (binary toggle, better UX)
+- Attendance (Yes/No/Maybe) → 'multiple-choice' (3 options)
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Phone → 'phone' (with formatting)
+- Guest count → 'number' (numeric input)
+- Meal selection → 'dropdown' (compact menu)
+- Dietary restrictions → 'checkboxes' (multiple selections)
+- Event date → 'date-picker' (calendar selector)
+- Special requests → 'long-answer' (detailed text)
 
 Return ONLY valid JSON.`;
 
@@ -733,13 +1059,15 @@ REGISTRATION FORM BEST PRACTICES:
 5. Consent checkboxes for terms/privacy
 6. Marketing preferences
 
-Field type guidelines:
-- email for email addresses
-- tel for phone numbers
-- text for names
-- select for country/region
-- checkbox for consent and preferences
-- date for birth dates
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text input)
+- Email → 'email' (with validation)
+- Phone → 'phone' (with formatting)
+- Country/Region → 'dropdown' (long list of options)
+- Birth date → 'date-picker' (calendar selector)
+- Terms acceptance → 'switch' (binary agreement)
+- Multiple preferences → 'checkboxes' (select all that apply)
+- Password → 'short-answer' with validation
 
 Return ONLY valid JSON.`;
 
@@ -772,13 +1100,16 @@ BOOKING FORM ESSENTIALS:
 5. Special requests or notes
 6. Confirmation preferences
 
-Field types:
-- date for date selection
-- select for time slots
-- select/radio for service types
-- number for guest count
-- textarea for special requests
-- tel for phone
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Phone → 'phone' (with formatting)
+- Date selection → 'date-picker' (calendar interface)
+- Time slots → 'dropdown' (compact selection)
+- Service types → 'dropdown' or 'multiple-choice' (based on option count)
+- Guest count → 'number' (numeric input)
+- Date + Time → 'datetime-picker' (combined selector)
+- Special requests → 'long-answer' (detailed text)
 
 Return ONLY valid JSON.`;
 
@@ -812,14 +1143,16 @@ ORDER FORM ESSENTIALS:
 5. Payment preferences
 6. Delivery instructions
 
-Field types:
-- text for names and addresses
-- email for email
-- tel for phone
-- select for product choices, quantities
-- number for quantities
-- textarea for delivery instructions
-- checkbox for add-ons or options
+INTELLIGENT FIELD TYPE SELECTION:
+- Customer name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Phone → 'phone' (with formatting)
+- Address → 'address' (with autocomplete)
+- Product selection → 'dropdown' (compact selection)
+- Quantity → 'number' (numeric input)
+- Price/cost fields → 'currency' (with formatting)
+- Add-ons → 'checkboxes' (multiple selections)
+- Delivery instructions → 'long-answer' (detailed text)
 
 Return ONLY valid JSON.`;
 
@@ -853,15 +1186,17 @@ APPLICATION FORM ESSENTIALS:
 5. Supporting documents references
 6. Additional relevant questions
 
-Field types:
-- text for name, titles, company names
-- email for email
-- tel for phone
-- url for LinkedIn/portfolio
-- date for availability dates
-- textarea for cover letter, experience descriptions
-- select for experience levels, education
-- number for years of experience
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Phone → 'phone' (with formatting)
+- LinkedIn/Portfolio → 'short-answer' (URL input)
+- Resume/CV upload → 'file-uploader' (document upload)
+- Availability dates → 'date-picker' or 'date-range' (calendar)
+- Experience level → 'dropdown' (selection menu)
+- Years of experience → 'number' (numeric input)
+- Expected salary → 'currency' (with formatting)
+- Cover letter/Motivation → 'long-answer' (detailed text)
 
 Return ONLY valid JSON.`;
 
@@ -903,12 +1238,13 @@ Return ONLY valid JSON.`;
 
 **IMPORTANT: Generate EXACTLY ${contactFieldCount} fields.**
 
-Include essential fields:
-- Name
-- Email
-- Subject or topic (select if categories known)
-- Message (textarea)
-- Optional additional context fields
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Phone → 'phone' (with formatting)
+- Subject → 'dropdown' (if categories known) or 'short-answer'
+- Message → 'long-answer' (detailed text area)
+- Urgency → 'dropdown' (selection menu)
 
 Return valid JSON with title and fields array.`;
 
@@ -922,13 +1258,18 @@ CRITICAL RULE: Generate EXACTLY the number of fields requested.
 
 CONSENT FORM ESSENTIALS:
 1. Participant/signatory identification
-2. Clear consent statements (checkbox for each)
+2. Clear consent statements (switch for each)
 3. Date of consent
 4. Optional: Parent/guardian info for minors
 5. Contact information
 6. Digital signature acknowledgment
 
-Use checkbox type for individual consent items - each consent should be a separate checkbox.
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Individual consents → 'switch' (binary toggle for each item)
+- Date → 'date-picker' (calendar selector)
+- Signature → 'short-answer' (typed signature)
 
 Return ONLY valid JSON.`;
 
@@ -993,12 +1334,14 @@ DONATION FORM ESSENTIALS:
 5. Anonymous option
 6. Contact for acknowledgment
 
-Field types:
-- radio for preset amounts
-- number for custom amount
-- select for frequency
-- checkbox for anonymous, dedications
-- textarea for messages
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Preset amounts → 'multiple-choice' (radio-style selection)
+- Custom amount → 'currency' (with currency formatting)
+- Frequency → 'dropdown' (one-time vs recurring)
+- Anonymous option → 'switch' (binary toggle)
+- Dedication message → 'long-answer' (detailed text)
 
 Return ONLY valid JSON.`;
 
@@ -1037,12 +1380,14 @@ Return ONLY valid JSON.`;
 
 **IMPORTANT: Generate EXACTLY ${contestFieldCount} fields.**
 
-Include relevant fields:
-- Name and email
-- Age confirmation (if needed)
-- Entry answer or submission
-- Terms acceptance checkbox
-- Optional marketing opt-in
+INTELLIGENT FIELD TYPE SELECTION:
+- Name → 'short-answer' (brief text)
+- Email → 'email' (with validation)
+- Age → 'number' or 'switch' (age confirmation)
+- Entry answer → 'short-answer' or 'long-answer' (based on requirement)
+- Terms acceptance → 'switch' (binary toggle)
+- Marketing opt-in → 'switch' (binary toggle)
+- How did you hear → 'dropdown' (source selection)
 
 Return valid JSON with title and fields array.`;
 
@@ -1062,7 +1407,14 @@ REVIEW FORM ESSENTIALS:
 5. Would recommend? (Yes/No)
 6. Date of experience
 
-Use radio/select for ratings, textarea for comments.
+INTELLIGENT FIELD TYPE SELECTION:
+- Overall rating → 'star-rating' (visual 1-5 stars)
+- Specific aspect ratings → 'star-rating' or 'opinion-scale' (for each aspect)
+- Recommendation likelihood → 'opinion-scale' (0-10 NPS style)
+- Would recommend? → 'switch' (yes/no toggle)
+- Written review → 'long-answer' (detailed text)
+- Reviewer name → 'short-answer' (brief text)
+- Date of experience → 'date-picker' (calendar selector)
 
 Return ONLY valid JSON.`;
 
@@ -1070,12 +1422,12 @@ Return ONLY valid JSON.`;
 
 **IMPORTANT: Generate EXACTLY ${reviewFieldCount} fields.**
 
-Include relevant fields:
-- Overall rating (1-5 scale or similar)
-- Specific ratings for key aspects
-- Written review/testimonial
-- Recommendation question
-- Reviewer name (optional)
+INTELLIGENT FIELD TYPE SELECTION:
+- Overall rating → 'star-rating' (visual, intuitive)
+- Aspect ratings → 'star-rating' or 'opinion-scale'
+- Recommendation → 'switch' or 'opinion-scale'
+- Written review → 'long-answer' (detailed feedback)
+- Reviewer name → 'short-answer' (optional)
 
 Return valid JSON with title and fields array.`;
 

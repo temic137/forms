@@ -5,6 +5,10 @@ export interface Form {
   title: string;
   createdAt: string;
   updatedAt: string;
+  // Scheduling status
+  closesAt?: string | null;
+  opensAt?: string | null;
+  isClosed?: boolean;
   _count: {
     submissions: number;
   };

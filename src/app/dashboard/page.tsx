@@ -15,7 +15,7 @@ const DragDropFormBuilder = lazy(() => import("@/components/builder/DragDropForm
 import PostSaveShareModal from "@/components/PostSaveShareModal";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
 import AnimatedDashboardSubtitle from "@/components/AnimatedDashboardSubtitle";
-import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X, UserPlus } from "lucide-react";
+import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X, UserPlus, History, Clock } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
@@ -67,6 +67,12 @@ export default function DashboardPage() {
   const [limitOneResponse, setLimitOneResponse] = useState(false);
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
+  // Scheduling state
+  const [closesAt, setClosesAt] = useState<string | undefined>(undefined);
+  const [opensAt, setOpensAt] = useState<string | undefined>(undefined);
+  const [isClosed, setIsClosed] = useState(false);
+  const [closedMessage, setClosedMessage] = useState<string | undefined>(undefined);
+
   const {
     query,
     setQuery,
@@ -93,6 +99,11 @@ export default function DashboardPage() {
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
       setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
+      // Reset scheduling for generated forms
+      setClosesAt(undefined);
+      setOpensAt(undefined);
+      setIsClosed(false);
+      setClosedMessage(undefined);
       setEditingFormId(null);
       setShowBuilder(true);
     }
@@ -108,7 +119,13 @@ export default function DashboardPage() {
     if (data.multiStepConfig !== undefined) setPreviewMultiStepConfig(data.multiStepConfig);
     if (data.quizMode !== undefined) setPreviewQuizMode(data.quizMode);
     if (data.limitOneResponse !== undefined) setLimitOneResponse(data.limitOneResponse);
+    if (data.limitOneResponse !== undefined) setLimitOneResponse(data.limitOneResponse);
     if (data.saveAndEdit !== undefined) setSaveAndEdit(data.saveAndEdit);
+    // Scheduling updates from collaborator
+    if (data.closesAt !== undefined) setClosesAt(data.closesAt);
+    if (data.opensAt !== undefined) setOpensAt(data.opensAt);
+    if (data.isClosed !== undefined) setIsClosed(data.isClosed);
+    if (data.closedMessage !== undefined) setClosedMessage(data.closedMessage);
 
     toast.info('Form updated by collaborator');
   };
@@ -183,7 +200,12 @@ export default function DashboardPage() {
     setPreviewNotifications(undefined);
     setPreviewMultiStepConfig(undefined);
     setLimitOneResponse(false);
+    setLimitOneResponse(false);
     setSaveAndEdit(false);
+    setClosesAt(undefined);
+    setOpensAt(undefined);
+    setIsClosed(false);
+    setClosedMessage(undefined);
     setShowBuilder(true);
   };
 
@@ -201,7 +223,12 @@ export default function DashboardPage() {
         setPreviewMultiStepConfig(data.multiStepConfig as MultiStepConfig | undefined);
         setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
         setLimitOneResponse(data.limitOneResponse || false);
+        setLimitOneResponse(data.limitOneResponse || false);
         setSaveAndEdit(data.saveAndEdit || false);
+        setClosesAt(data.closesAt || undefined);
+        setOpensAt(data.opensAt || undefined);
+        setIsClosed(data.isClosed || false);
+        setClosedMessage(data.closedMessage || undefined);
         setEditingFormId(formId);
         setShowBuilder(true);
       } else {
@@ -265,6 +292,10 @@ export default function DashboardPage() {
           quizMode: previewQuizMode,
           limitOneResponse,
           saveAndEdit,
+          closesAt,
+          opensAt,
+          isClosed,
+          closedMessage,
         }),
       });
 
@@ -337,7 +368,12 @@ export default function DashboardPage() {
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
       setLimitOneResponse(false);
+      setLimitOneResponse(false);
       setSaveAndEdit(false);
+      setClosesAt(undefined);
+      setOpensAt(undefined);
+      setIsClosed(false);
+      setClosedMessage(undefined);
     }
   };
 
@@ -455,6 +491,17 @@ export default function DashboardPage() {
             onQuizModeChange={setPreviewQuizMode}
             onLimitOneResponseChange={setLimitOneResponse}
             onSaveAndEditChange={setSaveAndEdit}
+
+            // Scheduling props
+            closesAt={closesAt}
+            opensAt={opensAt}
+            isClosed={isClosed}
+            closedMessage={closedMessage}
+            onClosesAtChange={setClosesAt}
+            onOpensAtChange={setOpensAt}
+            onIsClosedChange={setIsClosed}
+            onClosedMessageChange={setClosedMessage}
+
             onSave={handleBuilderSave}
             onCancel={handleBuilderCancel}
             saving={savingForm}
@@ -823,8 +870,21 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-base truncate pr-2" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-semibold text-base truncate pr-2 flex items-center gap-2" style={{ color: 'var(--foreground)' }}>
                       {form.title}
+                      {/* Status Badges */}
+                      {(form.isClosed || (form.closesAt && new Date(form.closesAt) < new Date())) && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 border border-red-200">
+                          <History className="w-3 h-3" />
+                          Closed
+                        </span>
+                      )}
+                      {(!form.isClosed && form.opensAt && new Date(form.opensAt) > new Date()) && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                          <Clock className="w-3 h-3" />
+                          Scheduled
+                        </span>
+                      )}
                     </h3>
                     <div className="flex items-center gap-3 text-sm mt-1" style={{ color: 'var(--foreground-muted)' }}>
                       <span className="flex items-center gap-1">
