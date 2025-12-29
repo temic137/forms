@@ -44,229 +44,230 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         closedMessage: true,
       }
     });
-    return NextResponse.json({ error: "Form not found" }, { status: 404 });
-  }
+    if (!form) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
 
     // Check if form is closed
     const now = new Date();
-  const isClosed = form.isClosed ||
-    (form.closesAt && new Date(form.closesAt) < now) ||
-    (form.opensAt && new Date(form.opensAt) > now);
+    const isClosed = form.isClosed ||
+      (form.closesAt && new Date(form.closesAt) < now) ||
+      (form.opensAt && new Date(form.opensAt) > now);
 
-  if (isClosed) {
-    // Increment blocked attempts counter
-    await prisma.form.update({
-      where: { id: formId },
-      data: {
-        closedSubmissionAttempts: {
-          increment: 1
+    if (isClosed) {
+      // Increment blocked attempts counter
+      await prisma.form.update({
+        where: { id: formId },
+        data: {
+          closedSubmissionAttempts: {
+            increment: 1
+          }
         }
-      }
-    });
+      });
 
-    const message = form.closedMessage || "This form is no longer accepting responses.";
-    return NextResponse.json(
-      { error: message },
-      { status: 403 }
-    );
-  }
-
-  // Extract file metadata and respondentId if present
-  const fileMetadata: FileMetadata[] = body._fileMetadata || [];
-  const respondentId = body.respondentId;
-
-  delete body._fileMetadata; // Remove metadata from answers
-  delete body.respondentId; // Remove respondentId from answers
-
-  // Check for previous submission if limited
-  if (form.limitOneResponse && respondentId) {
-    const existingSubmission = await prisma.submission.findFirst({
-      where: {
-        formId,
-        respondentId: String(respondentId),
-      },
-    });
-
-    if (existingSubmission) {
+      const message = form.closedMessage || "This form is no longer accepting responses.";
       return NextResponse.json(
-        { error: "You have already responded to this form." },
+        { error: message },
         { status: 403 }
       );
     }
-  }
 
-  // Get form fields and quiz mode for scoring
-  const fields = form.fieldsJson as unknown as Field[];
-  const quizModeConfig = form.quizMode as QuizModeConfig | null;
+    // Extract file metadata and respondentId if present
+    const fileMetadata: FileMetadata[] = body._fileMetadata || [];
+    const respondentId = body.respondentId;
 
-  // Calculate quiz score if quiz mode is enabled
-  const quizScore = quizModeConfig ? calculateQuizScore(fields, body, quizModeConfig) : null;
+    delete body._fileMetadata; // Remove metadata from answers
+    delete body.respondentId; // Remove respondentId from answers
 
-  // Handle Edit Link logic
-  let editToken: string | null = null;
-  let respondentEmail: string | null = null;
+    // Check for previous submission if limited
+    if (form.limitOneResponse && respondentId) {
+      const existingSubmission = await prisma.submission.findFirst({
+        where: {
+          formId,
+          respondentId: String(respondentId),
+        },
+      });
 
-  if (form.saveAndEdit) {
-    editToken = randomUUID();
-
-    // Attempt to find email in submission
-    const emailField = fields.find(f => f.type === 'email');
-    if (emailField && body[emailField.id]) {
-      respondentEmail = String(body[emailField.id]);
-    } else {
-      // Fallback: search for keys containing 'email'
-      const emailKey = Object.keys(body).find(k => k.toLowerCase().includes('email'));
-      if (emailKey) {
-        respondentEmail = String(body[emailKey]);
+      if (existingSubmission) {
+        return NextResponse.json(
+          { error: "You have already responded to this form." },
+          { status: 403 }
+        );
       }
     }
 
-    // Send edit link if email found
-    if (respondentEmail && respondentEmail.includes('@')) {
-      try {
-        const editLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/f/${formId}/edit?token=${editToken}`;
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || "Form Builder <onboarding@resend.dev>",
-          to: respondentEmail,
-          subject: `Edit your response: ${form.title}`,
-          html: generateEditLinkEmailHtml(form.title, editLink),
-        });
-        console.log(`✓ Edit link sent to ${respondentEmail}`);
-      } catch (e) {
-        console.error("Failed to send edit link:", e);
-        // Continue without failing submission
+    // Get form fields and quiz mode for scoring
+    const fields = form.fieldsJson as unknown as Field[];
+    const quizModeConfig = form.quizMode as QuizModeConfig | null;
+
+    // Calculate quiz score if quiz mode is enabled
+    const quizScore = quizModeConfig ? calculateQuizScore(fields, body, quizModeConfig) : null;
+
+    // Handle Edit Link logic
+    let editToken: string | null = null;
+    let respondentEmail: string | null = null;
+
+    if (form.saveAndEdit) {
+      editToken = randomUUID();
+
+      // Attempt to find email in submission
+      const emailField = fields.find(f => f.type === 'email');
+      if (emailField && body[emailField.id]) {
+        respondentEmail = String(body[emailField.id]);
+      } else {
+        // Fallback: search for keys containing 'email'
+        const emailKey = Object.keys(body).find(k => k.toLowerCase().includes('email'));
+        if (emailKey) {
+          respondentEmail = String(body[emailKey]);
+        }
+      }
+
+      // Send edit link if email found
+      if (respondentEmail && respondentEmail.includes('@')) {
+        try {
+          const editLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/f/${formId}/edit?token=${editToken}`;
+          await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "Form Builder <onboarding@resend.dev>",
+            to: respondentEmail,
+            subject: `Edit your response: ${form.title}`,
+            html: generateEditLinkEmailHtml(form.title, editLink),
+          });
+          console.log(`✓ Edit link sent to ${respondentEmail}`);
+        } catch (e) {
+          console.error("Failed to send edit link:", e);
+          // Continue without failing submission
+        }
       }
     }
-  }
 
-  // Create submission with score
-  const submission = await prisma.submission.create({
-    data: {
-      formId,
-      answersJson: body,
-      score: quizScore ? (quizScore as unknown as Prisma.InputJsonValue) : undefined,
-      respondentId: respondentId ? String(respondentId) : null,
-      editToken: editToken,
-      respondentEmail: respondentEmail,
-    },
-  });
-
-  // Store file metadata in database
-  if (fileMetadata.length > 0) {
-    const fileRecords = fileMetadata.map((file) => ({
-      submissionId: submission.id,
-      fieldId: file.fieldId,
-      filename: file.filename,
-      originalName: file.originalName,
-      size: file.size,
-      mimeType: file.mimeType,
-      path: file.url,
-      uploadedAt: new Date(),
-    }));
-
-    await prisma.file.createMany({
-      data: fileRecords,
+    // Create submission with score
+    const submission = await prisma.submission.create({
+      data: {
+        formId,
+        answersJson: body,
+        score: quizScore ? (quizScore as unknown as Prisma.InputJsonValue) : undefined,
+        respondentId: respondentId ? String(respondentId) : null,
+        editToken: editToken,
+        respondentEmail: respondentEmail,
+      },
     });
-  }
 
-  // Fetch the created submission with file references
-  const submissionWithFiles = await prisma.submission.findUnique({
-    where: { id: submission.id },
-    include: { files: true },
-  });
-
-  // Send notifications to all enabled channels
-  const notificationConfig = form.notifications as NotificationConfig | null;
-  if (notificationConfig?.enabled) {
-    try {
-      // Format submission data for notifications
-      const formattedFields = fields.map((field) => ({
-        label: field.label,
-        value: String(body[field.id] || ""),
-        type: field.type,
+    // Store file metadata in database
+    if (fileMetadata.length > 0) {
+      const fileRecords = fileMetadata.map((file) => ({
+        submissionId: submission.id,
+        fieldId: file.fieldId,
+        filename: file.filename,
+        originalName: file.originalName,
+        size: file.size,
+        mimeType: file.mimeType,
+        path: file.url,
+        uploadedAt: new Date(),
       }));
 
-      // Format file attachments for notifications
-      const formattedFiles = submissionWithFiles?.files.map((file) => {
-        const field = fields.find((f) => f.id === file.fieldId);
-        return {
-          fieldLabel: field?.label || "File",
-          filename: file.originalName,
-          downloadUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}${file.path}`,
-        };
-      }) || [];
-
-      // Prepare notification data
-      const notificationData: SubmissionData = {
-        formTitle: form.title,
-        submissionId: submission.id,
-        timestamp: new Date().toLocaleString(),
-        fields: formattedFields,
-        files: formattedFiles.length > 0 ? formattedFiles : undefined,
-        customMessage: notificationConfig.customMessage,
-      };
-
-      // Send notifications to all enabled channels
-      const results = await sendNotifications(notificationConfig, notificationData, formId);
-
-      // Log results
-      const successful = results.filter((r) => r.success);
-      const failed = results.filter((r) => !r.success);
-
-      if (successful.length > 0) {
-        console.log(`✓ Notifications sent: ${successful.map((r) => r.type).join(", ")}`);
-      }
-      if (failed.length > 0) {
-        console.error(`✗ Notification failures: ${failed.map((r) => `${r.type}: ${r.error}`).join(", ")}`);
-      }
-    } catch (notificationError) {
-      // Log error but don't fail the submission
-      console.error("Failed to send notifications:", notificationError);
+      await prisma.file.createMany({
+        data: fileRecords,
+      });
     }
-  }
 
-  // Sync to Google Sheets if enabled
-  try {
-    const googleSheetsIntegration = await prisma.integration.findFirst({
-      where: {
-        formId,
-        type: "google_sheets",
-        enabled: true
-      }
+    // Fetch the created submission with file references
+    const submissionWithFiles = await prisma.submission.findUnique({
+      where: { id: submission.id },
+      include: { files: true },
     });
 
-    if (googleSheetsIntegration && submissionWithFiles) {
-      const config = googleSheetsIntegration.config as unknown as GoogleSheetsConfig;
-      const formattedData = formatSubmissionForSheet(
-        submissionWithFiles,
-        fields.map(f => ({ id: f.id, label: f.label, type: f.type }))
-      );
+    // Send notifications to all enabled channels
+    const notificationConfig = form.notifications as NotificationConfig | null;
+    if (notificationConfig?.enabled) {
+      try {
+        // Format submission data for notifications
+        const formattedFields = fields.map((field) => ({
+          label: field.label,
+          value: String(body[field.id] || ""),
+          type: field.type,
+        }));
 
-      await addRowToSheet(config, formattedData);
-      console.log('✓ Synced to Google Sheets');
+        // Format file attachments for notifications
+        const formattedFiles = submissionWithFiles?.files.map((file) => {
+          const field = fields.find((f) => f.id === file.fieldId);
+          return {
+            fieldLabel: field?.label || "File",
+            filename: file.originalName,
+            downloadUrl: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}${file.path}`,
+          };
+        }) || [];
+
+        // Prepare notification data
+        const notificationData: SubmissionData = {
+          formTitle: form.title,
+          submissionId: submission.id,
+          timestamp: new Date().toLocaleString(),
+          fields: formattedFields,
+          files: formattedFiles.length > 0 ? formattedFiles : undefined,
+          customMessage: notificationConfig.customMessage,
+        };
+
+        // Send notifications to all enabled channels
+        const results = await sendNotifications(notificationConfig, notificationData, formId);
+
+        // Log results
+        const successful = results.filter((r) => r.success);
+        const failed = results.filter((r) => !r.success);
+
+        if (successful.length > 0) {
+          console.log(`✓ Notifications sent: ${successful.map((r) => r.type).join(", ")}`);
+        }
+        if (failed.length > 0) {
+          console.error(`✗ Notification failures: ${failed.map((r) => `${r.type}: ${r.error}`).join(", ")}`);
+        }
+      } catch (notificationError) {
+        // Log error but don't fail the submission
+        console.error("Failed to send notifications:", notificationError);
+      }
     }
-  } catch (sheetsError) {
-    // Log error but don't fail the submission
-    console.error("Failed to sync to Google Sheets:", sheetsError);
+
+    // Sync to Google Sheets if enabled
+    try {
+      const googleSheetsIntegration = await prisma.integration.findFirst({
+        where: {
+          formId,
+          type: "google_sheets",
+          enabled: true
+        }
+      });
+
+      if (googleSheetsIntegration && submissionWithFiles) {
+        const config = googleSheetsIntegration.config as unknown as GoogleSheetsConfig;
+        const formattedData = formatSubmissionForSheet(
+          submissionWithFiles,
+          fields.map(f => ({ id: f.id, label: f.label, type: f.type }))
+        );
+
+        await addRowToSheet(config, formattedData);
+        console.log('✓ Synced to Google Sheets');
+      }
+    } catch (sheetsError) {
+      // Log error but don't fail the submission
+      console.error("Failed to sync to Google Sheets:", sheetsError);
+    }
+
+    // Track submission (no PII)
+    trackEvent('form_submitted', {
+      fieldCount: fields.length,
+      hasQuizMode: !!quizModeConfig,
+      quizScore: quizScore?.percentage,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      submissionId: submission.id,
+      files: submissionWithFiles?.files || [],
+      score: quizScore,
+    });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "Failed";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
-
-  // Track submission (no PII)
-  trackEvent('form_submitted', {
-    fieldCount: fields.length,
-    hasQuizMode: !!quizModeConfig,
-    quizScore: quizScore?.percentage,
-  });
-
-  return NextResponse.json({
-    ok: true,
-    submissionId: submission.id,
-    files: submissionWithFiles?.files || [],
-    score: quizScore,
-  });
-} catch (err) {
-  const errorMessage = err instanceof Error ? err.message : "Failed";
-  return NextResponse.json({ error: errorMessage }, { status: 500 });
-}
 }
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
