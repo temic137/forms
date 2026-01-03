@@ -21,12 +21,12 @@ export default function AnimatedLandingDescription() {
 
     return (
         <p
-            className="text-xl max-w-2xl mx-auto mb-8 leading-relaxed"
+            className="text-xl max-w-2xl mx-auto mb-8 leading-relaxed font-paper"
             style={{ color: 'var(--foreground-muted)' }}
         >
             Create{" "}
             <span
-                className={`transition-opacity duration-500 inline-block font-medium ${fade ? 'opacity-100' : 'opacity-0'
+                className={`transition-opacity duration-500 inline-block font-bold ${fade ? 'opacity-100' : 'opacity-0'
                     }`}
                 style={{ color: 'var(--foreground)' }}
             >

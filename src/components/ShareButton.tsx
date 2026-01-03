@@ -428,18 +428,18 @@ export default function ShareButton({
 
   // Button style variants
   const buttonStyles = useMemo(() => {
-    const baseStyles = "transition-colors flex items-center justify-center gap-2 font-medium";
+    const baseStyles = "transition-colors flex items-center justify-center gap-2 font-bold font-paper";
     const sizeStyles = size === "sm"
-      ? "px-2.5 py-1.5 text-xs rounded-md"
-      : "px-4 py-2.5 text-sm rounded-lg";
+      ? "px-3 py-1.5 text-xs rounded-full"
+      : "px-5 py-2.5 text-sm rounded-full";
 
     switch (variant) {
       case "subtle":
-        return `${baseStyles} ${sizeStyles} border`;
+        return `${baseStyles} ${sizeStyles} border-2 border-black/20 hover:border-black/40 bg-white text-black`;
       case "icon-only":
-        return `${baseStyles} p-2.5 rounded-lg border`;
+        return `${baseStyles} p-3 rounded-full border border-transparent hover:bg-black/5 text-black`;
       default:
-        return `${baseStyles} ${sizeStyles} bg-black dark:bg-white text-white dark:text-black`;
+        return `${baseStyles} ${sizeStyles} bg-black text-white border-2 border-black hover:bg-black/90`;
     }
   }, [variant, size]);
 
@@ -451,11 +451,6 @@ export default function ShareButton({
           onClick={onQuickShare}
           ref={triggerRef}
           className={buttonStyles}
-          style={
-            variant === "subtle" || variant === "icon-only"
-              ? { borderColor: 'var(--card-border)', color: 'var(--foreground)' }
-              : undefined
-          }
           aria-label="Share"
           aria-expanded={showMenu}
           aria-haspopup="menu"
@@ -463,8 +458,8 @@ export default function ShareButton({
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4 text-green-600" />
-              {variant !== "icon-only" && <span className="text-green-600">Copied!</span>}
+              <Check className="w-4 h-4" />
+              {variant !== "icon-only" && <span>Copied!</span>}
             </>
           ) : (
             <>
@@ -477,11 +472,7 @@ export default function ShareButton({
         {showMenu && mounted && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-[150] w-72 max-w-[calc(100vw-2rem)] rounded-lg border shadow-lg transition-opacity duration-100 scrollbar-hidden"
-            style={{
-              background: 'var(--background)',
-              borderColor: 'var(--card-border)',
-            }}
+            className="fixed z-[150] w-80 max-w-[calc(100vw-2rem)] rounded-2xl border-2 border-black/10 bg-white shadow-none font-paper"
             data-placement={menuPlacement}
             id="share-menu"
             role="menu"
@@ -489,29 +480,20 @@ export default function ShareButton({
             {/* Quick Copy Section */}
             <div className="p-4 pb-3">
               <div
-                className="space-y-3 rounded-lg border px-3 py-3"
-                style={{
-                  background: 'var(--background-subtle)',
-                  borderColor: 'var(--card-border)',
-                }}
+                className="space-y-3 rounded-xl border-2 border-black/10 px-4 py-4 bg-white"
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-                    style={{
-                      background: 'var(--background)',
-                      color: 'var(--foreground-muted)',
-                    }}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/5 text-black"
                   >
-                    <LinkIcon className="w-4 h-4" />
+                    <LinkIcon className="w-5 h-5" />
                   </span>
                   <div className="flex flex-1 flex-col">
-                    <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
+                    <span className="text-sm font-bold text-black">
                       Share link
                     </span>
                     <span
-                      className="text-[11px] truncate max-w-40"
-                      style={{ color: 'var(--foreground-muted)' }}
+                      className="text-xs truncate max-w-48 text-black/60"
                       title={effectiveUrl}
                     >
                       {effectiveUrl.replace(/^https?:\/\//, '')}
@@ -526,13 +508,9 @@ export default function ShareButton({
                     }}
                     disabled={!effectiveUrl}
                     aria-label="Copy share link"
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{
-                      background: 'var(--accent)',
-                      color: 'white',
-                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-black text-white hover:bg-black/90"
                   >
-                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     {copied ? "Copied!" : "Copy link"}
                   </button>
                   <button
@@ -542,13 +520,9 @@ export default function ShareButton({
                     }}
                     disabled={!effectiveUrl}
                     aria-label="Open form in new tab"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{
-                      borderColor: 'var(--card-border)',
-                      color: 'var(--foreground)',
-                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold border-2 border-black/10 hover:border-black/30 transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-white text-black"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <ExternalLink className="w-4 h-4" />
                     Open
                   </button>
                 </div>
@@ -557,21 +531,20 @@ export default function ShareButton({
 
             {/* Share Options */}
             <div
-              className="space-y-3 border-t pt-3 pb-2"
-              style={{ borderColor: 'var(--card-border)' }}
+              className="space-y-3 border-t-2 border-black/10 pt-4 pb-4"
             >
               {shareGroups.map((group) => {
                 const isGrid = group.layout === "grid";
                 return (
-                  <div key={group.id} className="px-2">
-                    <div className="px-2">
-                      <p className="text-xs font-semibold" style={{ color: 'var(--foreground)' }}>{group.title}</p>
+                  <div key={group.id} className="px-4">
+                    <div className="px-1 mb-2">
+                      <p className="text-sm font-bold text-black">{group.title}</p>
                       {group.subtitle && (
-                        <p className="text-[11px]" style={{ color: 'var(--foreground-muted)' }}>{group.subtitle}</p>
+                        <p className="text-xs text-black/60">{group.subtitle}</p>
                       )}
                     </div>
                     <div
-                      className={isGrid ? "mt-2 grid grid-cols-2 gap-1.5" : "mt-2 flex flex-col gap-1"}
+                      className={isGrid ? "grid grid-cols-2 gap-2" : "flex flex-col gap-1"}
                     >
                       {group.options.map((option) => (
                         <button
@@ -581,26 +554,21 @@ export default function ShareButton({
                           }}
                           className={
                             isGrid
-                              ? "flex w-full flex-col items-center gap-2 rounded-lg px-3 py-3 text-center text-sm transition-colors"
-                              : "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
+                              ? "flex w-full flex-col items-center gap-2 rounded-xl px-3 py-3 text-center text-sm transition-colors hover:bg-black/5 border border-transparent hover:border-black/10"
+                              : "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-black/5 border border-transparent hover:border-black/10"
                           }
-                          style={{ color: 'var(--foreground)' }}
                           role="menuitem"
                         >
                           <span
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                            style={{
-                              background: 'var(--background-subtle)',
-                              color: 'var(--foreground-muted)',
-                            }}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/5 text-black"
                           >
                             {option.icon}
                           </span>
                           <span
                             className={
                               isGrid
-                                ? "text-center text-sm font-medium leading-tight"
-                                : "text-left text-sm leading-tight"
+                                ? "text-center text-sm font-bold leading-tight text-black"
+                                : "text-left text-sm font-bold leading-tight text-black"
                             }
                           >
                             {option.label}
@@ -621,7 +589,7 @@ export default function ShareButton({
       {showQR && mounted && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div
-            className="rounded-xl p-6 max-w-sm w-full shadow-xl"
+            className="rounded-xl p-6 max-w-sm w-full"
             style={{ background: 'var(--background)' }}
           >
             <div className="flex justify-between items-center mb-4">
@@ -663,7 +631,7 @@ export default function ShareButton({
       {showEmbed && mounted && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div
-            className="rounded-xl p-6 max-w-3xl w-full shadow-xl my-4"
+            className="rounded-xl p-6 max-w-3xl w-full my-4"
             style={{ background: 'var(--background)' }}
           >
             <div className="flex justify-between items-center mb-4">

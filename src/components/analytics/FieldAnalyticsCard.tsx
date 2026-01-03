@@ -54,16 +54,16 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
   };
 
   const getCompletionColor = (rate: number) => {
-    if (rate >= 90) return '#10b981'; // green
-    if (rate >= 70) return '#f59e0b'; // amber
-    return '#ef4444'; // red
+    if (rate >= 90) return '#000000'; // black
+    if (rate >= 70) return '#4b5563'; // gray-600
+    return '#9ca3af'; // gray-400
   };
 
   return (
-    <div className="py-4 border-b" style={{ borderColor: 'var(--card-border)' }}>
+    <div className="paper-card p-4 border-2 border-black/10 bg-white mb-4">
       <div className="mb-3">
-        <div className="font-medium" style={{ color: 'var(--foreground)' }}>{analytics.label}</div>
-        <div className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
+        <div className="font-bold text-lg font-paper text-black">{analytics.label}</div>
+        <div className="text-xs font-paper text-black/60">
           {analytics.type} field
         </div>
       </div>
@@ -71,18 +71,18 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
         <div className="space-y-4">
           {/* Completion Rate */}
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <span style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
+            <div className="flex justify-between items-center mb-2 font-paper font-bold">
+              <span className="text-sm text-black/60">
                 Completion Rate
               </span>
               <span
-                className="font-semibold"
+                className="font-bold"
                 style={{ color: getCompletionColor(analytics.completionRate) }}
               >
                 {Math.round(analytics.completionRate)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-black/5 rounded-full h-2 overflow-hidden border border-black/10">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -91,7 +91,7 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
                 }}
               />
             </div>
-            <div className="flex justify-between mt-1" style={{ fontSize: '0.75rem', color: 'var(--foreground-muted)' }}>
+            <div className="flex justify-between mt-1 font-paper font-bold text-xs text-black/60">
               <span>{analytics.totalResponses} responses</span>
               <span>{analytics.emptyResponses} empty</span>
             </div>
@@ -99,28 +99,28 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
 
           {/* Text Field Analytics */}
           {(analytics.type === 'text' || analytics.type === 'textarea' || analytics.type === 'email') && (
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-black/10">
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Avg Length</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Avg Length</div>
+                <div className="font-bold font-paper text-black">
                   {Math.round(analytics.avgLength || 0)} chars
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Avg Words</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Avg Words</div>
+                <div className="font-bold font-paper text-black">
                   {Math.round(analytics.avgWordCount || 0)}
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Min Length</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Min Length</div>
+                <div className="font-bold font-paper text-black">
                   {analytics.minLength || 0}
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Max Length</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Max Length</div>
+                <div className="font-bold font-paper text-black">
                   {analytics.maxLength || 0}
                 </div>
               </div>
@@ -129,28 +129,28 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
 
           {/* Number Field Analytics */}
           {analytics.type === 'number' && (
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-black/10">
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Minimum</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Minimum</div>
+                <div className="font-bold font-paper text-black">
                   {analytics.min !== undefined ? analytics.min : 'N/A'}
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Maximum</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Maximum</div>
+                <div className="font-bold font-paper text-black">
                   {analytics.max !== undefined ? analytics.max : 'N/A'}
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Average</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Average</div>
+                <div className="font-bold font-paper text-black">
                   {analytics.avg !== undefined ? Math.round(analytics.avg * 100) / 100 : 'N/A'}
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Median</div>
-                <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                <div className="text-xs font-paper font-bold text-black/60">Median</div>
+                <div className="font-bold font-paper text-black">
                   {analytics.median !== undefined ? Math.round(analytics.median * 100) / 100 : 'N/A'}
                 </div>
               </div>
@@ -159,9 +159,9 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
 
           {/* Choice Field Analytics */}
           {(analytics.type === 'select' || analytics.type === 'radio' || analytics.type === 'checkbox') && analytics.distribution && (
-            <div className="pt-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
+            <div className="pt-4 border-t border-black/10">
               <div className="mb-4">
-                <div className="text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                <div className="text-sm font-bold font-paper mb-2 text-black">
                   Response Distribution
                 </div>
                 {Object.entries(analytics.distribution)
@@ -170,20 +170,19 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
                     const percentage = analytics.totalResponses > 0 ? (count / analytics.totalResponses) * 100 : 0;
                     return (
                       <div key={option} className="mb-3">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-sm truncate" style={{ color: 'var(--foreground)' }} title={option}>
+                        <div className="flex justify-between items-center mb-1 font-paper font-bold">
+                          <span className="text-sm truncate text-black" title={option}>
                             {option}
                           </span>
-                          <span className="text-sm font-semibold ml-2" style={{ color: 'var(--foreground)' }}>
+                          <span className="text-sm ml-2 text-black">
                             {count} ({Math.round(percentage)}%)
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-black/5 rounded-full h-2 overflow-hidden border border-black/10">
                           <div
-                            className="h-full rounded-full"
+                            className="h-full rounded-full bg-black"
                             style={{
                               width: `${percentage}%`,
-                              background: 'var(--primary)',
                             }}
                           />
                         </div>
@@ -192,9 +191,9 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
                   })}
               </div>
               {analytics.mostPopular && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span style={{ color: 'var(--foreground-muted)' }}>Most popular:</span>
-                  <span className="font-medium" style={{ color: 'var(--foreground)' }}>{analytics.mostPopular}</span>
+                <div className="flex items-center gap-2 text-sm font-paper font-bold">
+                  <span className="text-black/60">Most popular:</span>
+                  <span className="text-black">{analytics.mostPopular}</span>
                 </div>
               )}
             </div>
@@ -202,17 +201,17 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
 
           {/* Date Field Analytics */}
           {analytics.type === 'date' && analytics.earliestDate && (
-            <div className="pt-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
+            <div className="pt-4 border-t border-black/10">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Earliest Date</div>
-                  <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xs font-paper font-bold text-black/60">Earliest Date</div>
+                  <div className="font-bold font-paper text-black">
                     {new Date(analytics.earliestDate).toLocaleDateString()}
                   </div>
                 </div>
                 <div>
-                  <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Latest Date</div>
-                  <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xs font-paper font-bold text-black/60">Latest Date</div>
+                  <div className="font-bold font-paper text-black">
                     {analytics.latestDate ? new Date(analytics.latestDate).toLocaleDateString() : 'N/A'}
                   </div>
                 </div>
@@ -222,30 +221,30 @@ export function FieldAnalyticsCard({ fieldId, analytics, totalSubmissions }: Fie
 
           {/* File Field Analytics */}
           {analytics.type === 'file' && analytics.totalFiles !== undefined && (
-            <div className="pt-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
+            <div className="pt-4 border-t border-black/10">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Total Files</div>
-                  <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xs font-paper font-bold text-black/60">Total Files</div>
+                  <div className="font-bold font-paper text-black">
                     {analytics.totalFiles}
                   </div>
                 </div>
                 <div>
-                  <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Total Size</div>
-                  <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xs font-paper font-bold text-black/60">Total Size</div>
+                  <div className="font-bold font-paper text-black">
                     {formatBytes(analytics.totalSize || 0)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>Avg File Size</div>
-                  <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xs font-paper font-bold text-black/60">Avg File Size</div>
+                  <div className="font-bold font-paper text-black">
                     {formatBytes(analytics.avgFileSize || 0)}
                   </div>
                 </div>
                 {analytics.fileTypes && Object.keys(analytics.fileTypes).length > 0 && (
                   <div>
-                    <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>File Types</div>
-                    <div className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                    <div className="text-xs font-paper font-bold text-black/60">File Types</div>
+                    <div className="font-bold font-paper text-black">
                       {Object.entries(analytics.fileTypes).map(([type, count]) => `${type}: ${count}`).join(', ')}
                     </div>
                   </div>

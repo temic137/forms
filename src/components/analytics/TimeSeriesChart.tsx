@@ -13,7 +13,7 @@ interface TimeSeriesChartProps {
 export function TimeSeriesChart({
   title,
   data,
-  color = "var(--primary)",
+  color = "#000000",
   height = 200,
   showPoints = true,
 }: TimeSeriesChartProps) {
@@ -23,19 +23,18 @@ export function TimeSeriesChart({
   
   if (entries.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="paper-card p-4 border-2 border-black/10 bg-white">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold text-black font-paper">{title}</h3>
+        </div>
+        <div className="p-0">
           <div 
-            className="text-center py-8"
-            style={{ color: 'var(--foreground-muted)' }}
+            className="text-center py-8 font-bold font-paper text-black/40"
           >
             No data available
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -63,11 +62,11 @@ export function TimeSeriesChart({
   const areaPath = `${pathData} L ${points[points.length - 1].x} ${height - padding} L ${padding} ${height - padding} Z`;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="paper-card p-4 border-2 border-black/10 bg-white">
+      <div className="mb-4">
+        <h3 className="text-lg font-bold text-black font-paper">{title}</h3>
+      </div>
+      <div className="p-0">
         <div style={{ width: '100%', height: `${height}px`, position: 'relative' }}>
           <svg
             viewBox={`0 0 ${width} ${height}`}
@@ -96,7 +95,7 @@ export function TimeSeriesChart({
             <path
               d={areaPath}
               fill={color}
-              opacity="0.2"
+              opacity="0.1"
             />
 
             {/* Line */}
@@ -117,7 +116,7 @@ export function TimeSeriesChart({
                   cy={point.y}
                   r="4"
                   fill={color}
-                  stroke="var(--card-bg)"
+                  stroke="#ffffff"
                   strokeWidth="2"
                 />
                 <title>{entries[index][0]}: {point.value}</title>
@@ -127,22 +126,22 @@ export function TimeSeriesChart({
         </div>
 
         {/* Date labels */}
-        <div className="flex justify-between mt-4 px-2">
+        <div className="flex justify-between mt-4 px-2 font-paper font-bold">
           {entries.length > 0 && (
             <>
-              <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>
+              <div className="text-xs text-black/50">
                 {entries[0][0]}
               </div>
               {entries.length > 1 && (
-                <div style={{ color: 'var(--foreground-muted)', fontSize: '0.75rem' }}>
+                <div className="text-xs text-black/50">
                   {entries[entries.length - 1][0]}
                 </div>
               )}
             </>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

@@ -10,23 +10,8 @@ interface CardProps {
 export function Card({ children, className = "", hover = false, onClick }: CardProps) {
   return (
     <div
-      className={`border transition-colors ${hover ? "duration-150" : ""} ${className}`}
-      style={{
-        background: 'var(--card-bg)',
-        borderColor: 'var(--card-border)',
-        borderRadius: 'var(--card-radius)',
-      }}
+      className={`paper-card ${hover ? "hover:shadow-[6px_6px_0px_0px_#000]" : ""} ${className}`}
       onClick={onClick}
-      onMouseEnter={(e) => {
-        if (hover) {
-          e.currentTarget.style.borderColor = 'var(--card-border-hover)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (hover) {
-          e.currentTarget.style.borderColor = 'var(--card-border)';
-        }
-      }}
     >
       {children}
     </div>
@@ -36,8 +21,7 @@ export function Card({ children, className = "", hover = false, onClick }: CardP
 export function CardHeader({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`px-4 sm:px-6 py-4 sm:py-5 border-b ${className}`}
-      style={{ borderColor: 'var(--divider)' }}
+      className={`px-4 sm:px-6 py-4 sm:py-5 border-b-[3px] border-black ${className}`}
     >
       {children}
     </div>
@@ -47,8 +31,7 @@ export function CardHeader({ children, className = "" }: { children: React.React
 export function CardTitle({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <h3
-      className={`text-lg font-medium ${className}`}
-      style={{ color: 'var(--foreground)' }}
+      className={`text-xl font-bold text-black ${className}`}
     >
       {children}
     </h3>
@@ -78,14 +61,12 @@ export function CardSection({
     <div className={`flex items-start justify-between py-4 ${className}`}>
       <div className="flex-1 min-w-0 pr-4">
         <div
-          className="text-sm font-medium mb-1"
-          style={{ color: 'var(--foreground-muted)' }}
+          className="text-sm font-bold mb-1 text-gray-600"
         >
           {label}
         </div>
         <div
-          className="text-base"
-          style={{ color: 'var(--foreground)' }}
+          className="text-base text-black"
         >
           {value}
         </div>
@@ -102,8 +83,7 @@ export function CardSection({
 export function CardDivider() {
   return (
     <div
-      className="h-px my-0"
-      style={{ background: 'var(--divider)' }}
+      className="h-[2px] my-0 bg-black"
     />
   );
 }

@@ -21,8 +21,8 @@ export function Spinner({
   };
 
   const variantClasses = {
-    primary: "text-blue-600",
-    secondary: "text-gray-600",
+    primary: "text-black",
+    secondary: "text-black/60",
     white: "text-white",
     current: "text-current",
   };

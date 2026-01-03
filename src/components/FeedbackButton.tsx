@@ -8,7 +8,7 @@ export default function FeedbackButton() {
             href="https://www.anyform.live/f/cmjhq1iau0001la048jmbkk50"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
+            className="text-sm font-bold text-black/60 hover:text-black transition-colors flex items-center gap-2 font-paper"
             aria-label="Give Feedback"
         >
             <MessageSquare className="w-4 h-4" />

@@ -18,14 +18,6 @@ interface EmbedFormRendererProps {
   hideBranding?: boolean;
 }
 
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9\s_-]/g, "")
-    .trim()
-    .replace(/[\s_-]+/g, "_");
-}
-
 function getFontFamily(family: string): string {
   switch (family) {
     case "sans":
@@ -67,6 +59,7 @@ export default function EmbedFormRenderer({
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [respondentId, setRespondentId] = useState<string>("");
 
   const {
     register,
@@ -79,9 +72,21 @@ export default function EmbedFormRenderer({
   } = useForm({
     mode: "onBlur",
     defaultValues: fields.reduce((acc, f) => {
-      acc[slugify(f.label)] = f.type === "checkbox" ? false : "";
+      acc[f.id] = f.type === "checkbox" ? false : "";
       return acc;
     }, {} as Record<string, unknown>),
+  });
+
+  // Generate or get respondentId for tracking
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      let rid = localStorage.getItem("form_respondent_id");
+      if (!rid) {
+        rid = crypto.randomUUID();
+        localStorage.setItem("form_respondent_id", rid);
+      }
+      setRespondentId(rid);
+    }
   });
 
   const watchedValues = watch();
@@ -112,7 +117,7 @@ export default function EmbedFormRenderer({
       // Validate all visible fields
       const newFieldErrors: Record<string, string> = {};
       for (const field of visibleFields) {
-        const key = slugify(field.label);
+        const key = field.id;
         const value = data[key];
         
         // Check required fields
@@ -137,10 +142,10 @@ export default function EmbedFormRenderer({
       }
 
       try {
-        const response = await fetch("/api/forms/submit", {
+        const response = await fetch(`/api/forms/${formId}/submit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ formId, data }),
+          body: JSON.stringify({ ...data, respondentId }),
         });
 
         if (!response.ok) {
@@ -174,7 +179,7 @@ export default function EmbedFormRenderer({
         setSubmitting(false);
       }
     },
-    [formId, visibleFields, reset]
+    [formId, visibleFields, reset, respondentId]
   );
 
   // Render success message
@@ -260,7 +265,7 @@ export default function EmbedFormRenderer({
 
       <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-6">
         {visibleFields.map((field) => {
-          const key = slugify(field.label);
+          const key = field.id;
           const error = fieldErrors[key] || errors[key]?.message;
 
           return (

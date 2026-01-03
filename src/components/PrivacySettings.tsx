@@ -100,14 +100,14 @@ export default function PrivacySettings() {
 
   if (status === "unauthenticated") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-white">
-        <div className="card p-8 text-center max-w-md">
-          <Shield className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-xl font-semibold mb-2 text-gray-900">Sign In Required</h2>
-          <p className="mb-4 text-gray-500">Sign in to manage your privacy settings.</p>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-paper paper-texture font-paper">
+        <div className="paper-card p-6 text-center max-w-sm w-full border-2 border-black/10">
+          <Shield className="w-10 h-10 mx-auto mb-3 text-black/40" />
+          <h2 className="text-lg font-bold mb-2 text-black">Sign In Required</h2>
+          <p className="mb-4 text-black/60 text-sm">Sign in to manage your privacy settings.</p>
           <a
             href="/auth/signin"
-            className="inline-block px-6 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700"
+            className="paper-button paper-button-primary inline-block px-5 py-2 rounded-lg font-bold text-sm"
           >
             Sign In
           </a>
@@ -117,94 +117,98 @@ export default function PrivacySettings() {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4 pt-24 bg-white">
-      <div className="max-w-xl mx-auto">
+    <div className="min-h-screen py-6 px-4 pt-20 bg-paper paper-texture font-paper">
+      <div className="max-w-lg mx-auto flex flex-col items-center w-full">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <Shield className="w-6 h-6 text-gray-600" />
+        <div className="flex flex-col items-center gap-2 mb-6 text-center">
+          <div className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center border border-black/10">
+            <Shield className="w-5 h-5 text-black" />
+          </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Privacy Settings</h1>
-            <p className="text-sm text-gray-500">Manage your data and privacy preferences.</p>
+            <h1 className="text-2xl font-bold text-black">Privacy Settings</h1>
+            <p className="text-base text-black/60">Manage your data and privacy preferences.</p>
           </div>
         </div>
 
         {/* Messages */}
         {message && (
           <div
-            className={`p-3 rounded-lg flex items-center justify-between mb-6 text-sm ${message.type === "success"
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700"
+            className={`p-3 rounded-xl flex items-center justify-between mb-5 text-sm font-bold w-full border-2 ${message.type === "success"
+              ? "bg-green-50 text-green-800 border-green-200"
+              : "bg-red-50 text-red-800 border-red-200"
               }`}
           >
             <span>{message.text}</span>
-            <button onClick={() => setMessage(null)} className="font-bold">×</button>
+            <button onClick={() => setMessage(null)} className="font-bold p-1 hover:bg-black/5 rounded-full">×</button>
           </div>
         )}
 
         {/* Data Summary */}
         {data && (
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-gray-900 mb-4">Your Data</h2>
-            <div className="flex gap-8 mb-3">
-              <div>
-                <p className="text-2xl font-semibold text-gray-900">{data.dataSummary.formsCreated}</p>
-                <p className="text-xs text-gray-500">Forms</p>
+          <div className="mb-6 w-full text-center">
+            <h2 className="text-base font-bold text-black mb-3">Your Data</h2>
+            <div className="flex justify-center gap-6 mb-2">
+              <div className="paper-card p-4 min-w-[100px] border-2 border-black/10">
+                <p className="text-2xl font-bold text-black">{data.dataSummary.formsCreated}</p>
+                <p className="text-xs font-bold text-black/50 uppercase tracking-wider">Forms</p>
               </div>
-              <div>
-                <p className="text-2xl font-semibold text-gray-900">{data.dataSummary.submissionsReceived}</p>
-                <p className="text-xs text-gray-500">Submissions</p>
+              <div className="paper-card p-4 min-w-[100px] border-2 border-black/10">
+                <p className="text-2xl font-bold text-black">{data.dataSummary.submissionsReceived}</p>
+                <p className="text-xs font-bold text-black/50 uppercase tracking-wider">Submissions</p>
               </div>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-black/40 font-bold mt-2">
               Member since {new Date(data.user.memberSince).toLocaleDateString()}
             </p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="border-t border-gray-100 pt-6">
-          <h2 className="text-sm font-medium text-gray-900 mb-4">Data Actions</h2>
+        <div className="w-full max-w-md border-t-2 border-black/5 pt-6 flex flex-col items-center">
+          <h2 className="text-base font-bold text-black mb-4">Data Actions</h2>
 
-          <button
-            onClick={handleExport}
-            disabled={actionLoading === "export"}
-            className="w-full flex items-center gap-3 py-3 text-left hover:bg-gray-50 transition rounded-lg"
-          >
-            {actionLoading === "export" ? (
-              <Spinner size="sm" />
-            ) : (
-              <Download className="w-4 h-4 text-gray-500" />
-            )}
-            <span className="text-sm text-gray-900">Export My Data</span>
-          </button>
+          <div className="w-full space-y-3">
+            <button
+              onClick={handleExport}
+              disabled={actionLoading === "export"}
+              className="paper-button w-full flex items-center justify-center gap-2 py-2.5 bg-white text-black border-2 border-black/10 hover:border-black/30 font-bold text-sm"
+            >
+              {actionLoading === "export" ? (
+                <Spinner size="sm" variant="primary" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>Export My Data</span>
+            </button>
 
-          <button
-            onClick={() => setShowDelete(!showDelete)}
-            className="w-full flex items-center gap-3 py-3 text-left hover:bg-gray-50 transition rounded-lg"
-          >
-            <Trash2 className="w-4 h-4 text-red-500" />
-            <span className="text-sm text-gray-900">Delete Data</span>
-          </button>
+            <button
+              onClick={() => setShowDelete(!showDelete)}
+              className="paper-button w-full flex items-center justify-center gap-2 py-2.5 bg-white text-black border-2 border-black/10 hover:border-red-200 hover:text-red-600 font-bold text-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete Data</span>
+            </button>
+          </div>
 
           {showDelete && (
-            <div className="mt-4 py-4 border-t border-gray-100">
-              <div className="space-y-2">
+            <div className="mt-4 py-4 w-full border-t-2 border-black/5 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-2 flex flex-col items-center">
                 <button
                   onClick={() => handleDelete("submissions")}
                   disabled={!!actionLoading}
-                  className="w-full text-left py-2 px-3 rounded text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full text-center py-2 px-3 rounded-lg text-sm font-bold text-black/70 hover:bg-black/5 transition-colors"
                 >
                   Delete all submissions
                 </button>
                 <button
                   onClick={() => handleDelete("forms")}
                   disabled={!!actionLoading}
-                  className="w-full text-left py-2 px-3 rounded text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full text-center py-2 px-3 rounded-lg text-sm font-bold text-black/70 hover:bg-black/5 transition-colors"
                 >
                   Delete all forms
                 </button>
-                <div className="pt-4 mt-4 border-t border-gray-100">
-                  <p className="text-xs font-medium mb-2 text-red-600">
+                <div className="pt-4 mt-2 w-full border-t-2 border-black/5 flex flex-col items-center">
+                  <p className="text-xs font-bold mb-2 text-red-600 uppercase tracking-wider">
                     Delete Account (Permanent)
                   </p>
                   <input
@@ -212,12 +216,12 @@ export default function PrivacySettings() {
                     placeholder="Type your email to confirm"
                     value={confirmEmail}
                     onChange={(e) => setConfirmEmail(e.target.value)}
-                    className="w-full p-2 text-sm rounded border border-gray-200 bg-white text-gray-900 mb-2"
+                    className="paper-input w-full p-2 text-sm rounded-lg border-2 border-black/10 focus:border-red-500 bg-white text-black mb-3 text-center"
                   />
                   <button
                     onClick={() => handleDelete("account")}
                     disabled={!!actionLoading || !confirmEmail}
-                    className="w-full py-2 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                    className="paper-button w-full py-2.5 rounded-lg text-sm font-bold bg-red-500 text-white border-2 border-red-600 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     {actionLoading === "account" ? "Deleting..." : "Delete My Account"}
                   </button>
@@ -228,8 +232,8 @@ export default function PrivacySettings() {
         </div>
 
         {/* Privacy Policy Link */}
-        <div className="text-center mt-8 pt-6 border-t border-gray-100">
-          <a href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
+        <div className="text-center mt-8 pt-6 border-t-2 border-black/5 w-full max-w-md">
+          <a href="/privacy" className="text-sm font-bold text-black/40 hover:text-black transition-colors">
             Read our Privacy Policy →
           </a>
         </div>

@@ -537,34 +537,25 @@ export default function DashboardPage() {
         onClose={() => setShowUpgradeModal(false)}
       />
       <div
-        className="min-h-screen"
-        style={{ background: 'var(--background)' }}
+        className="min-h-screen font-paper paper-texture bg-paper"
       >
         {/* Guest User Upgrade Banner */}
         {isGuestUser && (
           <div
-            className="border-b"
-            style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)',
-              borderColor: 'var(--card-border)'
-            }}
+            className="bg-white border-b border-black/10"
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-center sm:text-left">
-                  <UserPlus className="w-5 h-5 text-blue-500 hidden sm:block" />
-                  <p className="text-sm" style={{ color: 'var(--foreground)' }}>
-                    <span className="font-medium">You're using guest mode.</span>
+                  <UserPlus className="w-5 h-5 text-black hidden sm:block" />
+                  <p className="text-base text-black font-paper">
+                    <span className="font-bold">You&apos;re using guest mode.</span>
                     <span className="hidden sm:inline"> Create an account to save your forms permanently.</span>
                   </p>
                 </div>
                 <button
                   onClick={() => setShowUpgradeModal(true)}
-                  className="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-                  style={{
-                    background: 'var(--foreground)',
-                    color: 'var(--background)',
-                  }}
+                  className="paper-button paper-button-primary px-6 py-2 text-base whitespace-nowrap"
                 >
                   Create Account
                 </button>
@@ -572,18 +563,16 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col items-center">
           {/* Welcome Header - Simplified and Friendlier */}
-          <div className="mb-10 text-center">
+          <div className="mb-8 text-center w-full">
             <h1
-              className="text-4xl font-bold mb-4"
-              style={{ color: 'var(--foreground)' }}
+              className="text-4xl font-bold mb-3 text-black font-paper"
             >
               {forms.length === 0 ? "Welcome to AnyForm" : "Dashboard"}
             </h1>
             <p
-              className="text-lg max-w-2xl mx-auto"
-              style={{ color: 'var(--foreground-muted)' }}
+              className="text-lg max-w-xl mx-auto text-black/60 font-paper"
             >
               {forms.length === 0
                 ? "Let's create your first form. Just describe what you need, and AI will build it for you."
@@ -592,28 +581,25 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Creation Area - Clean and Simple */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
+          <div className="max-w-3xl mx-auto mb-10 w-full">
+            <div className="mb-4 flex justify-center">
+              <div className="flex items-center justify-center mb-2">
                 <AnimatedFormTitle />
 
               </div>
             </div>
 
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 w-full">
               <div className="relative">
                 <textarea
                   id="prompt"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
-                  className="w-full px-4 py-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="paper-input w-full px-4 py-4 text-base resize-none border-2 border-black/20 focus:border-black/40 rounded-xl bg-white"
                   style={{
-                    minHeight: '120px',
-                    background: 'var(--background-subtle)',
-                    border: 'none',
-                    color: 'var(--foreground)'
+                    minHeight: '100px'
                   }}
                   disabled={generatingForm}
                 />
@@ -621,15 +607,15 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={handleVoiceClick}
-                    className="absolute right-3 bottom-3 p-2.5 rounded-full transition-colors"
+                    className="absolute right-3 bottom-3 p-2 rounded-full border border-black/10 hover:bg-black/5 transition-all active:scale-95"
                     style={{
-                      background: isListening ? '#ef4444' : 'var(--background)',
-                      color: isListening ? '#fff' : 'var(--foreground-muted)',
+                      background: isListening ? '#000' : '#fff',
+                      color: isListening ? '#fff' : '#000',
                     }}
                     title={isListening ? 'Stop recording' : 'Start voice input'}
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       fill={isListening ? 'currentColor' : 'none'}
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -646,8 +632,8 @@ export default function DashboardPage() {
               </div>
 
               {/* Attachments Area */}
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-2 flex flex-col items-center">
+                <div className="flex flex-wrap gap-2 justify-center">
                   {/* File Attachment Button */}
                   <div className="relative">
                     <input
@@ -661,9 +647,9 @@ export default function DashboardPage() {
                     />
                     <label
                       htmlFor="attach-file"
-                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-all border shadow-sm ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 hover:border-gray-300"} ${attachedFiles.length > 0
-                        ? "bg-blue-50 border-blue-200 text-blue-700 shadow-none"
-                        : "bg-white border-gray-200 text-gray-700"
+                      className={`paper-button flex items-center gap-1.5 px-3 py-2 text-sm font-bold cursor-pointer border-2 ${generatingForm ? "opacity-50 cursor-not-allowed" : ""} ${attachedFiles.length > 0
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-black/20 hover:border-black/40"
                         }`}
                     >
                       <Upload className="w-4 h-4" />
@@ -685,7 +671,7 @@ export default function DashboardPage() {
                     />
                     <label
                       htmlFor="scan-doc"
-                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-all border shadow-sm ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 hover:border-gray-300"} bg-white border-gray-200 text-gray-700`}
+                      className={`paper-button flex items-center gap-1.5 px-3 py-2 text-sm font-bold bg-white text-black cursor-pointer border-2 border-black/20 hover:border-black/40 ${generatingForm ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <Camera className="w-4 h-4" />
                       Scan Doc
@@ -705,7 +691,7 @@ export default function DashboardPage() {
                     />
                     <label
                       htmlFor="import-json"
-                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg cursor-pointer transition-all border shadow-sm ${generatingForm ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 hover:border-gray-300"} bg-white border-gray-200 text-gray-700`}
+                      className={`paper-button flex items-center gap-1.5 px-3 py-2 text-sm font-bold bg-white text-black cursor-pointer border-2 border-black/20 hover:border-black/40 ${generatingForm ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <FileJson className="w-4 h-4" />
                       Import JSON
@@ -717,9 +703,9 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => setShowUrlInput(!showUrlInput)}
                     disabled={generatingForm}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all border shadow-sm ${attachedUrl
-                      ? "bg-blue-50 border-blue-200 text-blue-700 shadow-none"
-                      : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                    className={`paper-button flex items-center gap-1.5 px-3 py-2 text-sm font-bold border-2 ${attachedUrl
+                      ? "bg-black text-white border-black"
+                      : "bg-white text-black border-black/20 hover:border-black/40"
                       }`}
                   >
                     <Globe className="w-4 h-4" />
@@ -731,7 +717,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => clearAttachments()}
                       disabled={generatingForm}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 ml-auto transition-colors disabled:opacity-50"
+                      className="paper-button flex items-center gap-1.5 px-3 py-2 text-sm font-bold bg-white text-black ml-auto disabled:opacity-50 border-2 border-black/20 hover:border-red-500 hover:text-red-500"
                     >
                       <Trash2 className="w-4 h-4" />
                       Clear All
@@ -745,11 +731,11 @@ export default function DashboardPage() {
                     {attachedFiles.map((file) => (
                       <div
                         key={file.id}
-                        className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-all ${file.status === 'error'
-                          ? 'bg-red-50 border-red-200 text-red-700'
+                        className={`paper-card group flex items-center gap-2 px-3 py-2 text-sm border-2 ${file.status === 'error'
+                          ? 'bg-white text-black border-black/20'
                           : file.status === 'parsing'
-                            ? 'bg-blue-50 border-blue-200 text-blue-700'
-                            : 'bg-white border-gray-200 text-gray-700'
+                            ? 'bg-white text-black border-black/20'
+                            : 'bg-white text-black border-black/20'
                           }`}
                         title={file.errorMessage}
                       >
@@ -759,11 +745,11 @@ export default function DashboardPage() {
                           ) : file.status === 'error' ? (
                             <AlertCircle className="w-4 h-4 shrink-0" />
                           ) : (
-                            <FileText className="w-4 h-4 shrink-0 text-gray-400" />
+                            <FileText className="w-4 h-4 shrink-0 text-black" />
                           )}
 
                           <div className="flex flex-col min-w-0 max-w-[150px]">
-                            <span className="truncate font-medium">{file.file.name}</span>
+                            <span className="truncate font-bold">{file.file.name}</span>
                             <span className="text-xs opacity-70">{(file.file.size / 1024 / 1024).toFixed(2)} MB</span>
                           </div>
                         </div>
@@ -772,9 +758,9 @@ export default function DashboardPage() {
                           type="button"
                           onClick={() => removeFile(file.id)}
                           disabled={generatingForm}
-                          className="p-1 rounded-md hover:bg-black/5 text-current opacity-60 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-1 rounded-full hover:bg-black/5 text-black disabled:opacity-30 disabled:cursor-not-allowed"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))}
@@ -789,8 +775,7 @@ export default function DashboardPage() {
                       value={attachedUrl}
                       onChange={(e) => setAttachedUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="flex-1 px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ background: 'var(--background-subtle)', border: 'none' }}
+                      className="paper-input flex-1 px-3 py-2 text-sm border-2 border-black/20 focus:border-black/40 rounded-xl"
                       disabled={generatingForm}
                     />
                     {attachedUrl && (
@@ -801,7 +786,7 @@ export default function DashboardPage() {
                           setShowUrlInput(false);
                         }}
                         disabled={generatingForm}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50"
+                        className="paper-button p-2 bg-white text-black disabled:opacity-50 border-2 border-black/20 hover:border-red-500 hover:text-red-500"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -811,7 +796,7 @@ export default function DashboardPage() {
               </div>
 
               {isListening && autoSubmitCountdown !== null && (
-                <div className="text-center text-sm font-medium animate-pulse" style={{ color: 'var(--accent)' }}>
+                <div className="text-center text-base font-bold animate-pulse text-black">
                   Auto-generating in {autoSubmitCountdown}s...
                 </div>
               )}
@@ -820,11 +805,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={!query.trim() || generatingForm}
-                  className="flex-1 py-3 px-6 rounded-lg font-medium text-base transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{
-                    background: 'var(--accent)',
-                    color: '#ffffff',
-                  }}
+                  className="paper-button paper-button-primary flex-1 py-3 px-6 text-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2 border-2 border-black shadow-none hover:shadow-none transition-transform active:scale-[0.98]"
                 >
                   {generatingForm ? (
                     <>
@@ -833,7 +814,7 @@ export default function DashboardPage() {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
+                      <Sparkles className="w-5 h-5" />
                       Generate Form
                     </>
                   )}
@@ -842,13 +823,13 @@ export default function DashboardPage() {
             </form>
           </div>
 
-          <div className="flex flex-col gap-4 max-w-5xl mx-auto w-full">
+          <div className="flex flex-col gap-3 max-w-3xl mx-auto w-full">
             {/* Header for the list */}
-            <div className="flex items-center justify-between mb-2 px-4">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Your Forms</h3>
+            <div className="flex items-center justify-between mb-3 px-2">
+              <h3 className="text-lg font-bold text-black font-paper">Your Forms</h3>
               <button
                 onClick={openBuilderForCreate}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                className="paper-button px-4 py-2 bg-white text-black flex items-center gap-2 border-2 border-black/20 hover:border-black/40 font-bold text-sm"
               >
                 <Plus className="w-4 h-4" />
                 Create From Scratch
@@ -859,36 +840,33 @@ export default function DashboardPage() {
             {forms.map((form) => (
               <div
                 key={form.id}
-                className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg transition-all duration-200 hover:bg-black/5"
-                style={{
-                  color: 'var(--foreground)',
-                }}
+                className="paper-card group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 transition-all duration-200 border-2 border-black/10 hover:border-black/30 bg-white rounded-xl"
               >
                 <Link href={`/forms/${form.id}/submissions`} className="flex-1 flex items-start sm:items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                    <FileText className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-lg bg-black/5 flex items-center justify-center shrink-0 border border-black/10">
+                    <FileText className="w-5 h-5 text-black" />
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-base truncate pr-2 flex items-center gap-2" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="font-bold text-lg truncate pr-2 flex items-center gap-2 text-black font-paper">
                       {form.title}
                       {/* Status Badges */}
                       {(form.isClosed || (form.closesAt && new Date(form.closesAt) < new Date())) && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 border border-red-200">
+                        <span className="paper-badge inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-black/5 text-black border border-black/10">
                           <History className="w-3 h-3" />
                           Closed
                         </span>
                       )}
                       {(!form.isClosed && form.opensAt && new Date(form.opensAt) > new Date()) && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                        <span className="paper-badge inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-black/5 text-black border border-black/10">
                           <Clock className="w-3 h-3" />
                           Scheduled
                         </span>
                       )}
                     </h3>
-                    <div className="flex items-center gap-3 text-sm mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                    <div className="flex items-center gap-3 text-sm mt-1 text-black/60 font-paper">
                       <span className="flex items-center gap-1">
-                        <BarChart3 className="w-3.5 h-3.5" />
+                        <BarChart3 className="w-3 h-3" />
                         {form._count?.submissions || 0}
                       </span>
                       <span>•</span>
@@ -905,7 +883,7 @@ export default function DashboardPage() {
                       e.stopPropagation(); // Prevent Link navigation
                       openBuilderForEdit(form.id)
                     }}
-                    className="p-2 rounded-lg hover:bg-black/5 transition-colors text-gray-500"
+                    className="p-2 rounded-full hover:bg-black/5 transition-colors text-black border border-transparent hover:border-black/10"
                     title="Edit"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -920,7 +898,7 @@ export default function DashboardPage() {
                       e.stopPropagation();
                       deleteForm(form.id)
                     }}
-                    className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                    className="p-2 rounded-full hover:bg-black/5 transition-colors text-black border border-transparent hover:border-black/10"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -929,7 +907,7 @@ export default function DashboardPage() {
 
                 {/* Visual loading overlay for deleting/loading */}
                 {(deletingFormId === form.id || loadingFormId === form.id) && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 backdrop-blur-sm rounded-lg">
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 backdrop-blur-sm rounded-[20px]">
                     <Spinner size="md" variant="primary" />
                   </div>
                 )}

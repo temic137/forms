@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Embed Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .iframe-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            display: block;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .instructions code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d32f2f;
+        }
+        .code-block {
+            background: #263238;
+            color: #aed581;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 AnyForm Embed Test</h1>
+        <p class="description">This page demonstrates how to embed forms from AnyForm into your website.</p>
+        
+        <div class="instructions">
+            <h3>📝 Instructions:</h3>
+            <ol>
+                <li>Create a form at <code>http://localhost:3000</code> (or your deployment URL)</li>
+                <li>Get the form ID from the share link (e.g., <code>/f/YOUR_FORM_ID</code>)</li>
+                <li>Replace <code>YOUR_FORM_ID</code> in the iframe src below</li>
+                <li>Customize the iframe dimensions and parameters as needed</li>
+            </ol>
+        </div>
+
+        <h3>Basic Embed Code:</h3>
+        <div class="code-block">
+&lt;iframe 
+    src="http://localhost:3000/embed/YOUR_FORM_ID" 
+    width="100%" 
+    height="800" 
+    frameborder="0" 
+    style="border: none; border-radius: 8px;"
+&gt;&lt;/iframe&gt;
+        </div>
+
+        <h3>Advanced Embed with Options:</h3>
+        <div class="code-block">
+&lt;iframe 
+    src="http://localhost:3000/embed/YOUR_FORM_ID?transparent=true&hideTitle=true&theme=light" 
+    width="100%" 
+    height="800" 
+    frameborder="0" 
+    style="border: none;"
+&gt;&lt;/iframe&gt;
+        </div>
+
+        <h3>Available Parameters:</h3>
+        <ul>
+            <li><code>transparent=true</code> - Remove card background for seamless integration</li>
+            <li><code>hideTitle=true</code> - Hide the form title</li>
+            <li><code>hideBranding=true</code> - Hide the "Powered by AnyForm" footer</li>
+            <li><code>theme=light|dark|auto</code> - Set the color theme</li>
+            <li><code>padding=16</code> - Adjust padding (in pixels)</li>
+        </ul>
+
+        <h3>Live Demo:</h3>
+        <p><em>Replace the src URL with your actual form embed URL to test</em></p>
+        <div class="iframe-container">
+            <!-- Replace YOUR_FORM_ID with an actual form ID -->
+            <iframe 
+                src="http://localhost:3000/embed/YOUR_FORM_ID" 
+                title="Embedded Form Demo"
+            ></iframe>
+        </div>
+
+        <h3>📱 Event Listening (Optional):</h3>
+        <p>You can listen for form events in your parent page:</p>
+        <div class="code-block">
+&lt;script&gt;
+window.addEventListener('message', function(event) {
+    // Verify the origin for security
+    if (event.origin !== 'http://localhost:3000') return;
+    
+    if (event.data.type === 'FORM_SUBMITTED') {
+        console.log('Form submitted successfully!', event.data);
+        // Do something after successful submission
+        // e.g., show a thank you message, redirect, etc.
+    }
+    
+    if (event.data.type === 'FORM_SUBMISSION_ERROR') {
+        console.error('Form submission error:', event.data.error);
+        // Handle errors
+    }
+});
+&lt;/script&gt;
+        </div>
+    </div>
+
+    <script>
+        // Example: Listen for form submission events
+        window.addEventListener('message', function(event) {
+            // In production, verify the origin!
+            // if (event.origin !== 'https://your-domain.com') return;
+            
+            if (event.data.type === 'FORM_SUBMITTED') {
+                console.log('✅ Form submitted successfully!', event.data);
+                alert('Thank you for your submission!');
+            }
+            
+            if (event.data.type === 'FORM_SUBMISSION_ERROR') {
+                console.error('❌ Form submission error:', event.data.error);
+                alert('Error: ' + event.data.error);
+            }
+        });
+    </script>
+</body>
+</html>

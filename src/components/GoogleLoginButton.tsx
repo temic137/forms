@@ -57,7 +57,7 @@ export default function GoogleLoginButton() {
     return (
       <button
         disabled
-        className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm flex items-center gap-2 opacity-50"
+        className="paper-button px-4 py-3 bg-white text-black flex items-center gap-2 opacity-50"
       >
         <Spinner size="sm" variant="secondary" />
         <span>Loading...</span>
@@ -83,7 +83,7 @@ export default function GoogleLoginButton() {
         <button
           onClick={handleSignOut}
           disabled={loading}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
+          className="paper-button paper-button-primary px-4 py-3 disabled:opacity-50 flex items-center gap-2"
         >
           {loading ? (
             <>
@@ -100,7 +100,7 @@ export default function GoogleLoginButton() {
     <button
       onClick={handleSignIn}
       disabled={loading}
-      className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center gap-2 disabled:opacity-50"
+      className="paper-button px-4 py-3 text-base font-bold bg-white text-black flex items-center gap-2 disabled:opacity-50"
     >
       {loading ? (
         <>

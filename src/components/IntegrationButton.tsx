@@ -54,7 +54,6 @@ export default function IntegrationButton({ formId, label = "Integrations" }: In
               background: "var(--card-bg)",
               border: "1px solid var(--card-border)",
               borderRadius: "var(--card-radius-lg)",
-              boxShadow: "var(--card-shadow-hover)",
             }}
             onClick={(e) => e.stopPropagation()}
           >

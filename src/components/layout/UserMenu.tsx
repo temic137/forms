@@ -23,24 +23,16 @@ function UserMenu() {
 
   if (!session) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 font-paper">
         <Link
           href="/auth/signin"
-          className="px-4 py-2 rounded-lg font-medium transition-all"
-          style={{
-            color: 'var(--foreground)',
-            border: '1px solid var(--card-border)',
-          }}
+          className="paper-button px-5 py-2 text-base font-bold border-2 border-black/20 hover:border-black/40"
         >
           Sign In
         </Link>
         <Link
           href="/auth/signup"
-          className="px-4 py-2 rounded-lg font-medium transition-all"
-          style={{
-            background: 'var(--accent)',
-            color: 'var(--accent-dark)',
-          }}
+          className="paper-button paper-button-primary px-5 py-2 text-base font-bold border-2 border-black"
         >
           Sign Up
         </Link>
@@ -90,36 +82,18 @@ function UserMenu() {
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-48 py-2 rounded-lg shadow-lg z-50"
-          style={{
-            background: 'var(--card-bg)',
-            border: '1px solid var(--card-border)',
-          }}
+          className="absolute right-0 mt-2 w-56 py-2 rounded-2xl z-50 bg-white border-2 border-black/10 shadow-none font-paper"
         >
           <Link
             href="/dashboard"
-            className="block px-4 py-2 transition-colors"
-            style={{ color: 'var(--foreground)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--card-bg-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-            }}
+            className="block px-4 py-3 transition-colors text-black hover:bg-black/5 font-bold"
             onClick={() => setIsOpen(false)}
           >
             Dashboard
           </Link>
           <Link
             href="/settings/privacy"
-            className="block px-4 py-2 transition-colors"
-            style={{ color: 'var(--foreground)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--card-bg-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-            }}
+            className="block px-4 py-3 transition-colors text-black hover:bg-black/5 font-bold"
             onClick={() => setIsOpen(false)}
           >
             <span className="flex items-center gap-2">
@@ -130,25 +104,14 @@ function UserMenu() {
             </span>
           </Link>
           <div
-            className="my-2"
-            style={{
-              height: '1px',
-              background: 'var(--divider)',
-            }}
+            className="my-2 h-px bg-black/10"
           />
           <button
             onClick={() => {
               setIsOpen(false);
               signOut({ callbackUrl: "/" });
             }}
-            className="w-full text-left px-4 py-2 transition-colors"
-            style={{ color: 'var(--foreground)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--card-bg-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-            }}
+            className="w-full text-left px-4 py-3 transition-colors text-black hover:bg-black/5 font-bold"
           >
             Sign Out
           </button>

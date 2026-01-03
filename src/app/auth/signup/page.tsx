@@ -69,18 +69,16 @@ export default function SignUpPage() {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 sm:p-6"
-      style={{ background: 'var(--background)' }}
+      className="min-h-screen font-paper paper-texture flex items-center justify-center p-4 sm:p-6"
     >
       <div className="w-full max-w-md">
         <div className="text-center mb-6 sm:mb-8">
           <h1 
-            className="text-2xl sm:text-3xl font-bold mb-2"
-            style={{ color: 'var(--foreground)' }}
+            className="text-4xl sm:text-5xl font-bold mb-2 text-black"
           >
             Create Account
           </h1>
-          <p style={{ color: 'var(--foreground-muted)' }}>
+          <p className="text-xl text-gray-600">
             Start building forms with AI
           </p>
         </div>
@@ -93,22 +91,17 @@ export default function SignUpPage() {
             <div className="space-y-4">
               <GoogleLoginButton />
               <div className="flex items-center gap-2">
-                <div className="h-px flex-1" style={{ background: 'var(--card-border)' }} />
-                <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--foreground-muted)' }}>
+                <div className="h-[2px] flex-1 bg-black" />
+                <span className="text-sm uppercase tracking-wide font-bold text-black">
                   or continue with email
                 </span>
-                <div className="h-px flex-1" style={{ background: 'var(--card-border)' }} />
+                <div className="h-[2px] flex-1 bg-black" />
               </div>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               {error && (
                 <div 
-                  className="p-3 rounded-lg text-sm"
-                  style={{ 
-                    background: 'rgba(239, 68, 68, 0.1)', 
-                    color: '#ef4444',
-                    border: '1px solid rgba(239, 68, 68, 0.2)'
-                  }}
+                  className="paper-card p-3 text-base font-bold bg-red-50 text-black"
                 >
                   {error}
                 </div>
@@ -117,8 +110,7 @@ export default function SignUpPage() {
               <div>
                 <label 
                   htmlFor="name" 
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: 'var(--foreground)' }}
+                  className="block text-base font-bold mb-2 text-black"
                 >
                   Name
                 </label>
@@ -128,12 +120,7 @@ export default function SignUpPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2"
-                  style={{
-                    background: 'var(--background-subtle)',
-                    border: '1px solid var(--card-border)',
-                    color: 'var(--foreground)',
-                  }}
+                  className="paper-input w-full px-4 py-3 text-base"
                   placeholder="Your name"
                 />
               </div>
@@ -141,8 +128,7 @@ export default function SignUpPage() {
               <div>
                 <label 
                   htmlFor="email" 
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: 'var(--foreground)' }}
+                  className="block text-base font-bold mb-2 text-black"
                 >
                   Email
                 </label>
@@ -152,12 +138,7 @@ export default function SignUpPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2"
-                  style={{
-                    background: 'var(--background-subtle)',
-                    border: '1px solid var(--card-border)',
-                    color: 'var(--foreground)',
-                  }}
+                  className="paper-input w-full px-4 py-3 text-base"
                   placeholder="you@example.com"
                 />
               </div>
@@ -165,8 +146,7 @@ export default function SignUpPage() {
               <div>
                 <label 
                   htmlFor="password" 
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: 'var(--foreground)' }}
+                  className="block text-base font-bold mb-2 text-black"
                 >
                   Password
                 </label>
@@ -176,12 +156,7 @@ export default function SignUpPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2"
-                  style={{
-                    background: 'var(--background-subtle)',
-                    border: '1px solid var(--card-border)',
-                    color: 'var(--foreground)',
-                  }}
+                  className="paper-input w-full px-4 py-3 text-base"
                   placeholder="••••••••"
                   minLength={8}
                 />
@@ -190,8 +165,7 @@ export default function SignUpPage() {
               <div>
                 <label 
                   htmlFor="confirmPassword" 
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: 'var(--foreground)' }}
+                  className="block text-base font-bold mb-2 text-black"
                 >
                   Confirm Password
                 </label>
@@ -201,12 +175,7 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg transition-all focus:outline-none focus:ring-2"
-                  style={{
-                    background: 'var(--background-subtle)',
-                    border: '1px solid var(--card-border)',
-                    color: 'var(--foreground)',
-                  }}
+                  className="paper-input w-full px-4 py-3 text-base"
                   placeholder="••••••••"
                 />
               </div>
@@ -214,17 +183,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center"
-                style={{
-                  background: 'var(--accent)',
-                  color: 'var(--accent-dark)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-hover)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--accent)';
-                }}
+                className="paper-button paper-button-primary w-full py-4 px-4 text-lg font-bold disabled:opacity-50 flex items-center justify-center"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -235,12 +194,11 @@ export default function SignUpPage() {
               </button>
 
               <div className="text-center mt-4">
-                <p style={{ color: 'var(--foreground-muted)' }}>
+                <p className="text-base text-gray-600">
                   Already have an account?{" "}
                   <Link 
                     href="/auth/signin" 
-                    className="font-medium"
-                    style={{ color: 'var(--foreground)' }}
+                    className="font-bold text-black underline"
                   >
                     Sign in
                   </Link>

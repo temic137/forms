@@ -261,45 +261,34 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
   if (status === "loading" || loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: 'var(--background)' }}
+        className="min-h-screen flex items-center justify-center bg-paper paper-texture font-paper"
       >
-        <div className="flex items-center gap-3" style={{ color: 'var(--foreground-muted)' }}>
+        <div className="flex items-center gap-3 text-black/60">
           <Spinner size="lg" variant="primary" />
-          <span>Loading...</span>
+          <span className="font-bold">Loading...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: 'var(--background)' }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen font-paper paper-texture bg-paper">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="p-2 rounded-lg transition-all"
-              style={{
-                border: '1px solid var(--card-border)',
-                color: 'var(--foreground)',
-              }}
+              className="paper-button p-2 bg-white text-black border-2 border-black/20 hover:border-black/40"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
             <div>
-              <h1
-                className="text-3xl font-bold mb-1"
-                style={{ color: 'var(--foreground)' }}
-              >
+              <h1 className="text-2xl font-bold mb-1 text-black">
                 {formTitle}
               </h1>
-              <p style={{ color: 'var(--foreground-muted)' }}>
+              <p className="text-sm text-black/60 font-bold">
                 {submissions.length} response{submissions.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -314,27 +303,25 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="flex gap-2 border-b overflow-x-auto scrollbar-hidden pb-1" style={{ borderColor: 'var(--card-border)' }}>
+        <div className="mb-6 flex justify-center">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hidden pb-1">
             {analytics && (
               <button
                 onClick={() => setActiveTab('overview')}
-                className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
-                style={{
-                  color: activeTab === 'overview' ? 'var(--primary)' : 'var(--foreground-muted)',
-                  borderBottom: activeTab === 'overview' ? '2px solid var(--primary)' : '2px solid transparent',
-                }}
+                className={`px-4 py-2 font-bold transition-all whitespace-nowrap text-sm rounded-lg border-2 ${activeTab === 'overview'
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-black/10 hover:border-black/30'
+                  }`}
               >
                 Overview
               </button>
             )}
             <button
               onClick={() => setActiveTab('responses')}
-              className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
-              style={{
-                color: activeTab === 'responses' ? 'var(--primary)' : 'var(--foreground-muted)',
-                borderBottom: activeTab === 'responses' ? '2px solid var(--primary)' : '2px solid transparent',
-              }}
+              className={`px-4 py-2 font-bold transition-all whitespace-nowrap text-sm rounded-lg border-2 ${activeTab === 'responses'
+                ? 'bg-black text-white border-black'
+                : 'bg-white text-black border-black/10 hover:border-black/30'
+                }`}
             >
               Responses
             </button>
@@ -342,21 +329,19 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               <>
                 <button
                   onClick={() => setActiveTab('fields')}
-                  className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
-                  style={{
-                    color: activeTab === 'fields' ? 'var(--primary)' : 'var(--foreground-muted)',
-                    borderBottom: activeTab === 'fields' ? '2px solid var(--primary)' : '2px solid transparent',
-                  }}
+                  className={`px-4 py-2 font-bold transition-all whitespace-nowrap text-sm rounded-lg border-2 ${activeTab === 'fields'
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-black border-black/10 hover:border-black/30'
+                    }`}
                 >
                   Field Analytics
                 </button>
                 <button
                   onClick={() => setActiveTab('insights')}
-                  className="px-3 sm:px-4 py-2 font-medium transition-all whitespace-nowrap text-sm sm:text-base"
-                  style={{
-                    color: activeTab === 'insights' ? 'var(--primary)' : 'var(--foreground-muted)',
-                    borderBottom: activeTab === 'insights' ? '2px solid var(--primary)' : '2px solid transparent',
-                  }}
+                  className={`px-4 py-2 font-bold transition-all whitespace-nowrap text-sm rounded-lg border-2 ${activeTab === 'insights'
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-black border-black/10 hover:border-black/30'
+                    }`}
                 >
                   Time Insights
                 </button>
@@ -371,7 +356,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
             {/* Quiz Performance (if available) */}
             {analytics.quizAnalytics && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+                <h3 className="text-lg font-bold font-paper text-black">
                   Quiz Performance
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -410,7 +395,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                   <BarChart
                     title="Score Distribution"
                     data={analytics.quizAnalytics.scoreDistribution}
-                    color="var(--accent)"
+                    color="#000000"
                     height={300}
                   />
                 </div>
@@ -474,24 +459,24 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
             <TimeSeriesChart
               title="Submissions Over Time"
               data={analytics.submissionsByDate}
-              color="var(--primary)"
+              color="#000000"
               height={250}
             />
 
             {/* Additional Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-              <div>
-                <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--foreground)' }}>Response Velocity</h4>
+              <div className="paper-card p-6 border-2 border-black/10 bg-white">
+                <h4 className="text-lg font-bold font-paper mb-4 text-black">Response Velocity</h4>
                 <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
-                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Submissions per Hour</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="flex justify-between py-2 border-b border-black/10">
+                    <span className="text-sm font-bold font-paper text-black/60">Submissions per Hour</span>
+                    <span className="text-sm font-bold font-paper text-black">
                       {analytics.engagementMetrics.responseVelocity.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between py-2">
-                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Avg Time Between</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                    <span className="text-sm font-bold font-paper text-black/60">Avg Time Between</span>
+                    <span className="text-sm font-bold font-paper text-black">
                       {analytics.timeAnalytics.avgTimeBetweenSubmissions < 3600
                         ? `${Math.round(analytics.timeAnalytics.avgTimeBetweenSubmissions / 60)} min`
                         : `${(analytics.timeAnalytics.avgTimeBetweenSubmissions / 3600).toFixed(1)} hrs`}
@@ -500,32 +485,32 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--foreground)' }}>Form Details</h4>
+              <div className="paper-card p-6 border-2 border-black/10 bg-white">
+                <h4 className="text-lg font-bold font-paper mb-4 text-black">Form Details</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
-                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Total Fields</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="flex justify-between py-2 border-b border-black/10">
+                    <span className="text-sm font-bold font-paper text-black/60">Total Fields</span>
+                    <span className="text-sm font-bold font-paper text-black">
                       {analytics.engagementMetrics.totalFields}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
-                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Required Fields</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="flex justify-between py-2 border-b border-black/10">
+                    <span className="text-sm font-bold font-paper text-black/60">Required Fields</span>
+                    <span className="text-sm font-bold font-paper text-black">
                       {analytics.engagementMetrics.requiredFields}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
-                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>First Response</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="flex justify-between py-2 border-b border-black/10">
+                    <span className="text-sm font-bold font-paper text-black/60">First Response</span>
+                    <span className="text-sm font-bold font-paper text-black">
                       {analytics.firstSubmission
                         ? new Date(analytics.firstSubmission).toLocaleDateString()
                         : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between py-2">
-                    <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Latest Response</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                    <span className="text-sm font-bold font-paper text-black/60">Latest Response</span>
+                    <span className="text-sm font-bold font-paper text-black">
                       {analytics.lastSubmission
                         ? new Date(analytics.lastSubmission).toLocaleDateString()
                         : 'N/A'}
@@ -540,7 +525,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         {/* Field Analytics Tab */}
         {analytics && activeTab === 'fields' && (
           <div className="space-y-6 mb-8">
-            <div className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+            <div className="text-sm font-bold font-paper text-black/60">
               Detailed analytics for each field in your form
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -569,7 +554,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                   12: '12 PM', 13: '1 PM', 14: '2 PM', 15: '3 PM', 16: '4 PM', 17: '5 PM',
                   18: '6 PM', 19: '7 PM', 20: '8 PM', 21: '9 PM', 22: '10 PM', 23: '11 PM',
                 }}
-                color="var(--primary)"
+                color="#000000"
                 height={350}
               />
 
@@ -585,19 +570,19 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                   5: 'Friday',
                   6: 'Saturday',
                 }}
-                color="#8b5cf6"
+                color="#4b5563"
                 height={350}
               />
             </div>
 
-            <div className="mt-6 py-4 border-t" style={{ borderColor: 'var(--card-border)' }}>
-              <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--foreground)' }}>Peak Activity Times</h4>
+            <div className="mt-6 py-4 border-t border-black/10">
+              <h4 className="text-lg font-bold font-paper mb-4 text-black">Peak Activity Times</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                <div className="paper-card p-4 border-2 border-black/10 bg-white">
+                  <div className="text-xs uppercase tracking-wide mb-1 font-bold font-paper text-black/60">
                     Peak Hour
                   </div>
-                  <div className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xl font-bold font-paper text-black">
                     {analytics.timeAnalytics.peakHour !== null
                       ? analytics.timeAnalytics.peakHour === 0
                         ? '12 AM'
@@ -608,21 +593,21 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                             : `${analytics.timeAnalytics.peakHour - 12} PM`
                       : 'N/A'}
                   </div>
-                  <div className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                  <div className="text-xs mt-1 font-bold font-paper text-black/60">
                     Most submissions received
                   </div>
                 </div>
 
-                <div>
-                  <div className="text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                <div className="paper-card p-4 border-2 border-black/10 bg-white">
+                  <div className="text-xs uppercase tracking-wide mb-1 font-bold font-paper text-black/60">
                     Peak Day
                   </div>
-                  <div className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                  <div className="text-xl font-bold font-paper text-black">
                     {analytics.timeAnalytics.peakDayOfWeek !== null
                       ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][analytics.timeAnalytics.peakDayOfWeek]
                       : 'N/A'}
                   </div>
-                  <div className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                  <div className="text-xs mt-1 font-bold font-paper text-black/60">
                     Most active day of week
                   </div>
                 </div>
@@ -636,56 +621,31 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
           <div className="flex flex-wrap gap-2 sm:gap-3 mb-6">
             <button
               onClick={exportToCSV}
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                color: 'var(--foreground)',
-              }}
+              className="paper-button px-4 py-2 bg-white text-black border-2 border-black/10 hover:border-black/30 font-bold font-paper"
             >
               Export as CSV
             </button>
             <button
               onClick={exportToExcel}
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                color: 'var(--foreground)',
-              }}
+              className="paper-button px-4 py-2 bg-white text-black border-2 border-black/10 hover:border-black/30 font-bold font-paper"
             >
               Export to Excel
             </button>
             <button
               onClick={copyToClipboard}
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                color: 'var(--foreground)',
-              }}
+              className="paper-button px-4 py-2 bg-white text-black border-2 border-black/10 hover:border-black/30 font-bold font-paper"
             >
               Copy to Clipboard
             </button>
             <button
               onClick={exportToJSON}
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                color: 'var(--foreground)',
-              }}
+              className="paper-button px-4 py-2 bg-white text-black border-2 border-black/10 hover:border-black/30 font-bold font-paper"
             >
               Export as JSON
             </button>
             <button
               onClick={handlePrint}
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                background: 'var(--card-bg)',
-                border: '1px solid var(--card-border)',
-                color: 'var(--foreground)',
-              }}
+              className="paper-button px-4 py-2 bg-white text-black border-2 border-black/10 hover:border-black/30 font-bold font-paper"
             >
               Print / PDF
             </button>
@@ -695,14 +655,13 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
         {/* Submissions List */}
         {activeTab === 'responses' && (
           submissions.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 font-paper">
               <div className="mb-4">
                 <svg
-                  className="w-12 h-12 mx-auto"
+                  className="w-12 h-12 mx-auto text-black/20"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                  style={{ color: 'var(--foreground-muted)' }}
                 >
                   <path
                     strokeLinecap="round"
@@ -713,67 +672,65 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                 </svg>
               </div>
               <h3
-                className="text-lg font-medium mb-1"
-                style={{ color: 'var(--foreground)' }}
+                className="text-lg font-bold mb-1 text-black"
               >
                 No responses yet
               </h3>
-              <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+              <p className="text-sm text-black/60 font-bold">
                 Share your form to start collecting responses
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--card-border)' }}>
-              <table className="w-full text-left text-sm">
-                <thead style={{ background: 'var(--background-subtle)', color: 'var(--foreground-muted)' }}>
+            <div className="overflow-x-auto rounded-lg border-2 border-black/10 bg-white paper-card">
+              <table className="w-full text-left text-sm font-paper">
+                <thead className="bg-black/5 text-black/60 font-bold">
                   <tr>
-                    <th className="px-4 py-3 font-medium whitespace-nowrap">#</th>
-                    <th className="px-4 py-3 font-medium whitespace-nowrap">Submitted At</th>
+                    <th className="px-4 py-3 whitespace-nowrap">#</th>
+                    <th className="px-4 py-3 whitespace-nowrap">Submitted At</th>
                     {analytics?.quizAnalytics && (
-                      <th className="px-4 py-3 font-medium whitespace-nowrap">Score</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Score</th>
                     )}
                     {fields.map((field) => (
-                      <th key={field.id} className="px-4 py-3 font-medium whitespace-nowrap min-w-[150px]">
+                      <th key={field.id} className="px-4 py-3 whitespace-nowrap min-w-[150px]">
                         {field.label}
                       </th>
                     ))}
-                    <th className="px-4 py-3 font-medium text-right whitespace-nowrap">Actions</th>
+                    <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
+                <tbody className="divide-y divide-black/10">
                   {submissions.map((submission, index) => (
                     <tr
                       key={submission.id}
-                      className="group transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+                      className="group transition-colors hover:bg-black/5 cursor-pointer"
                       onClick={() => setSelectedSubmission(submission)}
                     >
-                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--foreground)' }}>
+                      <td className="px-4 py-3 whitespace-nowrap font-bold text-black">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--foreground-muted)' }}>
+                      <td className="px-4 py-3 whitespace-nowrap font-bold text-black/60">
                         {new Date(submission.createdAt).toLocaleString()}
                       </td>
                       {analytics?.quizAnalytics && (
                         <td className="px-4 py-3 whitespace-nowrap">
                           {submission.score ? (
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${submission.score.passed
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border ${submission.score.passed
+                                ? 'bg-white text-black border-black'
+                                : 'bg-black text-white border-black'
                                 }`}
                             >
                               {submission.score.percentage.toFixed(0)}%
                             </span>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-black/40">-</span>
                           )}
                         </td>
                       )}
                       {fields.map((field) => (
                         <td
                           key={field.id}
-                          className="px-4 py-3 max-w-[200px] truncate"
-                          style={{ color: 'var(--foreground)' }}
+                          className="px-4 py-3 max-w-[200px] truncate font-bold text-black"
                         >
                           {field.type === 'file' ? (
                             <span className="text-xs opacity-70">
@@ -790,8 +747,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                             e.stopPropagation();
                             setSelectedSubmission(submission);
                           }}
-                          className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                          style={{ color: 'var(--foreground-muted)' }}
+                          className="p-1 rounded hover:bg-black/10 transition-colors text-black/40 hover:text-black"
                         >
                           <svg
                             className="w-5 h-5"
@@ -834,18 +790,17 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
               className="max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <Card>
-                <CardHeader>
+              <div className="paper-card p-6 border-2 border-black/10 bg-white">
+                <div className="mb-6">
                   <div className="flex items-center justify-between">
-                    <CardTitle>
+                    <h3 className="text-2xl font-bold font-paper text-black">
                       Response #{submissions.indexOf(selectedSubmission) + 1}
-                    </CardTitle>
+                    </h3>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={downloadSubmissionPDF}
-                        className="p-2 rounded-lg transition-all hover:bg-black/5 dark:hover:bg-white/5"
+                        className="p-2 rounded-lg transition-all hover:bg-black/5 text-black/60 hover:text-black"
                         title="Download as PDF"
-                        style={{ color: 'var(--foreground-muted)' }}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -853,8 +808,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                       </button>
                       <button
                         onClick={() => setSelectedSubmission(null)}
-                        className="p-2 rounded-lg transition-all"
-                        style={{ color: 'var(--foreground-muted)' }}
+                        className="p-2 rounded-lg transition-all hover:bg-black/5 text-black/60 hover:text-black"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -862,51 +816,46 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                       </button>
                     </div>
                   </div>
-                  <div style={{ color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
+                  <div className="text-sm font-bold font-paper text-black/60">
                     Submitted: {new Date(selectedSubmission.createdAt).toLocaleString()}
                   </div>
                   {selectedSubmission.score && (
                     <div
-                      className="mt-4 p-4 rounded-lg"
-                      style={{
-                        background: selectedSubmission.score.passed ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                        border: `1px solid ${selectedSubmission.score.passed ? 'rgba(34, 197, 94, 0.3)' : 'rgba(234, 179, 8, 0.3)'}`,
-                      }}
+                      className="mt-4 p-4 rounded-lg border-2 border-black/10 bg-black/5"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                      <div className="flex items-center justify-between mb-2 font-paper font-bold">
+                        <span className="text-black">
                           Quiz Score
                         </span>
                         <span
-                          className="text-2xl font-bold"
-                          style={{ color: selectedSubmission.score.passed ? '#22c55e' : '#eab308' }}
+                          className="text-2xl"
+                          style={{ color: selectedSubmission.score.passed ? '#000000' : '#000000' }}
                         >
                           {selectedSubmission.score.percentage.toFixed(0)}%
                         </span>
                       </div>
-                      <div className="text-sm space-y-1" style={{ color: 'var(--foreground-muted)' }}>
+                      <div className="text-sm space-y-1 font-paper font-bold text-black/60">
                         <div>Points: {selectedSubmission.score.earnedPoints.toFixed(1)} / {selectedSubmission.score.totalPoints}</div>
                         <div>
                           Status:{' '}
-                          <span className="font-semibold" style={{ color: selectedSubmission.score.passed ? '#22c55e' : '#eab308' }}>
+                          <span className="text-black">
                             {selectedSubmission.score.passed ? 'Passed ✓' : 'Not Passed'}
                           </span>
                         </div>
                       </div>
                     </div>
                   )}
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div>
                   <div className="space-y-4">
                     {fields.map((field) => (
                       <div key={field.id}>
                         <div
-                          className="text-sm font-medium mb-1"
-                          style={{ color: 'var(--foreground-muted)' }}
+                          className="text-sm font-bold font-paper mb-1 text-black/60"
                         >
                           {field.label}
                         </div>
-                        <div style={{ color: 'var(--foreground)' }}>
+                        <div className="font-paper font-bold text-black">
                           {field.type === 'file' ? (
                             <div className="space-y-2">
                               {selectedSubmission.files
@@ -917,11 +866,7 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                                     href={file.path}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block px-3 py-2 rounded-lg transition-all"
-                                    style={{
-                                      background: 'var(--card-bg)',
-                                      border: '1px solid var(--card-border)',
-                                    }}
+                                    className="block px-3 py-2 rounded-lg transition-all border-2 border-black/10 hover:border-black/30 bg-white"
                                   >
                                     📎 {file.originalName}
                                   </a>
@@ -934,8 +879,8 @@ export default function SubmissionsPage({ params }: { params: Promise<{ formId: 
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
         )}
