@@ -104,24 +104,24 @@ export default function DraggableField({
     <div
       ref={setNodeRef}
       style={dragStyle}
-      className={`group relative rounded-lg border bg-white p-4 transition-all ${isSelected
-        ? "border-blue-500"
-        : "border-gray-200 hover:border-gray-300"
+      className={`group relative rounded-xl border bg-white p-3 transition-all font-paper shadow-none ${isSelected
+        ? "border-black/30 ring-1 ring-black/5"
+        : "border-black/10 hover:border-black/20"
         } ${isDragging ? "opacity-80" : ""}`}
       onClick={onSelect}
       role="presentation"
     >
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 pb-3">
+      <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-2">
         <div className="flex items-center gap-2">
           <button
             {...attributes}
             {...listeners}
             onClick={(event) => event.stopPropagation()}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition hover:border-blue-200 hover:text-blue-500 active:cursor-grabbing"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-black/10 text-black/40 transition hover:border-black/30 hover:text-black active:cursor-grabbing"
             aria-label="Drag to reorder"
             type="button"
           >
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M7 4C7 4.55228 6.55228 5 6 5C5.44772 5 5 4.55228 5 4C5 3.44772 5.44772 3 6 3C6.55228 3 7 3.44772 7 4Z" fill="currentColor" />
               <path d="M15 4C15 4.55228 14.5523 5 14 5C13.4477 5 13 4.55228 13 4C13 3.44772 13.4477 3 14 3C14.5523 3 15 3.44772 15 4Z" fill="currentColor" />
               <path d="M7 10C7 10.5523 6.55228 11 6 11C5.44772 11 5 10.5523 5 10C5 9.44772 5.44772 9 6 9C6.55228 9 7 9.44772 7 10Z" fill="currentColor" />
@@ -130,7 +130,7 @@ export default function DraggableField({
               <path d="M15 16C15 16.5523 14.5523 17 14 17C13.4477 17 13 16.5523 13 16C13 15.4477 13.4477 15 14 15C14.5523 15 15 15.4477 15 16Z" fill="currentColor" />
             </svg>
           </button>
-          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold tracking-wide text-gray-600">
+          <span className="rounded-full bg-black/5 px-2 py-0.5 text-[9px] font-bold tracking-wide text-black uppercase">
             {fieldTypeLabel}
           </span>
         </div>
@@ -140,10 +140,10 @@ export default function DraggableField({
               event.stopPropagation();
               onDuplicate();
             }}
-            className="flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+            className="flex items-center gap-1 rounded-full border border-black/10 px-2 py-0.5 text-[9px] font-bold text-black/60 transition hover:border-black/30 hover:bg-black/5 hover:text-black"
             type="button"
           >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8a2 2 0 01-2 2H8" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
             </svg>
@@ -154,10 +154,10 @@ export default function DraggableField({
               event.stopPropagation();
               onDelete();
             }}
-            className="flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-red-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+            className="flex items-center gap-1 rounded-full border border-black/10 px-2 py-0.5 text-[9px] font-bold text-black/60 transition hover:border-black/30 hover:bg-black/5 hover:text-black"
             type="button"
           >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             Delete
@@ -165,7 +165,7 @@ export default function DraggableField({
         </div>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-3">
         <FieldEditor field={field} onUpdate={onUpdate} styling={styling} isQuizMode={isQuizMode} />
       </div>
     </div>
@@ -527,7 +527,7 @@ function FieldEditor({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-1">
           <div
@@ -535,7 +535,7 @@ function FieldEditor({
             role="textbox"
             contentEditable
             suppressContentEditableWarning
-            className="relative flex-1 cursor-text rounded-md px-1 py-1 text-base font-semibold text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-500/40 before:pointer-events-none before:absolute before:inset-1 before:select-none before:text-sm before:text-gray-400 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
+            className="relative flex-1 cursor-text rounded-md px-1 py-1 text-sm font-bold text-black outline-none transition focus:ring-2 focus:ring-black/20 before:pointer-events-none before:absolute before:inset-1 before:select-none before:text-xs before:text-black/30 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
             data-placeholder="Untitled field"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
@@ -567,13 +567,13 @@ function FieldEditor({
               e.stopPropagation();
               onUpdate({ required: !field.required });
             }}
-            className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${field.required
-              ? "border-blue-200 bg-blue-50 text-blue-700"
-              : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+            className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold transition-colors ${field.required
+              ? "border-black/20 bg-black/5 text-black"
+              : "border-black/10 bg-white text-black/60 hover:border-black/20"
               }`}
             type="button"
           >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             {field.required ? "Required" : "Optional"}
@@ -606,12 +606,12 @@ function FieldEditor({
             return (
               <div
                 key={`${field.id}-option-${idx}`}
-                className="group flex items-center gap-3 rounded-xl border border-transparent bg-gray-50 px-3 py-2 transition-colors hover:border-gray-300 hover:bg-white"
+                className="group flex items-center gap-3 rounded-xl border border-transparent bg-black/5 px-3 py-2 transition-colors hover:border-black/20 hover:bg-white"
               >
                 {optionControlType ? (
-                  <input type={optionControlType} disabled className="h-4 w-4" />
+                  <input type={optionControlType} disabled className="h-4 w-4 border-black/20 bg-transparent" />
                 ) : (
-                  <span className="text-gray-400">•</span>
+                  <span className="text-black/40">•</span>
                 )}
                 <div
                   ref={(el) => {
@@ -627,7 +627,7 @@ function FieldEditor({
                   role="textbox"
                   contentEditable
                   suppressContentEditableWarning
-                  className="relative flex-1 cursor-text rounded px-1 py-0.5 text-sm text-gray-800 outline-none before:pointer-events-none before:absolute before:inset-y-0 before:left-1 before:select-none before:text-sm before:text-gray-400 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
+                  className="relative flex-1 cursor-text rounded px-1 py-0.5 text-sm font-bold text-black outline-none before:pointer-events-none before:absolute before:inset-y-0 before:left-1 before:select-none before:text-sm before:text-black/30 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
                   data-placeholder={`Option ${idx + 1}`}
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -656,14 +656,14 @@ function FieldEditor({
                 />
 
                 {field.type === "picture-choice" && field.optionImages?.[idx] && (
-                  <div className="h-8 w-8 relative rounded overflow-hidden border border-gray-200 shrink-0">
+                  <div className="h-8 w-8 relative rounded overflow-hidden border border-black/10 shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={field.optionImages[idx]} alt="Option" className="h-full w-full object-cover" />
+                    <img src={field.optionImages[idx]} alt="Option" className="h-full w-full object-cover grayscale" />
                   </div>
                 )}
 
                 {field.type === "picture-choice" && (
-                  <label className="cursor-pointer rounded-md border border-gray-200 p-1.5 text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Upload image">
+                  <label className="cursor-pointer rounded-md border border-black/10 p-1.5 text-black/40 hover:border-black/30 hover:bg-black/5 hover:text-black transition-colors" title="Upload image">
                     <input
                       type="file"
                       accept="image/*"
@@ -685,7 +685,7 @@ function FieldEditor({
                       e.stopPropagation();
                       handleOptionInsertAfter(idx);
                     }}
-                    className="rounded-md border border-gray-200 p-1.5 text-gray-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                    className="rounded-md border border-black/10 p-1.5 text-black/40 hover:border-black/30 hover:bg-black/5 hover:text-black"
                     title="Add option below"
                     type="button"
                   >
@@ -698,7 +698,7 @@ function FieldEditor({
                       e.stopPropagation();
                       handleOptionRemove(idx);
                     }}
-                    className="rounded-md border border-gray-200 p-1.5 text-red-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                    className="rounded-md border border-black/10 p-1.5 text-black/40 hover:border-black/30 hover:bg-black/5 hover:text-black disabled:cursor-not-allowed disabled:border-black/5 disabled:text-black/20"
                     title="Remove option"
                     disabled={resolvedOptions.length <= 1}
                     type="button"
@@ -717,7 +717,7 @@ function FieldEditor({
                 e.stopPropagation();
                 handleOptionInsertAfter();
               }}
-              className="flex-1 rounded-xl border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-600"
+              className="flex-1 rounded-xl border border-dashed border-black/20 py-2 text-sm font-bold text-black/60 transition-colors hover:border-black/40 hover:text-black"
               type="button"
             >
               + Add option
@@ -738,35 +738,35 @@ function FieldEditor({
 
       {field.type === "image" && (
         <div className="space-y-2 mb-4">
-          <label className="block text-sm font-medium text-gray-700">Image</label>
+          <label className="block text-sm font-bold text-black">Image</label>
           <div className="flex items-center gap-4">
             {field.imageUrl || field.helpText ? (
-              <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+              <div className="relative w-full max-w-xs rounded-lg overflow-hidden border border-black/10 bg-black/5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={field.imageUrl || field.helpText}
                   alt="Field image"
-                  className="w-full h-auto object-contain"
+                  className="w-full h-auto object-contain grayscale"
                 />
                 <button
                   onClick={() => onUpdate({ imageUrl: undefined, helpText: undefined })}
-                  className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-100 border border-gray-200 transition-colors"
+                  className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-none border border-black/10 hover:bg-black/5 transition-colors"
                   title="Remove image"
                   type="button"
                 >
-                  <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all">
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-black/20 border-dashed rounded-lg cursor-pointer bg-black/5 hover:bg-black/10 hover:border-black/40 transition-all">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg className="w-8 h-8 mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                  <svg className="w-8 h-8 mb-4 text-black/40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                   </svg>
-                  <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                  <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF</p>
+                  <p className="mb-2 text-sm text-black/60 font-bold"><span className="underline">Click to upload</span> or drag and drop</p>
+                  <p className="text-xs text-black/40 font-bold">SVG, PNG, JPG or GIF</p>
                 </div>
                 <input
                   type="file"
@@ -783,7 +783,7 @@ function FieldEditor({
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <div className="rounded-xl border border-black/10 bg-black/5 p-3">
         <FieldRenderer field={field} isPreview={false} styling={styling} />
       </div>
 

@@ -356,6 +356,8 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
   ].includes(field.type);
 
   const renderFieldInput = () => {
+    const inputClasses = "w-full px-2.5 py-1.5 text-sm border border-black/20 rounded-lg bg-transparent focus:border-black/40 focus:ring-0 transition-colors font-paper text-black placeholder:text-black/30";
+    
     switch (field.type) {
       // Text Inputs
       case "short-answer":
@@ -364,12 +366,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
           <input
             type="text"
             placeholder={field.placeholder || "Your answer"}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors"
-            style={{
-              borderColor: styling?.primaryColor ? 'rgba(0,0,0,0.2)' : '#d1d5db',
-              backgroundColor: styling?.backgroundColor || '#ffffff',
-              '--tw-ring-color': styling?.primaryColor || '#3b82f6',
-            } as React.CSSProperties}
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
@@ -380,12 +377,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
           <textarea
             placeholder={field.placeholder || "Your answer"}
             rows={4}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent resize-vertical transition-colors"
-            style={{
-              borderColor: styling?.primaryColor ? 'rgba(0,0,0,0.2)' : '#d1d5db',
-              backgroundColor: styling?.backgroundColor || '#ffffff',
-              '--tw-ring-color': styling?.primaryColor || '#3b82f6',
-            } as React.CSSProperties}
+            className={`${inputClasses} resize-vertical`}
             disabled={!isPreview}
           />
         );
@@ -396,12 +388,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
           <input
             type="email"
             placeholder={field.placeholder || "your@email.com"}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors"
-            style={{
-              borderColor: styling?.primaryColor ? 'rgba(0,0,0,0.2)' : '#d1d5db',
-              backgroundColor: styling?.backgroundColor || '#ffffff',
-              '--tw-ring-color': styling?.primaryColor || '#3b82f6',
-            } as React.CSSProperties}
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
@@ -411,27 +398,22 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
           <input
             type="tel"
             placeholder={field.placeholder || "+1 (555) 000-0000"}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors"
-            style={{
-              borderColor: styling?.primaryColor ? 'rgba(0,0,0,0.2)' : '#d1d5db',
-              backgroundColor: styling?.backgroundColor || '#ffffff',
-              '--tw-ring-color': styling?.primaryColor || '#3b82f6',
-            } as React.CSSProperties}
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
 
       case "address":
         return (
-          <div className="space-y-2">
-            <input type="text" placeholder="Street Address" className="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
+          <div className="space-y-2 font-paper">
+            <input type="text" placeholder="Street Address" className={inputClasses} disabled={!isPreview} />
             <div className="grid grid-cols-2 gap-2">
-              <input type="text" placeholder="City" className="px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
-              <input type="text" placeholder="State/Province" className="px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
+              <input type="text" placeholder="City" className={inputClasses} disabled={!isPreview} />
+              <input type="text" placeholder="State/Province" className={inputClasses} disabled={!isPreview} />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <input type="text" placeholder="ZIP/Postal Code" className="px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
-              <input type="text" placeholder="Country" className="px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
+              <input type="text" placeholder="ZIP/Postal Code" className={inputClasses} disabled={!isPreview} />
+              <input type="text" placeholder="Country" className={inputClasses} disabled={!isPreview} />
             </div>
           </div>
         );
@@ -441,11 +423,14 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "choices":
       case "radio":
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 font-paper">
             {normalizeOptions(field.options).map((option, idx) => (
-              <label key={idx} className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name={field.id} disabled={!isPreview} className="w-4 h-4" />
-                <span className="text-gray-700">{option}</span>
+              <label key={idx} className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded-full group-hover:border-black/40">
+                  <input type="radio" name={field.id} disabled={!isPreview} className="peer sr-only" />
+                  <div className="w-2.5 h-2.5 bg-black rounded-full opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-black">{option}</span>
               </label>
             ))}
           </div>
@@ -455,12 +440,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "select":
         return (
           <select
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors"
-            style={{
-              borderColor: styling?.primaryColor ? 'rgba(0,0,0,0.2)' : '#d1d5db',
-              backgroundColor: styling?.backgroundColor || '#ffffff',
-              '--tw-ring-color': styling?.primaryColor || '#3b82f6',
-            } as React.CSSProperties}
+            className={inputClasses}
             disabled={!isPreview}
           >
             <option value="">Select an option...</option>
@@ -473,11 +453,16 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "checkboxes":
       case "multiselect":
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 font-paper">
             {normalizeOptions(field.options).map((option, idx) => (
-              <label key={idx} className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />
-                <span className="text-gray-700">{option}</span>
+              <label key={idx} className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded group-hover:border-black/40">
+                  <input type="checkbox" disabled={!isPreview} className="peer sr-only" />
+                  <svg className="w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-black">{option}</span>
               </label>
             ))}
           </div>
@@ -487,11 +472,16 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         // If options are provided, treat as multiple checkboxes
         if (field.options && field.options.length > 0) {
           return (
-            <div className="space-y-2">
+            <div className="space-y-2 font-paper">
               {normalizeOptions(field.options).map((option, idx) => (
-                <label key={idx} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />
-                  <span className="text-gray-700">{option}</span>
+                <label key={idx} className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded group-hover:border-black/40">
+                    <input type="checkbox" disabled={!isPreview} className="peer sr-only" />
+                    <svg className="w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-black">{option}</span>
                 </label>
               ))}
             </div>
@@ -499,28 +489,34 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         }
         // Otherwise treat as single boolean checkbox
         return (
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" disabled={!isPreview} className="w-4 h-4" />
-            <span className="text-gray-700">{field.placeholder || "I agree"}</span>
+          <label className="flex items-center gap-2 cursor-pointer group font-paper">
+            <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded group-hover:border-black/40">
+              <input type="checkbox" disabled={!isPreview} className="peer sr-only" />
+              <svg className="w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-black">{field.placeholder || "I agree"}</span>
           </label>
         );
 
       case "switch":
         return (
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div className="relative inline-block w-12 h-6">
+          <label className="flex items-center gap-3 cursor-pointer font-paper">
+            <div className="relative inline-block w-10 h-6">
               <input type="checkbox" disabled={!isPreview} className="sr-only peer" />
-              <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-6 peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+              <div className="w-10 h-6 bg-transparent border border-black/20 rounded-full peer peer-checked:bg-black/5 peer-checked:border-black transition-colors"></div>
+              <div className="absolute left-1 top-1 bg-black w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4"></div>
             </div>
-            <span className="text-gray-700">{field.label}</span>
+            <span className="text-black">{field.label}</span>
           </label>
         );
 
       case "picture-choice":
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 font-paper">
             {normalizeOptions(field.options).map((option, i) => (
-              <label key={i} className="relative cursor-pointer">
+              <label key={i} className="relative cursor-pointer group">
                 <input 
                   type="radio" 
                   name={field.id} 
@@ -528,19 +524,19 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
                   disabled={!isPreview}
                   className="peer sr-only"
                 />
-                <div className="rounded-lg border-2 border-gray-200 p-3 transition-all hover:border-blue-300 peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                    <div className="aspect-square bg-white rounded-md flex items-center justify-center overflow-hidden mb-3 relative border border-gray-100">
+                <div className="rounded-xl border border-black/10 p-3 transition-all hover:border-black/30 peer-checked:border-black peer-checked:bg-black/5">
+                    <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden mb-3 relative border border-black/5">
                       {field.optionImages?.[i] ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={field.optionImages[i]} alt={option} className="w-full h-full object-cover" />
+                        <img src={field.optionImages[i]} alt={option} className="w-full h-full object-cover grayscale" />
                       ) : (
-                        <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-black/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       )}
                     </div>
                     <div className="flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-700">{option}</span>
+                        <span className="text-sm font-bold text-black">{option}</span>
                     </div>
                 </div>
               </label>
@@ -550,13 +546,13 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
 
       case "choice-matrix":
         return (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto font-paper">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-50"></th>
+                  <th className="border border-black/10 px-4 py-2 bg-transparent"></th>
                   {normalizeOptions(field.options).map((option, idx) => (
-                    <th key={idx} className="border border-gray-300 px-4 py-2 bg-gray-50 font-medium">
+                    <th key={idx} className="border border-black/10 px-4 py-2 bg-transparent font-bold text-black">
                       {option}
                     </th>
                   ))}
@@ -565,15 +561,24 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
               <tbody>
                 {(field.matrixRows || ["Row 1", "Row 2", "Row 3"]).map((row, rowIdx) => (
                   <tr key={rowIdx}>
-                    <td className="border border-gray-300 px-4 py-2 font-medium">{row}</td>
+                    <td className="border border-black/10 px-4 py-2 font-bold text-black">{row}</td>
                     {normalizeOptions(field.options).map((option, colIdx) => (
-                      <td key={colIdx} className="border border-gray-300 px-4 py-2 text-center">
-                        <input
-                          type={field.allowMultipleSelection ? "checkbox" : "radio"}
-                          name={`matrix-${field.id}-${rowIdx}`}
-                          disabled={!isPreview}
-                          className="w-4 h-4"
-                        />
+                      <td key={colIdx} className="border border-black/10 px-4 py-2 text-center">
+                        <div className="flex justify-center">
+                          {field.allowMultipleSelection ? (
+                            <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded hover:border-black/40">
+                              <input type="checkbox" name={`matrix-${field.id}-${rowIdx}`} disabled={!isPreview} className="peer sr-only" />
+                              <svg className="w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          ) : (
+                            <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded-full hover:border-black/40">
+                              <input type="radio" name={`matrix-${field.id}-${rowIdx}`} disabled={!isPreview} className="peer sr-only" />
+                              <div className="w-2.5 h-2.5 bg-black rounded-full opacity-0 peer-checked:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
                       </td>
                     ))}
                   </tr>
@@ -589,7 +594,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         return (
           <input
             type="date"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
@@ -599,7 +604,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         return (
           <input
             type="time"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
@@ -608,21 +613,21 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
         return (
           <input
             type="datetime-local"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
 
       case "date-range":
         return (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 font-paper">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Start Date</label>
-              <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
+              <label className="block text-sm text-black/60 mb-1 font-bold">Start Date</label>
+              <input type="date" className={inputClasses} disabled={!isPreview} />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">End Date</label>
-              <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg" disabled={!isPreview} />
+              <label className="block text-sm text-black/60 mb-1 font-bold">End Date</label>
+              <input type="date" className={inputClasses} disabled={!isPreview} />
             </div>
           </div>
         );
@@ -634,17 +639,19 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
             {[1, 2, 3, 4, 5].map((star) => (
               <button 
                 key={star} 
-                className="text-gray-300 hover:text-yellow-400 transition-colors" 
+                className="text-black/20 hover:text-black transition-colors" 
                 disabled={!isPreview}
                 type="button"
               >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   viewBox="0 0 24 24" 
-                  fill="currentColor" 
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
                   className="w-8 h-8"
                 >
-                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 4.646 1.251 5.318c.277 1.162-1.074 2.056-1.987 1.488L12 18.771l-4.695 2.636c-.913.568-2.264-.326-1.987-1.488l1.251-5.318-4.117-4.646c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.563.045.8.77.397 1.107l-4.19 3.523a.562.562 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.19-3.523a.562.562 0 01.397-1.107l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                 </svg>
               </button>
             ))}
@@ -653,16 +660,16 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
 
       case "slider":
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 font-paper">
             <input
               type="range"
               min="0"
               max="100"
               defaultValue="50"
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-black"
               disabled={!isPreview}
             />
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm text-black/60 font-bold">
               <span>0</span>
               <span>50</span>
               <span>100</span>
@@ -672,11 +679,11 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
 
       case "opinion-scale":
         return (
-          <div className="flex gap-2 justify-between">
+          <div className="flex gap-2 justify-between font-paper">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
               <button
                 key={num}
-                className="w-10 h-10 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 border border-black/20 rounded-lg hover:border-black hover:bg-black/5 transition-colors font-bold text-black"
                 disabled={!isPreview}
               >
                 {num}
@@ -687,14 +694,14 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
 
       case "ranking":
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 font-paper">
             {normalizeOptions(field.options).map((option, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg bg-white">
-                <svg className="w-5 h-5 text-gray-400 cursor-move" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
+              <div key={idx} className="flex items-center gap-3 p-3 border border-black/10 rounded-lg bg-white hover:border-black/30 transition-colors">
+                <svg className="w-5 h-5 text-black/40 cursor-move" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                 </svg>
-                <span className="flex-1">{option}</span>
-                <span className="text-sm text-gray-500">#{idx + 1}</span>
+                <span className="flex-1 text-black font-bold">{option}</span>
+                <span className="text-sm text-black/40 font-bold">#{idx + 1}</span>
               </div>
             ))}
           </div>
@@ -706,25 +713,20 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
           <input
             type="number"
             placeholder={field.placeholder || "0"}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent transition-colors"
-            style={{
-              borderColor: styling?.primaryColor ? 'rgba(0,0,0,0.2)' : '#d1d5db',
-              backgroundColor: styling?.backgroundColor || '#ffffff',
-              '--tw-ring-color': styling?.primaryColor || '#3b82f6',
-            } as React.CSSProperties}
+            className={inputClasses}
             disabled={!isPreview}
           />
         );
 
       case "currency":
         return (
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+          <div className="relative font-paper">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-black/60 font-bold">$</span>
             <input
               type="number"
               step="0.01"
               placeholder="0.00"
-              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`${inputClasses} pl-8`}
               disabled={!isPreview}
             />
           </div>
@@ -734,8 +736,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "h1":
         return (
           <h1 
-            className="text-4xl font-bold"
-            style={{ color: styling?.primaryColor || '#111827' }}
+            className="text-4xl font-bold font-paper text-black"
           >
             {field.label}
           </h1>
@@ -744,8 +745,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "heading":
         return (
           <h2 
-            className="text-2xl font-bold"
-            style={{ color: styling?.primaryColor || '#111827' }}
+            className="text-2xl font-bold font-paper text-black"
           >
             {field.label}
           </h2>
@@ -754,41 +754,41 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
       case "paragraph":
       case "display-text":
         return (
-          <p style={{ color: styling?.primaryColor || '#374151' }}>
+          <p className="font-paper text-black/80">
             {field.helpText || field.label}
           </p>
         );
 
       case "banner":
         return (
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-            <p className="text-blue-900 font-medium">{field.label}</p>
-            {field.helpText && <p className="text-blue-700 text-sm mt-1">{field.helpText}</p>}
+          <div className="bg-transparent border border-black/20 border-dashed p-4 rounded-xl font-paper">
+            <p className="text-black font-bold text-lg">{field.label}</p>
+            {field.helpText && <p className="text-black/60 text-sm mt-1">{field.helpText}</p>}
           </div>
         );
 
       case "divider":
-        return <hr className="border-t-2 border-gray-300" />;
+        return <hr className="border-t border-black/10 border-dashed my-4" />;
 
       case "image":
         if (field.imageUrl || field.helpText) {
           return (
-            <div className="rounded-lg overflow-hidden border border-gray-200">
+            <div className="rounded-xl overflow-hidden border border-black/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={field.imageUrl || field.helpText}
                 alt={field.label || "Image"}
-                className="w-full h-auto max-h-96 object-contain"
+                className="w-full h-auto max-h-96 object-contain grayscale"
               />
             </div>
           );
         }
         return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <div className="border-2 border-dashed border-black/20 rounded-xl p-8 text-center font-paper">
+            <svg className="w-12 h-12 mx-auto text-black/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="text-gray-500 mt-2">Image will be displayed here</p>
+            <p className="text-black/40 mt-2 font-bold">Image will be displayed here</p>
           </div>
         );
 
@@ -799,7 +799,7 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
 
       default:
         return (
-          <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 text-gray-600">
+          <div className="p-4 border border-black/10 rounded-xl bg-transparent text-black/60 font-paper font-bold">
             {field.type} field (preview not implemented)
           </div>
         );

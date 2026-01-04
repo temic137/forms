@@ -348,9 +348,9 @@ export default function Home() {
                       />
                       <label
                         htmlFor="landing-attach-file"
-                        className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button cursor-pointer ${loading ? "opacity-50 cursor-not-allowed" : "text-gray-800"} ${attachedFiles.length > 0
-                          ? "bg-blue-50 text-blue-700"
-                          : ""
+                        className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button cursor-pointer ${loading ? "opacity-50 cursor-not-allowed" : "text-black"} ${attachedFiles.length > 0
+                          ? "bg-black text-white border-black"
+                          : "bg-white border-black/10 hover:border-black/30"
                           }`}
                       >
                         <Upload className="w-3 h-3" />
@@ -373,7 +373,7 @@ export default function Home() {
                       />
                       <label
                         htmlFor="landing-scan-doc"
-                        className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button cursor-pointer ${loading ? "opacity-50 cursor-not-allowed" : "text-gray-800"}`}
+                        className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button cursor-pointer bg-white border-black/10 hover:border-black/30 ${loading ? "opacity-50 cursor-not-allowed" : "text-black"}`}
                       >
                         <Camera className="w-3 h-3" />
                         <span className="hidden sm:inline">Scan Doc</span>
@@ -394,7 +394,7 @@ export default function Home() {
                       />
                       <label
                         htmlFor="landing-import-json"
-                        className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button cursor-pointer ${loading ? "opacity-50 cursor-not-allowed" : "text-gray-800"}`}
+                        className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button cursor-pointer bg-white border-black/10 hover:border-black/30 ${loading ? "opacity-50 cursor-not-allowed" : "text-black"}`}
                       >
                         <FileJson className="w-3 h-3" />
                         <span className="hidden sm:inline">Import JSON</span>
@@ -408,8 +408,8 @@ export default function Home() {
                       onClick={() => setShowUrlInput(!showUrlInput)}
                       disabled={loading}
                       className={`flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button ${attachedUrl
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-800"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-black/10 hover:border-black/30"
                         }`}
                     >
                       <Globe className="w-3 h-3" />
@@ -422,7 +422,7 @@ export default function Home() {
                         type="button"
                         onClick={() => clearAttachments()}
                         disabled={loading}
-                        className="flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button text-red-600 ml-auto disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button text-black border-black/10 hover:border-red-500 hover:text-red-600 ml-auto disabled:opacity-50 bg-white"
                       >
                         <Trash2 className="w-3 h-3" />
                         Clear All
@@ -436,11 +436,11 @@ export default function Home() {
                       {attachedFiles.map((file) => (
                         <div
                           key={file.id}
-                          className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs transition-all ${file.status === 'error'
-                            ? 'bg-red-50 text-red-700'
+                          className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs transition-all border-2 font-bold ${file.status === 'error'
+                            ? 'bg-white text-red-600 border-red-200'
                             : file.status === 'parsing'
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'bg-white text-gray-700'
+                              ? 'bg-white text-black border-black/30'
+                              : 'bg-white text-black border-black/10'
                             }`}
                           title={file.errorMessage}
                         >
@@ -450,12 +450,12 @@ export default function Home() {
                             ) : file.status === 'error' ? (
                               <AlertCircle className="w-3 h-3 shrink-0" />
                             ) : (
-                              <FileText className="w-3 h-3 shrink-0 text-gray-400" />
+                              <FileText className="w-3 h-3 shrink-0 text-black/40" />
                             )}
 
                             <div className="flex flex-col min-w-0 max-w-[120px]">
-                              <span className="truncate font-medium">{file.file.name}</span>
-                              <span className="text-[10px] opacity-70">{(file.file.size / 1024 / 1024).toFixed(2)} MB</span>
+                              <span className="truncate font-bold">{file.file.name}</span>
+                              <span className="text-[10px] opacity-60">{(file.file.size / 1024 / 1024).toFixed(2)} MB</span>
                             </div>
                           </div>
 
@@ -480,7 +480,7 @@ export default function Home() {
                         value={attachedUrl}
                         onChange={(e) => setAttachedUrl(e.target.value)}
                         placeholder="https://example.com"
-                        className="flex-1 px-2 py-1.5 text-xs rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 border-0"
+                        className="flex-1 px-2 py-1.5 text-xs rounded-md focus:outline-none border-2 border-black/10 focus:border-black bg-white font-bold paper-input"
                         disabled={loading}
                       />
                       {attachedUrl && (
@@ -491,7 +491,7 @@ export default function Home() {
                             setShowUrlInput(false);
                           }}
                           disabled={loading}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50"
+                          className="p-1.5 text-black/40 hover:text-red-600 hover:bg-black/5 rounded-md disabled:opacity-50"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -501,7 +501,7 @@ export default function Home() {
                 </div>
 
                 {isListening && autoSubmitCountdown !== null && (
-                  <div className="text-center text-xs font-medium animate-pulse text-blue-600">
+                  <div className="text-center text-xs font-bold animate-pulse text-black">
                     Auto-generating in {autoSubmitCountdown}s...
                   </div>
                 )}
@@ -510,7 +510,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={!query.trim() || loading}
-                    className="flex-1 py-3 px-6 font-bold text-base disabled:opacity-50 flex items-center justify-center gap-2 paper-button-primary"
+                    className="flex-1 py-3 px-6 font-bold text-base disabled:opacity-50 flex items-center justify-center gap-2 paper-button bg-black text-white border-2 border-black hover:bg-black/90"
                   >
                     {loading ? (
                       <>
@@ -528,7 +528,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={openBuilderForCreate}
-                    className="px-4 py-3 font-bold paper-button text-black"
+                    className="px-4 py-3 font-bold paper-button bg-white text-black border-2 border-black/10 hover:border-black/30"
                     title="Build manually"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -542,35 +542,35 @@ export default function Home() {
 
         {/* Comparison Section */}
         <section id="comparison" className="py-10 bg-transparent">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 paper-card p-6">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 paper-card p-6 bg-white">
             <h2 className="text-2xl font-bold text-black mb-6 text-center">vs Google Forms</h2>
 
             <div className="space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0 border-b border-black/5 last:border-0">
                 <span className="text-sm font-bold text-black">Creation Speed</span>
                 <div className="flex gap-4 text-sm justify-between sm:justify-start">
-                  <span className="text-gray-400 w-24 text-left sm:text-right">5-10 min</span>
+                  <span className="text-black/40 w-24 text-left sm:text-right font-bold">5-10 min</span>
                   <span className="text-black font-bold w-24 text-right">30 sec</span>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0 border-b border-black/5 last:border-0">
                 <span className="text-sm font-bold text-black">Input Methods</span>
                 <div className="flex gap-4 text-sm justify-between sm:justify-start">
-                  <span className="text-gray-400 w-24 text-left sm:text-right">Click only</span>
+                  <span className="text-black/40 w-24 text-left sm:text-right font-bold">Click only</span>
                   <span className="text-black font-bold w-24 text-right">Voice, File, URL</span>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0 border-b border-black/5 last:border-0">
                 <span className="text-sm font-bold text-black">AI Detection</span>
                 <div className="flex gap-4 text-sm justify-between sm:justify-start">
-                  <span className="text-gray-400 w-24 text-left sm:text-right flex items-center sm:justify-end"><Minus className="w-4 h-4" /></span>
+                  <span className="text-black/40 w-24 text-left sm:text-right flex items-center sm:justify-end"><Minus className="w-4 h-4" /></span>
                   <span className="text-black font-bold w-24 text-right flex items-center justify-end"><Check className="w-4 h-4" /></span>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0 border-b border-black/5 last:border-0">
                 <span className="text-sm font-bold text-black">File Imports</span>
                 <div className="flex gap-4 text-sm justify-between sm:justify-start">
-                  <span className="text-gray-400 w-24 text-left sm:text-right flex items-center sm:justify-end"><Minus className="w-4 h-4" /></span>
+                  <span className="text-black/40 w-24 text-left sm:text-right flex items-center sm:justify-end"><Minus className="w-4 h-4" /></span>
                   <span className="text-black font-bold w-24 text-right flex items-center justify-end"><Check className="w-4 h-4" /></span>
                 </div>
               </div>
@@ -583,14 +583,14 @@ export default function Home() {
       {
         showHelpPopup && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowHelpPopup(false)}>
-            <div className="paper-card max-w-lg w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6">
+            <div className="paper-card max-w-lg w-full max-h-[80vh] overflow-hidden bg-white" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b-2 border-black/10">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-2xl font-bold text-black">What can I say?</h3>
-                    <p className="text-base text-gray-600 mt-1">Just describe your form naturally. Here are some examples:</p>
+                    <p className="text-base text-black/60 mt-1 font-bold">Just describe your form naturally. Here are some examples:</p>
                   </div>
-                  <button onClick={() => setShowHelpPopup(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <button onClick={() => setShowHelpPopup(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
                     <X className="w-6 h-6 text-black" />
                   </button>
                 </div>
@@ -607,7 +607,7 @@ export default function Home() {
                             setQuery(prompt);
                             setShowHelpPopup(false);
                           }}
-                          className="w-full text-left p-3 bg-white hover:bg-gray-100 rounded-[20px] text-base text-black transition-all font-bold"
+                          className="w-full text-left p-3 bg-white hover:bg-black/5 rounded-lg text-base text-black transition-all font-bold border-2 border-black/10 hover:border-black/30"
                         >
                           &quot;{prompt}&quot;
                         </button>
@@ -616,9 +616,9 @@ export default function Home() {
                   </div>
                 ))}
 
-                <div className="pt-4">
+                <div className="pt-4 border-t-2 border-black/10">
                   <h4 className="text-base font-bold text-black mb-2">💡 Pro Tips</h4>
-                  <ul className="text-base text-gray-600 space-y-2">
+                  <ul className="text-base text-black/60 space-y-2 font-bold">
                     <li className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-black mt-0.5 flex-shrink-0" />
                       <span>Mention specific field types: &quot;email&quot;, &quot;phone number&quot;, &quot;date picker&quot;</span>
@@ -643,7 +643,7 @@ export default function Home() {
         )
       }
 
-      <footer className="bg-transparent py-12">
+      <footer className="bg-transparent py-12 border-t-2 border-black/5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2 text-black font-bold text-xl">
@@ -654,7 +654,7 @@ export default function Home() {
               href="https://www.producthunt.com/products/anyform-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-anyform-2"
               target="_blank"
               rel="noopener noreferrer"
-              className="opacity-70 hover:opacity-100 transition-opacity"
+              className="opacity-70 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
             >
               <img
                 src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1053675&theme=neutral&t=1766549102046"
@@ -664,10 +664,10 @@ export default function Home() {
                 style={{ height: '43px', width: '200px' }}
               />
             </a>
-            <div className="flex gap-8 text-sm text-gray-500">
-              <a href="/privacy" className="hover:text-gray-900">Privacy</a>
-              <a href="/terms" className="hover:text-gray-900">Terms</a>
-              <a href="#" className="hover:text-gray-900">Twitter</a>
+            <div className="flex gap-8 text-sm text-black/60 font-bold">
+              <a href="/privacy" className="hover:text-black">Privacy</a>
+              <a href="/terms" className="hover:text-black">Terms</a>
+              <a href="#" className="hover:text-black">Twitter</a>
             </div>
           </div>
         </div>

@@ -685,7 +685,7 @@ export default function DragDropFormBuilder({
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-paper-texture font-paper text-black overflow-hidden text-sm">
       {currentFormId && (
         <CollaboratorModal
           formId={currentFormId}
@@ -698,7 +698,7 @@ export default function DragDropFormBuilder({
       {/* Mobile backdrop */}
       {showFieldPalette && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/20 z-40 backdrop-blur-[1px]"
           onClick={() => setShowFieldPalette(false)}
         />
       )}
@@ -709,7 +709,7 @@ export default function DragDropFormBuilder({
         {/* Close button for mobile */}
         <button
           onClick={() => setShowFieldPalette(false)}
-          className="lg:hidden absolute top-4 right-4 z-10 p-2 bg-white rounded-md shadow-lg text-gray-600 hover:text-gray-900"
+          className="lg:hidden absolute top-4 right-4 z-10 p-2 bg-white rounded-full border border-black/10 text-black hover:bg-gray-50"
         >
           <X className="w-5 h-5" />
         </button>
@@ -727,7 +727,7 @@ export default function DragDropFormBuilder({
       {/* Main Canvas */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Top Bar */}
-        <div className="border-b border-gray-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className="border-b border-black/10 bg-white/80 px-2 sm:px-3 py-1.5 sm:py-2">
           {/* Mobile Header */}
           <div className="flex items-center gap-2 sm:hidden">
             <button
@@ -737,16 +737,16 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 onCancel();
               }}
-              className="flex h-10 items-center justify-center gap-1 rounded-md px-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex h-8 items-center justify-center gap-1 rounded-full border border-black/10 px-2 text-black transition-colors hover:bg-black/5"
               title="Back to Dashboard"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm font-medium">Back</span>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="text-xs font-bold">Back</span>
             </button>
 
             {/* Status Badge (Mobile) */}
             {isClosed && (
-              <div className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full flex items-center gap-1">
+              <div className="px-2 py-0.5 bg-transparent border border-black/20 text-black text-[10px] font-bold rounded-full flex items-center gap-1">
                 <History className="w-3 h-3" />
                 <span>Closed</span>
               </div>
@@ -758,7 +758,7 @@ export default function DragDropFormBuilder({
                 type="text"
                 value={formTitle}
                 onChange={(e) => onFormTitleChange(e.target.value)}
-                className="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full rounded-md border border-black/10 bg-transparent px-2 py-1 text-sm font-bold text-black placeholder:text-black/40 focus:border-black/30 focus:outline-none focus:ring-0"
                 placeholder="Form title"
               />
             </div>
@@ -772,16 +772,16 @@ export default function DragDropFormBuilder({
                 }
               }}
               disabled={saving}
-              className="flex items-center gap-1.5 rounded-md bg-black px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-1 text-xs font-bold text-black transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <>
-                  <Spinner size="sm" variant="white" />
+                  <Spinner size="sm" variant="primary" />
                   <span>Saving</span>
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" />
+                  <Save className="h-3.5 w-3.5" />
                   <span>Save</span>
                 </>
               )}
@@ -793,15 +793,15 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 setShowMobileActions(true);
               }}
-              className="flex h-10 w-10 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-black transition-colors hover:bg-black/5"
               title="More actions"
             >
-              <MoreVertical className="h-4 w-4" />
+              <MoreVertical className="h-3.5 w-3.5" />
             </button>
           </div>
 
           {/* Desktop Header */}
-          <div className="hidden sm:flex w-full items-center gap-2 sm:gap-3">
+          <div className="hidden sm:flex w-full items-center gap-2">
             <button
               type="button"
               onClick={(e) => {
@@ -809,23 +809,23 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 onCancel();
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors z-10 relative shrink-0"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors z-10 relative shrink-0"
               title="Back to Dashboard"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-3.5 h-3.5" />
               <span>Dashboard</span>
             </button>
 
             {/* Status Indicators (Desktop) */}
             {isClosed && (
-              <div className="px-2.5 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full flex items-center gap-1.5 animate-in fade-in">
-                <History className="w-3.5 h-3.5" />
+              <div className="px-2 py-0.5 border border-black/20 text-black text-[10px] font-bold rounded-full flex items-center gap-1 animate-in fade-in">
+                <History className="w-3 h-3" />
                 <span>Closed</span>
               </div>
             )}
             {!isClosed && opensAt && new Date(opensAt) > new Date() && (
-              <div className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full flex items-center gap-1.5 animate-in fade-in">
-                <Clock className="w-3.5 h-3.5" />
+              <div className="px-2 py-0.5 border border-black/20 text-black text-[10px] font-bold rounded-full flex items-center gap-1 animate-in fade-in">
+                <Clock className="w-3 h-3" />
                 <span>Scheduled</span>
               </div>
             )}
@@ -833,9 +833,9 @@ export default function DragDropFormBuilder({
             {isClosed && (
               <button
                 onClick={() => onIsClosedChange?.(false)}
-                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded-full text-xs font-medium transition-colors"
+                className="hidden lg:flex items-center gap-1 px-2 py-0.5 border border-black/20 hover:bg-black/5 rounded-full text-[10px] font-bold transition-colors"
               >
-                <PlayCircle className="w-3.5 h-3.5" />
+                <PlayCircle className="w-3 h-3" />
                 Reopen Form
               </button>
             )}
@@ -845,79 +845,79 @@ export default function DragDropFormBuilder({
                 type="text"
                 value={formTitle}
                 onChange={(e) => onFormTitleChange(e.target.value)}
-                className="text-base sm:text-lg font-semibold w-full px-2 py-1.5 border-0 focus:outline-none focus:ring-0 bg-transparent text-gray-900 placeholder:text-gray-400"
+                className="text-base font-bold w-full px-2 py-1 border-0 focus:outline-none focus:ring-0 bg-transparent text-black placeholder:text-black/40"
                 placeholder="Form title"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setShowFieldPalette(true)}
-                className="lg:hidden p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className="lg:hidden p-1.5 text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors"
                 title="Add Fields"
               >
-                <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Menu className="w-4 h-4" />
               </button>
 
               {multiStepConfig?.enabled && (
                 <>
                   <button
                     onClick={handleAddPage}
-                    className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
+                    className="hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1"
                     title="Add Page"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                     <span>Add Page</span>
                   </button>
-                  <div className="hidden sm:block w-px h-6 bg-gray-200" />
+                  <div className="hidden sm:block w-px h-4 bg-black/10" />
                 </>
               )}
 
               <button
                 onClick={handlePreview}
-                className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
+                className="hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1"
                 title="Preview Form"
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-3.5 h-3.5" />
                 <span>Preview</span>
               </button>
 
-              <div className="hidden sm:block w-px h-6 bg-gray-200" />
+              <div className="hidden sm:block w-px h-4 bg-black/10" />
 
               {currentFormId && (
                 <>
                   <ShareCollaboratorButton formId={currentFormId} />
-                  <div className="hidden sm:block w-px h-6 bg-gray-200" />
+                  <div className="hidden sm:block w-px h-4 bg-black/10" />
                 </>
               )}
 
               <button
                 onClick={() => setShowOnboarding(true)}
-                className="hidden sm:flex px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium items-center gap-1.5"
+                className="hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1"
                 title="Help & Tour"
               >
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="w-3.5 h-3.5" />
                 <span>Help</span>
               </button>
 
-              <div className="hidden sm:block w-px h-6 bg-gray-200" />
+              <div className="hidden sm:block w-px h-4 bg-black/10" />
 
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className={`p-1.5 sm:p-2 rounded-md transition-colors ${showSettings
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                className={`p-1.5 rounded-full border border-black/10 transition-colors ${showSettings
+                  ? "bg-black/5 text-black"
+                  : "text-black hover:bg-black/5"
                   }`}
                 title="Settings"
               >
-                <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Settings className="w-3.5 h-3.5" />
               </button>
 
-              <div className="hidden sm:block w-px h-6 bg-gray-200" />
+              <div className="hidden sm:block w-px h-4 bg-black/10" />
 
               <button
                 onClick={onCancel}
-                className="hidden sm:block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                className="hidden sm:block px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold"
               >
                 Cancel
               </button>
@@ -925,11 +925,11 @@ export default function DragDropFormBuilder({
               <button
                 onClick={onSave}
                 disabled={saving}
-                className="px-3 sm:px-4 py-1.5 text-xs sm:text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-3 py-1 text-xs bg-white text-black border border-black/20 rounded-full hover:bg-black/5 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 {saving ? (
                   <>
-                    <Spinner size="sm" variant="white" className="w-3.5 h-3.5" />
+                    <Spinner size="sm" variant="primary" className="w-3 h-3" />
                     <span className="hidden sm:inline">Saving</span>
                   </>
                 ) : (

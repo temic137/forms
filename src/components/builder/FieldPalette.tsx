@@ -111,26 +111,26 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
   }, [filteredFields]);
 
   return (
-    <div className="w-72 h-full flex flex-col border-r border-gray-200 bg-white">
+    <div className="w-64 h-full flex flex-col border-r border-black/10 bg-white/50 backdrop-blur-sm font-paper">
       {/* Header */}
-      <div className="p-3 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Form Fields</h2>
+      <div className="p-2 border-b border-black/10 bg-transparent">
+        <h2 className="text-[10px] font-bold text-black uppercase tracking-wider">Form Fields</h2>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-2">
         {/* Mobile instruction banner */}
-        <div className="lg:hidden mb-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs text-blue-700 font-medium">
+        <div className="lg:hidden mb-2 p-2 bg-transparent border border-black/20 rounded-lg border-dashed">
+          <p className="text-[10px] text-black font-bold">
             💡 Tap any field below to add it to your form
           </p>
         </div>
 
         {/* Search */}
-        <div className="mb-3">
+        <div className="mb-2">
           <div className="relative">
             <svg
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black/40"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -142,31 +142,31 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search fields..."
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-black/10 rounded-full focus:outline-none focus:border-black/30 bg-transparent placeholder:text-black/30 text-black font-bold"
             />
           </div>
         </div>
 
         {/* Recommended Fields */}
         {!searchQuery && (
-          <div className="mb-4">
-            <h3 className="px-1 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="mb-3">
+            <h3 className="px-1 mb-1.5 text-[10px] font-bold text-black/60 uppercase tracking-wider">
               Recommended
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {fieldTemplates.filter(f => f.recommended).map(field => (
                 <button
                   key={`rec-${field.type}`}
                   onClick={() => onFieldSelect(field.type)}
-                  className="flex flex-col items-center justify-center p-3 rounded-md bg-gray-50 hover:bg-gray-100 transition-all text-center group"
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-black/10 hover:bg-black/5 transition-all text-center group shadow-none"
                   draggable
                   onDragStart={(e) => {
                     e.dataTransfer.setData("fieldType", field.type);
                     e.dataTransfer.effectAllowed = "copy";
                   }}
                 >
-                  <span className="text-2xl mb-1">{field.icon}</span>
-                  <span className="text-xs font-medium text-gray-700 group-hover:text-gray-900">{field.label}</span>
+                  <span className="text-xl mb-1 grayscale opacity-80">{field.icon}</span>
+                  <span className="text-[10px] font-bold text-black group-hover:text-black">{field.label}</span>
                 </button>
               ))}
             </div>
@@ -174,7 +174,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
         )}
 
         {/* Field Categories */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {(searchQuery ? Object.keys(categoryGroups) : categories).map(category => {
             const fields = searchQuery ? categoryGroups[category] : fieldTemplates.filter(f => f.category === category);
             const isExpanded = searchQuery || expandedCategories.has(category);
@@ -182,15 +182,15 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
             if (fields.length === 0) return null;
 
             return (
-              <div key={category} className="rounded-md overflow-hidden">
+              <div key={category} className="rounded-xl overflow-hidden border border-black/5">
                 {!searchQuery && (
                   <button
                     onClick={() => toggleCategory(category)}
-                    className="w-full px-3 py-2 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-xs font-semibold text-gray-700 transition-colors"
+                    className="w-full px-2.5 py-1.5 bg-transparent hover:bg-black/5 flex items-center justify-between text-[10px] font-bold text-black transition-colors"
                   >
                     <span>{category}</span>
                     <svg
-                      className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -200,24 +200,24 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
                   </button>
                 )}
                 {isExpanded && (
-                  <div className="p-1 space-y-0.5">
+                  <div className="p-0.5 space-y-0.5 bg-white/30">
                     {fields.map(field => (
                       <button
                         key={field.type}
                         onClick={() => onFieldSelect(field.type)}
-                        className="w-full flex items-center gap-2 px-2.5 py-2.5 text-left rounded-md
-                                     hover:bg-blue-50 hover:text-blue-600 text-gray-700
-                                     transition-colors text-xs font-medium group cursor-pointer
-                                     active:bg-blue-100 touch-manipulation"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 text-left rounded-lg
+                                     hover:bg-black/5 text-black
+                                     transition-colors text-[10px] font-bold group cursor-pointer
+                                     active:bg-black/10 touch-manipulation"
                         draggable
                         onDragStart={(e) => {
                           e.dataTransfer.setData("fieldType", field.type);
                           e.dataTransfer.effectAllowed = "copy";
                         }}
                       >
-                        <span className="text-base leading-none">{field.icon}</span>
+                        <span className="text-sm leading-none grayscale opacity-80">{field.icon}</span>
                         <span className="flex-1 truncate">{field.label}</span>
-                        <span className="text-xs text-gray-400 group-hover:text-blue-500 lg:hidden">+</span>
+                        <span className="text-[10px] text-black/40 group-hover:text-black lg:hidden">+</span>
                       </button>
                     ))}
                   </div>
@@ -228,7 +228,7 @@ export default function FieldPalette({ onFieldSelect, styling, onStylingChange }
         </div>
 
         {filteredFields.length === 0 && (
-          <div className="text-center py-8 text-gray-400 text-sm">
+          <div className="text-center py-6 text-black/40 text-xs font-bold">
             No fields found
           </div>
         )}
