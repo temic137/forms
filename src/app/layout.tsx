@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://www.anyform.live/og-image.png?v=2',
+        url: 'https://www.anyform.live/og-image.png?v=3',
         width: 1200,
         height: 630,
         alt: 'AnyForm Preview',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     description: "Stop building forms manually. Just describe them to our AI.",
     creator: "@anyform",
     images: {
-      url: 'https://www.anyform.live/og-image.png?v=2',
+      url: 'https://www.anyform.live/og-image.png?v=3',
       alt: 'AnyForm - AI Form Builder Preview',
       width: 1200,
       height: 630,
