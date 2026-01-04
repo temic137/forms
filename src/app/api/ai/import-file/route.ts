@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAICompletion } from "@/lib/ai-provider";
+import { runFormGenerationPipeline } from "@/lib/form-generation-pipeline";
+import { analyzeFieldTypes } from "@/lib/semantic-field-analyzer";
 
 export const runtime = "nodejs";
+
+// Feature flag for new pipeline
+const USE_NEW_PIPELINE = true;
 
 type Field = {
   id: string;
@@ -156,7 +161,7 @@ Return ONLY valid JSON with this structure:
 }
 
 // Parse content based on its type
-async function parseContentIntelligently(content: string, analysis: ContentAnalysis, fileType: string): Promise<{ title: string; fields: Partial<Field>[] }> {
+async function parseContentIntelligently(content: string, analysis: ContentAnalysis, _fileType: string): Promise<{ title: string; fields: Partial<Field>[] }> {
   let systemPrompt = "";
   let userPrompt = "";
 
@@ -503,36 +508,123 @@ export async function POST(request: NextRequest) {
       // Use intelligent parsing for text files or when structured parsing failed
       console.log("Using intelligent content analysis for", fileType);
       
-      // First, analyze the content
-      const analysis = await analyzeContent(content, fileType);
-      console.log("Content analysis:", analysis);
-      
-      // Then parse based on the analysis
-      try {
-        const intelligentResult = await parseContentIntelligently(content, analysis, fileType);
-        finalData = {
-          title: intelligentResult.title,
-          fields: intelligentResult.fields.map((f, i) => ({
-            id: f.id || `field_${i + 1}`,
-            label: f.label || `Field ${i + 1}`,
-            type: (f.type as Field["type"]) || "text",
-            required: f.required || false,
-            placeholder: f.placeholder || "",
-            options: f.options || [],
-            helpText: f.helpText,
-          })),
-        };
-      } catch (parseError) {
-        // If intelligent parsing also fails, return a user-facing error
-        if (parseError instanceof FormImportError) {
-          throw parseError;
+      // NEW: Use multi-model pipeline for better form generation
+      if (USE_NEW_PIPELINE) {
+        console.log("[Import] Using new multi-model pipeline...");
+        
+        try {
+          // Determine what kind of form this content suggests
+          const analysis = await analyzeContent(content, fileType);
+          console.log("Content analysis:", analysis);
+          
+          // Use the pipeline with reference data
+          const result = await runFormGenerationPipeline({
+            prompt: analysis.contentType === "form_description" 
+              ? content.substring(0, 1000) 
+              : `Create a relevant form based on this ${fileType} content`,
+            referenceData: content.substring(0, 8000),
+          }, {
+            skipFieldOptimization: false,
+            skipQuestionEnhancement: true, // Skip for speed on imports
+            parallelOptimization: true,
+          });
+          
+          console.log(`[Import] Pipeline completed in ${result.metadata.pipeline.totalLatencyMs}ms`);
+          
+          finalData = {
+            title: result.title,
+            fields: result.fields.map((f, i) => ({
+              id: f.id || `field_${i + 1}`,
+              label: f.label,
+              type: f.type as Field["type"],
+              required: f.required,
+              placeholder: f.placeholder || "",
+              options: f.options || [],
+              helpText: f.helpText,
+            })),
+          };
+        } catch (pipelineError) {
+          console.error("[Import] Pipeline failed, falling back to legacy:", pipelineError);
+          // Fall through to legacy parsing
+          const analysis = await analyzeContent(content, fileType);
+          const intelligentResult = await parseContentIntelligently(content, analysis, fileType);
+          finalData = {
+            title: intelligentResult.title,
+            fields: intelligentResult.fields.map((f, i) => ({
+              id: f.id || `field_${i + 1}`,
+              label: f.label || `Field ${i + 1}`,
+              type: (f.type as Field["type"]) || "text",
+              required: f.required || false,
+              placeholder: f.placeholder || "",
+              options: f.options || [],
+              helpText: f.helpText,
+            })),
+          };
         }
+      } else {
+        // Legacy: First, analyze the content
+        const analysis = await analyzeContent(content, fileType);
+        console.log("Content analysis:", analysis);
+        
+        // Then parse based on the analysis
+        try {
+          const intelligentResult = await parseContentIntelligently(content, analysis, fileType);
+          finalData = {
+            title: intelligentResult.title,
+            fields: intelligentResult.fields.map((f, i) => ({
+              id: f.id || `field_${i + 1}`,
+              label: f.label || `Field ${i + 1}`,
+              type: (f.type as Field["type"]) || "text",
+              required: f.required || false,
+              placeholder: f.placeholder || "",
+              options: f.options || [],
+              helpText: f.helpText,
+            })),
+          };
+        } catch (parseError) {
+          // If intelligent parsing also fails, return a user-facing error
+          if (parseError instanceof FormImportError) {
+            throw parseError;
+          }
 
-        console.error("Intelligent parsing failed:", parseError);
-        throw new FormImportError(
-          "We couldn't understand this content well enough to build a form. Please upload a clearer form template or description.",
-          422
-        );
+          console.error("Intelligent parsing failed:", parseError);
+          throw new FormImportError(
+            "We couldn't understand this content well enough to build a form. Please upload a clearer form template or description.",
+            422
+          );
+        }
+      }
+    }
+
+    // NEW: Optimize field types using semantic analysis
+    if (USE_NEW_PIPELINE && finalData.fields.length > 0) {
+      try {
+        console.log("[Import] Optimizing field types...");
+        const fieldsToAnalyze = finalData.fields.map(f => ({
+          label: f.label,
+          currentType: f.type,
+          options: f.options,
+          helpText: f.helpText,
+        }));
+        
+        const optimizations = await analyzeFieldTypes(fieldsToAnalyze, "imported form");
+        
+        finalData.fields = finalData.fields.map((field, idx) => {
+          const opt = optimizations[idx];
+          if (opt && opt.confidence >= 0.7 && opt.recommendedType !== field.type) {
+            console.log(`[Import] Upgrading "${field.label}": ${field.type} → ${opt.recommendedType}`);
+            return {
+              ...field,
+              type: opt.recommendedType as Field["type"],
+              placeholder: opt.suggestedPlaceholder || field.placeholder,
+              helpText: opt.suggestedHelpText || field.helpText,
+            };
+          }
+          return field;
+        });
+      } catch (optError) {
+        console.warn("[Import] Field optimization failed:", optError);
+        // Continue with unoptimized fields
       }
     }
 

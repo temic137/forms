@@ -30,6 +30,8 @@ function getFontFamily(family: string): string {
       return "'Inter', sans-serif";
     case "roboto":
       return "'Roboto', sans-serif";
+    case "patrick-hand":
+      return "'Patrick Hand', cursive";
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
@@ -268,13 +270,11 @@ export default function EmbedFormRenderer({
           const key = field.id;
           const error = fieldErrors[key] || errors[key]?.message;
           
-          // Calculate field number (only counting visible input fields, not display-only types)
           const displayOnlyTypes = ["display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video", "html"];
           const isDisplayOnly = displayOnlyTypes.includes(field.type);
           const fieldNumber = styling?.showFieldNumbers && !isDisplayOnly
             ? visibleFields.slice(0, index + 1).filter(f => !displayOnlyTypes.includes(f.type)).length
             : undefined;
-          const numberedLabel = fieldNumber ? `${fieldNumber}. ${field.label}` : field.label;
 
           return (
             <div key={field.id} className="space-y-2">
@@ -283,7 +283,8 @@ export default function EmbedFormRenderer({
                 className="block text-sm font-medium"
                 style={{ color: "var(--foreground)" }}
               >
-                {numberedLabel}
+                {fieldNumber && <span>{fieldNumber}. </span>}
+                {field.label}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </label>
 

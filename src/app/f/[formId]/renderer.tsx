@@ -78,6 +78,8 @@ function getFontFamily(family: string): string {
       return "'Fira Code', monospace";
     case "jetbrains-mono":
       return "'JetBrains Mono', monospace";
+    case "patrick-hand":
+      return "'Patrick Hand', cursive";
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
@@ -857,9 +859,7 @@ export default function FormRenderer({
     const placeholder = f.placeholder || `Enter ${label.toLowerCase()}`;
     const helpText = f.helpText;
     
-    // Get field number if numbering is enabled
     const fieldNumber = styling?.showFieldNumbers && fieldNumbers ? fieldNumbers.get(id) : undefined;
-    const numberedLabel = fieldNumber ? `${fieldNumber}. ${label}` : label;
 
     // Check if field should be visible based on conditional logic
     const isVisible = visibleFieldIds.includes(id);
@@ -1015,7 +1015,8 @@ export default function FormRenderer({
             htmlFor={type === "radio" || type === "checkboxes" || type === "multiselect" ? undefined : id}
             style={{ color: styling?.primaryColor || 'var(--foreground-muted)' }}
           >
-            {numberedLabel}
+            {fieldNumber && <span>{fieldNumber}. </span>}
+            {label}
             {required && (
               <span
                 className="ml-1"

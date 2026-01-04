@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { DndContext, DragEndEvent, DragOverlay, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -19,6 +19,17 @@ import CollaboratorModal from "./CollaboratorModal";
 import BuilderOnboarding from "./BuilderOnboarding";
 import { Spinner } from "@/components/ui/Spinner";
 import { SingleAIButton } from "./InlineAIButton";
+
+const DISPLAY_ONLY_FIELD_TYPES = new Set([
+  "display-text",
+  "h1",
+  "heading",
+  "paragraph",
+  "banner",
+  "divider",
+  "image",
+  "video",
+]);
 
 interface DragDropFormBuilderProps {
   formTitle: string;
@@ -87,6 +98,29 @@ export default function DragDropFormBuilder({
 }: DragDropFormBuilderProps) {
   const router = useRouter();
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+
+  const DISPLAY_ONLY_FIELD_TYPES = new Set([
+    "display-text",
+    "h1",
+    "heading",
+    "paragraph",
+    "banner",
+    "divider",
+    "image",
+    "video",
+  ]);
+
+  const fieldDisplayNumbers = useMemo(() => {
+    const map = new Map<string, number>();
+    let counter = 0;
+    fields.forEach(field => {
+      if (!DISPLAY_ONLY_FIELD_TYPES.has(field.type)) {
+        counter++;
+        map.set(field.id, counter);
+      }
+    });
+    return map;
+  }, [fields]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showFieldPalette, setShowFieldPalette] = useState(false);
@@ -1174,6 +1208,7 @@ export default function DragDropFormBuilder({
                                   <DraggableField
                                     field={field}
                                     index={globalIndex}
+                                    displayNumber={fieldDisplayNumbers.get(field.id)}
                                     isSelected={selectedFieldId === field.id}
                                     styling={styling}
                                     isQuizMode={quizMode?.enabled}
@@ -1252,6 +1287,7 @@ export default function DragDropFormBuilder({
                         <DraggableField
                           field={field}
                           index={index}
+                          displayNumber={fieldDisplayNumbers.get(field.id)}
                           isSelected={selectedFieldId === field.id}
                           styling={styling}
                           isQuizMode={quizMode?.enabled}
@@ -1309,7 +1345,11 @@ export default function DragDropFormBuilder({
               <DragOverlay>
                 {activeId ? (
                   <div className="bg-white border border-gray-300 rounded-lg p-4 opacity-95">
-                    <FieldRenderer field={fields.find(f => f.id === activeId)!} styling={styling} />
+                    <FieldRenderer 
+                      field={fields.find(f => f.id === activeId)!} 
+                      styling={styling}
+                      displayNumber={fieldDisplayNumbers.get(activeId as string)}
+                    />
                   </div>
                 ) : null}
               </DragOverlay>

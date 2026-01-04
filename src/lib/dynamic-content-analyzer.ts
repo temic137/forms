@@ -1634,6 +1634,97 @@ but do NOT change the form type or structure based on keywords found in it.`;
 // Export singleton
 export const dynamicAnalyzer = new DynamicContentAnalyzer();
 
+// ============================================================================
+// NEW MULTI-MODEL PIPELINE INTEGRATION
+// ============================================================================
+
+import { runFormGenerationPipeline, generateFormQuick, generateFormHighQuality, generateQuiz, generateSurvey, GeneratedForm, PipelineConfig } from './form-generation-pipeline';
+
+/**
+ * Generate form using the new multi-model pipeline
+ * This is the recommended method for high-quality form generation
+ * 
+ * @param prompt - User's form request
+ * @param options - Generation options
+ * @returns Generated form with enhanced field types and questions
+ */
+export async function generateFormWithPipeline(
+  prompt: string,
+  options?: {
+    questionCount?: number;
+    referenceData?: string;
+    userContext?: string;
+    quality?: 'quick' | 'high';
+    tone?: 'professional' | 'friendly' | 'casual' | 'formal';
+  }
+): Promise<{
+  analysis: DynamicAnalysis;
+  form: GeneratedForm;
+}> {
+  const { questionCount, referenceData, userContext, quality = 'high', tone } = options || {};
+
+  // Use the pipeline
+  const form = await runFormGenerationPipeline(
+    {
+      prompt,
+      questionCount,
+      referenceData,
+      userContext,
+    },
+    {
+      skipFieldOptimization: quality === 'quick',
+      skipQuestionEnhancement: quality === 'quick',
+      parallelOptimization: true,
+      tone,
+    }
+  );
+
+  // Create a compatible analysis object from pipeline metadata
+  const analysis: DynamicAnalysis = {
+    understanding: {
+      purpose: form.metadata.formType,
+      audience: 'General',
+      context: form.metadata.domain,
+      keyTopics: [],
+      dataPoints: [],
+      tone: form.metadata.tone,
+    },
+    questions: form.fields.map(f => ({
+      question: f.label,
+      rationale: '',
+      suggestedFieldType: f.type,
+      placeholder: f.placeholder,
+      helpText: f.helpText,
+      options: f.options,
+      required: f.required,
+      reasoning: '',
+      relatesTo: [],
+      category: 'general',
+    })),
+    metadata: {
+      contentType: form.metadata.formType,
+      domain: form.metadata.domain,
+      confidence: 0.9,
+      complexity: form.metadata.complexity as 'simple' | 'moderate' | 'complex',
+      estimatedFieldCount: form.fields.length,
+      suggestions: [],
+    },
+  };
+
+  return { analysis, form };
+}
+
+// Re-export pipeline functions for direct use
+export {
+  runFormGenerationPipeline,
+  generateFormQuick,
+  generateFormHighQuality,
+  generateQuiz,
+  generateSurvey,
+  type GeneratedForm,
+  type PipelineConfig,
+};
+
 
 
 

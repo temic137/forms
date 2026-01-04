@@ -54,6 +54,7 @@ function normalizeOptions(options: unknown[] | undefined): string[] {
 interface DraggableFieldProps {
   field: Field;
   index: number;
+  displayNumber?: number;
   isSelected: boolean;
   styling?: FormStyling;
   isQuizMode?: boolean;
@@ -73,6 +74,7 @@ function formatFieldType(type: Field["type"]): string {
 export default function DraggableField({
   field,
   index,
+  displayNumber,
   isSelected,
   styling,
   isQuizMode,
@@ -166,7 +168,7 @@ export default function DraggableField({
       </div>
 
       <div className="pt-3">
-        <FieldEditor field={field} onUpdate={onUpdate} styling={styling} isQuizMode={isQuizMode} />
+        <FieldEditor field={field} onUpdate={onUpdate} styling={styling} isQuizMode={isQuizMode} displayNumber={displayNumber} />
       </div>
     </div>
   );
@@ -177,11 +179,13 @@ function FieldEditor({
   onUpdate,
   styling,
   isQuizMode,
+  displayNumber,
 }: {
   field: Field;
   onUpdate: (updates: Partial<Field>) => void;
   styling?: FormStyling;
   isQuizMode?: boolean;
+  displayNumber?: number;
 }) {
   const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
   const hasOptions = useMemo(() => OPTION_FIELD_TYPES.has(field.type), [field.type]);
@@ -784,7 +788,7 @@ function FieldEditor({
       )}
 
       <div className="rounded-xl border border-black/10 bg-black/5 p-3">
-        <FieldRenderer field={field} isPreview={false} styling={styling} />
+        <FieldRenderer field={field} isPreview={false} styling={styling} displayNumber={displayNumber} />
       </div>
 
       {/* Quiz Configuration Section */}

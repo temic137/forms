@@ -168,9 +168,9 @@ export interface FormStyling {
   backgroundColor: string;
   buttonColor: string;
   buttonTextColor: string;
-  fontFamily: "system" | "sans" | "serif" | "mono" | "inter" | "roboto" | "open-sans" | "lato" | "montserrat" | "playfair" | "merriweather" | "courier" | "arial" | "georgia" | "times" | "poppins" | "raleway" | "nunito" | "rubik" | "pt-serif" | "source-serif" | "fira-code" | "jetbrains-mono";
+  fontFamily: "system" | "sans" | "serif" | "mono" | "inter" | "roboto" | "open-sans" | "lato" | "montserrat" | "playfair" | "merriweather" | "courier" | "arial" | "georgia" | "times" | "poppins" | "raleway" | "nunito" | "rubik" | "pt-serif" | "source-serif" | "fira-code" | "jetbrains-mono" | "patrick-hand";
   buttonRadius: number;
-  showFieldNumbers?: boolean; // Show numbers before field labels (e.g., "1. Name", "2. Email")
+  showFieldNumbers?: boolean;
 }
 
 // Notification Configuration

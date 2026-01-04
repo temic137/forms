@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getAICompletion } from "@/lib/ai-provider";
+import { runFormGenerationPipeline } from "@/lib/form-generation-pipeline";
 
 export const runtime = "nodejs";
+
+// Feature flag to enable new multi-model pipeline
+const USE_NEW_PIPELINE = true;
 
 type Field = {
   id: string;
@@ -557,10 +561,90 @@ Think like a data strategist who wants to understand users deeply, make better d
 
 export async function POST(req: Request) {
   try {
-    const { brief } = await req.json();
+    const { brief, questionCount, referenceData, useLegacy } = await req.json();
     if (typeof brief !== "string" || !brief.trim()) {
       return NextResponse.json({ error: "Invalid brief" }, { status: 400 });
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // NEW MULTI-MODEL PIPELINE (default)
+    // ════════════════════════════════════════════════════════════════════════
+    if (USE_NEW_PIPELINE && !useLegacy) {
+      console.log('\n');
+      console.log('┌─────────────────────────────────────────────────────────────────────────────┐');
+      console.log('│           🎯 FORM GENERATION API - MULTI-MODEL PIPELINE ACTIVATED           │');
+      console.log('└─────────────────────────────────────────────────────────────────────────────┘');
+      console.log(`📥 Request received:`);
+      console.log(`   • Brief: "${brief.substring(0, 60)}${brief.length > 60 ? '...' : ''}"`);
+      console.log(`   • Question count: ${questionCount || 'auto'}`);
+      console.log(`   • Reference data: ${referenceData ? 'YES' : 'NO'}`);
+      console.log(`   • Legacy mode: ${useLegacy ? 'YES' : 'NO'}`);
+      
+      try {
+        const result = await runFormGenerationPipeline({
+          prompt: brief,
+          questionCount: questionCount,
+          referenceData: referenceData,
+        }, {
+          skipFieldOptimization: false,
+          skipQuestionEnhancement: false,
+          parallelOptimization: true,
+        });
+
+        console.log('\n');
+        console.log('┌─────────────────────────────────────────────────────────────────────────────┐');
+        console.log('│                     📤 API RESPONSE READY                                   │');
+        console.log('└─────────────────────────────────────────────────────────────────────────────┘');
+        console.log(`   • Total time: ${result.metadata.pipeline.totalLatencyMs}ms`);
+        console.log(`   • Models used: ${result.metadata.pipeline.modelsUsed.join(', ')}`);
+        console.log(`   • Stages completed: ${result.metadata.pipeline.stages.join(' → ')}`);
+        console.log(`   • Fields generated: ${result.fields.length}`);
+        console.log('\n');
+
+        // Convert to legacy response format for compatibility
+        const processedFields = result.fields.map((field, index) => ({
+          id: field.id || `field_${index}`,
+          label: field.label,
+          type: field.type,
+          required: field.required,
+          placeholder: field.placeholder,
+          helpText: field.helpText,
+          options: field.options,
+          validation: field.validation,
+          quizConfig: field.quizConfig ? {
+            correctAnswer: field.quizConfig.correctAnswer,
+            points: field.quizConfig.points || 1,
+            explanation: field.quizConfig.explanation,
+          } : undefined,
+        }));
+
+        return NextResponse.json({
+          title: result.title,
+          fields: processedFields,
+          ...(result.quizMode ? { quizMode: result.quizMode } : {}),
+          context: {
+            analysis: {
+              purpose: result.metadata.formType,
+              audience: "Determined by AI",
+              domain: result.metadata.domain,
+              formType: result.metadata.formType,
+              tone: result.metadata.tone,
+              complexity: result.metadata.complexity,
+            },
+            summary: `Generated ${result.metadata.formType} form with ${result.fields.length} fields`,
+          },
+          pipeline: result.metadata.pipeline,
+        });
+      } catch (pipelineError) {
+        console.error("[Generate API] Pipeline failed, falling back to legacy:", pipelineError);
+        // Fall through to legacy implementation
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // LEGACY IMPLEMENTATION (fallback)
+    // ════════════════════════════════════════════════════════════════════════
+    console.log("[Generate API] Using legacy single-model generation...");
 
     // Stage 1: Deep Context Analysis - Understand intent and meaning
     console.log("Stage 1: Analyzing context and intent...");
@@ -668,7 +752,17 @@ PRIORITIZE fields that provide ACTIONABLE INSIGHTS and STRATEGIC VALUE. Every fi
 
     const formContent = formGenerationResponse.content || "{}";
     console.log(`Form generated using ${formGenerationResponse.provider} AI provider`);
-    const formData = JSON.parse(formContent) as { title: string; fields: Field[]; quizMode?: any };
+    const formData = JSON.parse(formContent) as { 
+      title: string; 
+      fields: Field[]; 
+      quizMode?: {
+        enabled: boolean;
+        showScoreImmediately: boolean;
+        showCorrectAnswers: boolean;
+        showExplanations: boolean;
+        passingScore: number;
+      };
+    };
     
     // Validate response structure
     if (!formData?.title || !Array.isArray(formData.fields) || formData.fields.length === 0) {

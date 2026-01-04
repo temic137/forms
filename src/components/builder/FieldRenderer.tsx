@@ -8,6 +8,7 @@ interface FieldRendererProps {
   field: Field;
   isPreview?: boolean;
   styling?: FormStyling;
+  displayNumber?: number;
 }
 
 // File Upload Field Component
@@ -314,13 +315,15 @@ function getFontFamily(family: FormStyling["fontFamily"]): string {
       return '"Fira Code", monospace';
     case "jetbrains-mono":
       return '"JetBrains Mono", monospace';
+    case "patrick-hand":
+      return '"Patrick Hand", cursive';
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
   }
 }
 
-export default function FieldRenderer({ field, isPreview = false, styling }: FieldRendererProps) {
+export default function FieldRenderer({ field, isPreview = false, styling, displayNumber }: FieldRendererProps) {
   const cssVariables = useMemo(() => {
     if (!styling) return {};
     return {
@@ -820,6 +823,9 @@ export default function FieldRenderer({ field, isPreview = false, styling }: Fie
           className="block text-sm font-medium"
           style={{ color: styling?.primaryColor || '#111827' }}
         >
+          {styling?.showFieldNumbers && displayNumber && (
+            <span className="mr-1">{displayNumber}.</span>
+          )}
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>

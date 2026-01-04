@@ -3,8 +3,12 @@ import { getAICompletion } from "@/lib/ai-provider";
 import { contentAnalyzer, ContentAnalysis, SuggestedQuestion, FieldType } from "@/lib/content-analyzer";
 import { generateFormDynamically } from "@/lib/dynamic-content-analyzer";
 import { generateWithMultipleModels, MultiModelConfig } from "@/lib/multi-model-analyzer";
+import { runFormGenerationPipeline } from "@/lib/form-generation-pipeline";
 
 export const runtime = "nodejs";
+
+// Feature flag to enable new multi-model pipeline
+const USE_NEW_PIPELINE = true;
 
 interface EnhancedGenerationRequest {
   content: string;
@@ -128,7 +132,88 @@ export async function POST(req: Request) {
       });
     }
 
-    // Use dynamic AI-driven analysis (flexible and adaptive)
+    // ════════════════════════════════════════════════════════════════════════
+    // NEW MULTI-MODEL PIPELINE (default when useDynamicAnalysis is true)
+    // ════════════════════════════════════════════════════════════════════════
+    if (useDynamicAnalysis && USE_NEW_PIPELINE) {
+      console.log('\n');
+      console.log('┌─────────────────────────────────────────────────────────────────────────────┐');
+      console.log('│      🎯 GENERATE-ENHANCED API - MULTI-MODEL PIPELINE ACTIVATED              │');
+      console.log('└─────────────────────────────────────────────────────────────────────────────┘');
+      console.log(`📥 Request received:`);
+      console.log(`   • Content: "${content.substring(0, 60)}${content.length > 60 ? '...' : ''}"`);
+      console.log(`   • Question count: ${options?.questionCount || 'auto'}`);
+      console.log(`   • Reference data: ${referenceData ? 'YES (' + referenceData.length + ' chars)' : 'NO'}`);
+      console.log(`   • Source type: ${sourceType}`);
+      console.log(`   • User context: ${userContext ? 'YES' : 'NO'}`);
+      
+      const questionCount = options?.questionCount
+        ? Math.min(Math.max(options.questionCount, 1), 120)
+        : undefined;
+
+      const result = await runFormGenerationPipeline({
+        prompt: content,
+        questionCount,
+        referenceData,
+        userContext,
+      }, {
+        skipFieldOptimization: false,
+        skipQuestionEnhancement: false,
+        parallelOptimization: true,
+        tone: options?.targetAudience === 'professional' ? 'professional' : 
+              options?.targetAudience === 'academic' ? 'formal' : 'professional',
+      });
+
+      console.log('\n');
+      console.log('┌─────────────────────────────────────────────────────────────────────────────┐');
+      console.log('│                     📤 API RESPONSE READY                                   │');
+      console.log('└─────────────────────────────────────────────────────────────────────────────┘');
+      console.log(`   • Total time: ${result.metadata.pipeline.totalLatencyMs}ms`);
+      console.log(`   • Models used: ${result.metadata.pipeline.modelsUsed.join(', ')}`);
+      console.log(`   • Stages completed: ${result.metadata.pipeline.stages.join(' → ')}`);
+      console.log(`   • Fields generated: ${result.fields.length}`);
+      console.log('\n');
+
+      // Check if quiz mode is enabled
+      const isQuiz = result.quizMode?.enabled || result.fields.some(f => f.quizConfig);
+
+      return NextResponse.json({
+        title: result.title,
+        ...(isQuiz ? { quizMode: result.quizMode } : {}),
+        fields: result.fields.map((f, idx) => ({
+          id: f.id || `field_${Date.now()}_${idx}`,
+          label: f.label,
+          type: f.type,
+          required: f.required !== false,
+          placeholder: f.placeholder,
+          helpText: f.helpText,
+          options: f.options,
+          validation: f.validation,
+          quizConfig: f.quizConfig ? {
+            correctAnswer: f.quizConfig.correctAnswer || '',
+            points: f.quizConfig.points || 1,
+            explanation: f.quizConfig.explanation || ''
+          } : undefined,
+          order: f.order || idx,
+          conditionalLogic: []
+        })),
+        analysis: {
+          documentType: result.metadata.formType,
+          domain: result.metadata.domain,
+          confidence: 0.9, // High confidence from multi-model pipeline
+          summary: `Generated ${result.metadata.formType} with ${result.fields.length} fields using multi-model pipeline`,
+          understanding: {
+            purpose: result.metadata.formType,
+            context: result.metadata.domain,
+            tone: result.metadata.tone,
+          },
+          suggestions: [],
+          pipeline: result.metadata.pipeline, // Include pipeline metadata
+        }
+      });
+    }
+
+    // Use dynamic AI-driven analysis (legacy fallback)
     if (useDynamicAnalysis) {
       // Extract questionCount from options or content (max 120)
       const questionCount = options?.questionCount

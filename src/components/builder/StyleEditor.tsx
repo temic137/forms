@@ -168,6 +168,7 @@ export default function StyleEditor({ styling, onChange }: StyleEditorProps) {
             <option value="source-serif">Source Serif Pro</option>
             <option value="fira-code">Fira Code</option>
             <option value="jetbrains-mono">JetBrains Mono</option>
+            <option value="patrick-hand">Patrick Hand</option>
           </select>
         </div>
       </div>
@@ -266,6 +267,8 @@ function getFontFamily(family: FormStyling["fontFamily"]): string {
       return '"Fira Code", monospace';
     case "jetbrains-mono":
       return '"JetBrains Mono", monospace';
+    case "patrick-hand":
+      return '"Patrick Hand", cursive';
     case "system":
     default:
       return "system-ui, -apple-system, sans-serif";
