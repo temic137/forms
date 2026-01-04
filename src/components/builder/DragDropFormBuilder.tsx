@@ -674,6 +674,15 @@ export default function DragDropFormBuilder({
       fields: fields,
       styling: styling,
       multiStepConfig: multiStepConfig,
+      quizMode: quizMode,
+      notifications: notifications,
+      limitOneResponse: limitOneResponse,
+      saveAndEdit: saveAndEdit,
+      conversationalMode: false, // Preview always shows standard mode
+      closesAt: closesAt,
+      opensAt: opensAt,
+      isClosed: isClosed,
+      closedMessage: closedMessage,
     };
     sessionStorage.setItem('formPreviewData', JSON.stringify(previewData));
     if (currentFormId) {
@@ -1591,6 +1600,50 @@ export default function DragDropFormBuilder({
                           </div>
                         </div>
                       )}
+
+                      {/* Display Settings */}
+                      <div className="space-y-3 pt-2">
+                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                          </svg>
+                          Display Settings
+                        </h3>
+                        <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <label className="text-sm text-gray-700 font-medium cursor-pointer" htmlFor="show-field-numbers">
+                                Number Fields
+                              </label>
+                              <p className="text-xs text-gray-500 mt-0.5">Show numbers before field labels (1., 2., 3.)</p>
+                            </div>
+                            <button
+                              id="show-field-numbers"
+                              role="switch"
+                              aria-checked={styling?.showFieldNumbers || false}
+                              onClick={() => {
+                                const newStyling = {
+                                  ...styling,
+                                  primaryColor: styling?.primaryColor || '#3b82f6',
+                                  backgroundColor: styling?.backgroundColor || '#f3f4f6',
+                                  buttonColor: styling?.buttonColor || '#000000',
+                                  buttonTextColor: styling?.buttonTextColor || '#ffffff',
+                                  fontFamily: styling?.fontFamily || 'system',
+                                  buttonRadius: styling?.buttonRadius || 8,
+                                  showFieldNumbers: !styling?.showFieldNumbers,
+                                } as FormStyling;
+                                onStylingChange(newStyling);
+                              }}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${styling?.showFieldNumbers ? 'bg-black' : 'bg-gray-200'}`}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${styling?.showFieldNumbers ? 'translate-x-4' : 'translate-x-0'}`}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
 
                       {/* Submission Settings */}
                       {(onLimitOneResponseChange || onSaveAndEditChange) && (

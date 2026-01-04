@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import FormRenderer from "@/app/f/[formId]/renderer";
-import { Field, FormStyling, MultiStepConfig } from "@/types/form";
+import { Field, FormStyling, MultiStepConfig, QuizModeConfig, NotificationConfig } from "@/types/form";
 import { ArrowLeft } from "lucide-react";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -12,6 +12,15 @@ interface PreviewData {
   fields: Field[];
   styling?: FormStyling;
   multiStepConfig?: MultiStepConfig;
+  quizMode?: QuizModeConfig;
+  notifications?: NotificationConfig;
+  limitOneResponse?: boolean;
+  saveAndEdit?: boolean;
+  conversationalMode?: boolean;
+  closesAt?: string;
+  opensAt?: string;
+  isClosed?: boolean;
+  closedMessage?: string;
 }
 
 export default function FormPreviewPage() {
@@ -34,7 +43,8 @@ export default function FormPreviewPage() {
   }, []);
 
   const handleBack = () => {
-    router.push('/dashboard');
+    // Use browser history to go back, preserving the builder's state
+    router.back();
   };
 
   if (loading) {
@@ -103,6 +113,43 @@ export default function FormPreviewPage() {
           </div>
         </div>
 
+        {/* Info banner for special settings */}
+        {(previewData.isClosed || previewData.closesAt || previewData.opensAt || previewData.limitOneResponse || previewData.quizMode?.enabled) && (
+          <div className="mb-4 p-4 rounded-lg border" style={{ 
+            background: 'rgba(59, 130, 246, 0.05)',
+            borderColor: 'rgba(59, 130, 246, 0.2)'
+          }}>
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-sm">
+                <p className="font-medium text-blue-900 mb-1">Active Settings:</p>
+                <ul className="text-blue-800 space-y-0.5">
+                  {previewData.quizMode?.enabled && (
+                    <li>• Quiz Mode enabled</li>
+                  )}
+                  {previewData.limitOneResponse && (
+                    <li>• Limited to one response per person</li>
+                  )}
+                  {previewData.isClosed && (
+                    <li>• Form is currently closed</li>
+                  )}
+                  {previewData.closesAt && (
+                    <li>• Closes at: {new Date(previewData.closesAt).toLocaleString()}</li>
+                  )}
+                  {previewData.opensAt && (
+                    <li>• Opens at: {new Date(previewData.opensAt).toLocaleString()}</li>
+                  )}
+                  {previewData.saveAndEdit && (
+                    <li>• Save and continue later enabled</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Form Container */}
         <div
           className="border p-8 rounded-lg"
@@ -118,7 +165,11 @@ export default function FormPreviewPage() {
             fields={previewData.fields}
             styling={previewData.styling}
             multiStepConfig={previewData.multiStepConfig}
+            quizMode={previewData.quizMode}
             formTitle={previewData.title}
+            conversationalMode={previewData.conversationalMode}
+            limitOneResponse={previewData.limitOneResponse}
+            saveAndEdit={previewData.saveAndEdit}
             isPreview={true}
             onSubmit={async () => {
               // Preview mode - show alert instead of submitting

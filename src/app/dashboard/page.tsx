@@ -159,6 +159,15 @@ export default function DashboardPage() {
       setPreviewStyling(previewData.styling || undefined);
       setPreviewNotifications(previewData.notifications || undefined);
       setPreviewMultiStepConfig(previewData.multiStepConfig || undefined);
+      // Restore quiz mode configuration
+      setPreviewQuizMode(previewData.quizMode || undefined);
+      // Restore other settings
+      setLimitOneResponse(previewData.limitOneResponse || false);
+      setSaveAndEdit(previewData.saveAndEdit || false);
+      setClosesAt(previewData.closesAt || undefined);
+      setOpensAt(previewData.opensAt || undefined);
+      setIsClosed(previewData.isClosed || false);
+      setClosedMessage(previewData.closedMessage || undefined);
       const storedEditingFormId = sessionStorage.getItem('formPreviewEditingFormId');
       setEditingFormId(storedEditingFormId && storedEditingFormId !== 'new' ? storedEditingFormId : null);
       setShowBuilder(true);

@@ -264,9 +264,17 @@ export default function EmbedFormRenderer({
       )}
 
       <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-6">
-        {visibleFields.map((field) => {
+        {visibleFields.map((field, index) => {
           const key = field.id;
           const error = fieldErrors[key] || errors[key]?.message;
+          
+          // Calculate field number (only counting visible input fields, not display-only types)
+          const displayOnlyTypes = ["display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video", "html"];
+          const isDisplayOnly = displayOnlyTypes.includes(field.type);
+          const fieldNumber = styling?.showFieldNumbers && !isDisplayOnly
+            ? visibleFields.slice(0, index + 1).filter(f => !displayOnlyTypes.includes(f.type)).length
+            : undefined;
+          const numberedLabel = fieldNumber ? `${fieldNumber}. ${field.label}` : field.label;
 
           return (
             <div key={field.id} className="space-y-2">
@@ -275,7 +283,7 @@ export default function EmbedFormRenderer({
                 className="block text-sm font-medium"
                 style={{ color: "var(--foreground)" }}
               >
-                {field.label}
+                {numberedLabel}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </label>
 

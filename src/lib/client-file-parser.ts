@@ -86,8 +86,9 @@ async function parsePdf(file: File): Promise<string> {
         const pdfjsLib = await import("pdfjs-dist");
 
         if (!isWorkerConfigured) {
-            // Use version pinned CDN for stability
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+            // Use a working CDN version (4.0.379 is stable on CDNJS)
+            // Alternative: use unpkg which has better version availability
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
             isWorkerConfigured = true;
         }
 

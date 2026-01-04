@@ -847,7 +847,7 @@ export default function FormRenderer({
   }
 
   // Render field helper function
-  function renderField(f: Field, idx: number, isPreviewMode = isPreview) {
+  function renderField(f: Field, idx: number, isPreviewMode = isPreview, fieldNumbers?: Map<string, number>) {
     const id = f.id || slugify(f.label);
 
     const label = f.label || `Field ${idx + 1}`;
@@ -856,6 +856,10 @@ export default function FormRenderer({
     const options = f.options || [];
     const placeholder = f.placeholder || `Enter ${label.toLowerCase()}`;
     const helpText = f.helpText;
+    
+    // Get field number if numbering is enabled
+    const fieldNumber = styling?.showFieldNumbers && fieldNumbers ? fieldNumbers.get(id) : undefined;
+    const numberedLabel = fieldNumber ? `${fieldNumber}. ${label}` : label;
 
     // Check if field should be visible based on conditional logic
     const isVisible = visibleFieldIds.includes(id);
@@ -1011,7 +1015,7 @@ export default function FormRenderer({
             htmlFor={type === "radio" || type === "checkboxes" || type === "multiselect" ? undefined : id}
             style={{ color: styling?.primaryColor || 'var(--foreground-muted)' }}
           >
-            {label}
+            {numberedLabel}
             {required && (
               <span
                 className="ml-1"
@@ -1231,9 +1235,9 @@ export default function FormRenderer({
           </div>
         )}
 
-        {/* Choice Fields */}
+        {/* Choice Fields - Radio/Multiple Choice/Choices (single selection) */}
 
-        {type === "radio" && (
+        {(type === "radio" || type === "multiple-choice" || type === "choices") && (
           <div className="space-y-3">
             {((options && options.length > 0) ? options : ["Option 1", "Option 2", "Option 3"]).map((opt, i) => {
               const optValue = getOptionValue(opt);
@@ -1847,7 +1851,28 @@ export default function FormRenderer({
       ? fields.filter((f) => fieldIdsToRender.includes(f.id))
       : fields;
     
-    return fieldsToShow.map((f, idx) => renderField(f, idx));
+    // Display-only field types that don't get numbered
+    const displayOnlyTypes = [
+      "display-text", "h1", "heading", "paragraph", "banner", "divider", "image", "video", "html"
+    ];
+    
+    // Pre-compute field numbers for visible, non-display-only fields
+    let fieldNumber = 0;
+    const fieldNumbers = new Map<string, number>();
+    
+    fieldsToShow.forEach((f) => {
+      const id = f.id || slugify(f.label || '');
+      const type = f.type || inferTypeFromLabel(f.label || '');
+      const isVisible = visibleFieldIds.includes(id);
+      const isDisplayOnly = displayOnlyTypes.includes(type);
+      
+      if (isVisible && !isDisplayOnly) {
+        fieldNumber++;
+        fieldNumbers.set(id, fieldNumber);
+      }
+    });
+    
+    return fieldsToShow.map((f, idx) => renderField(f, idx, isPreview, fieldNumbers));
   }
 
   // Get the appropriate submit button label
