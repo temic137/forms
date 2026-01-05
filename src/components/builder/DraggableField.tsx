@@ -199,9 +199,11 @@ function FieldEditor({
   const [showLabelSuggestions, setShowLabelSuggestions] = useState(false);
 
   const labelRef = useRef<HTMLDivElement | null>(null);
+  const helpTextRef = useRef<HTMLDivElement | null>(null);
   const optionRefs = useRef(new Map<number, HTMLDivElement>());
   const selectionStore = useRef<{
     label?: { start: number; end: number };
+    helpText?: { start: number; end: number };
     options: Map<number, { start: number; end: number }>;
   }>({ options: new Map() });
 
@@ -217,7 +219,7 @@ function FieldEditor({
     selection.addRange(range);
   };
 
-  const captureSelection = (element: HTMLElement | null, key: "label" | number) => {
+  const captureSelection = (element: HTMLElement | null, key: "label" | "helpText" | number) => {
     if (!isBrowser || !element) return;
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
@@ -226,22 +228,28 @@ function FieldEditor({
     const record = { start: range.startOffset, end: range.endOffset };
     if (key === "label") {
       selectionStore.current.label = record;
+    } else if (key === "helpText") {
+      selectionStore.current.helpText = record;
     } else {
       selectionStore.current.options.set(key, record);
     }
   };
 
-  const restoreSelection = (element: HTMLElement | null, key: "label" | number) => {
+  const restoreSelection = (element: HTMLElement | null, key: "label" | "helpText" | number) => {
     if (!isBrowser || !element) return;
     const store =
       key === "label"
         ? selectionStore.current.label
+        : key === "helpText"
+        ? selectionStore.current.helpText
         : selectionStore.current.options.get(key);
     if (!store) return;
 
     if (document.activeElement !== element) {
       if (key === "label") {
         selectionStore.current.label = undefined;
+      } else if (key === "helpText") {
+        selectionStore.current.helpText = undefined;
       } else {
         selectionStore.current.options.delete(key);
       }
@@ -252,6 +260,8 @@ function FieldEditor({
     if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
       if (key === "label") {
         selectionStore.current.label = undefined;
+      } else if (key === "helpText") {
+        selectionStore.current.helpText = undefined;
       } else {
         selectionStore.current.options.delete(key);
       }
@@ -272,6 +282,8 @@ function FieldEditor({
 
     if (key === "label") {
       selectionStore.current.label = undefined;
+    } else if (key === "helpText") {
+      selectionStore.current.helpText = undefined;
     } else {
       selectionStore.current.options.delete(key);
     }
@@ -285,6 +297,15 @@ function FieldEditor({
     }
     restoreSelection(labelRef.current, "label");
   }, [field.label]);
+
+  useEffect(() => {
+    if (!helpTextRef.current) return;
+    const text = field.helpText || "";
+    if (helpTextRef.current.textContent !== text) {
+      helpTextRef.current.textContent = text;
+    }
+    restoreSelection(helpTextRef.current, "helpText");
+  }, [field.helpText]);
 
   useEffect(() => {
     focusEditable(labelRef.current);
@@ -327,6 +348,12 @@ function FieldEditor({
     const value = normalizeEditableValue(rawValue);
     if ((field.label || "") === value) return;
     onUpdate({ label: value });
+  };
+
+  const updateHelpText = (rawValue: string) => {
+    const value = normalizeEditableValue(rawValue);
+    if ((field.helpText || "") === value) return;
+    onUpdate({ helpText: value || undefined });
   };
 
   const optionControlType = useMemo(() => {
@@ -584,6 +611,32 @@ function FieldEditor({
           </button>
         )}
       </div>
+
+      {/* Editable Description/Help Text */}
+      {!isDisplayOnly && (
+        <div
+          ref={helpTextRef}
+          role="textbox"
+          contentEditable
+          suppressContentEditableWarning
+          className="relative cursor-text rounded-md px-1 py-1 text-sm text-black/60 outline-none transition focus:ring-2 focus:ring-black/20 before:pointer-events-none before:absolute before:inset-1 before:select-none before:text-xs before:text-black/30 before:opacity-0 before:content-[attr(data-placeholder)] empty:before:opacity-100"
+          data-placeholder="Add a description (optional)"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onInput={(e) => {
+            captureSelection(e.currentTarget, "helpText");
+            updateHelpText(e.currentTarget.textContent || "");
+          }}
+          onBlur={(e) => updateHelpText(e.currentTarget.textContent || "")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              // Move focus to first option if exists, otherwise blur
+              focusEditable(optionRefs.current.get(0) || null);
+            }
+          }}
+        />
+      )}
 
       {/* AI Label Suggestions */}
       {showLabelSuggestions && labelSuggestions.length > 0 && (
