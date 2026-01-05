@@ -39,8 +39,8 @@ function normalizeEditableValue(value: string): string {
 }
 
 // Helper function to normalize options - handles both string[] and {value, label}[] formats
-function normalizeOptions(options: unknown[] | undefined): string[] {
-  if (!options || options.length === 0) return [];
+function normalizeOptions(options: unknown): string[] {
+  if (!options || !Array.isArray(options) || options.length === 0) return [];
   return options.map((opt) => {
     if (typeof opt === 'string') return opt;
     if (typeof opt === 'object' && opt !== null) {
