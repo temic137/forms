@@ -27,6 +27,11 @@ export async function POST(
       quizMode,
       limitOneResponse,
       saveAndEdit,
+      // Scheduling & Access Control
+      closesAt,
+      opensAt,
+      isClosed,
+      closedMessage,
     } = body;
 
     // Check if form belongs to user or if user is a collaborator
@@ -57,6 +62,16 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Validation: opensAt < closesAt
+    if (opensAt && closesAt) {
+      if (new Date(opensAt) >= new Date(closesAt)) {
+        return NextResponse.json(
+          { error: "Opening time must be before closing time" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update form
     const updatedForm = await prisma.form.update({
       where: { id },
@@ -72,6 +87,13 @@ export async function POST(
         ...(quizMode !== undefined && { quizMode: quizMode || null }),
         ...(limitOneResponse !== undefined && { limitOneResponse }),
         ...(saveAndEdit !== undefined && { saveAndEdit }),
+        // Scheduling & Access Control
+        ...(closesAt !== undefined && { closesAt: closesAt ? new Date(closesAt) : null }),
+        ...(opensAt !== undefined && { opensAt: opensAt ? new Date(opensAt) : null }),
+        ...(isClosed !== undefined && { isClosed }),
+        ...(closedMessage !== undefined && { closedMessage }),
+        // Reset notification sent flag if closing time is updated
+        ...(closesAt !== undefined && { closedNotificationSent: false }),
       },
     });
 

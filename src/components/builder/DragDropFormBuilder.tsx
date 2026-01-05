@@ -1662,17 +1662,10 @@ export default function DragDropFormBuilder({
                               role="switch"
                               aria-checked={styling?.showFieldNumbers || false}
                               onClick={() => {
-                                const newStyling = {
+                                onStylingChange({
                                   ...styling,
-                                  primaryColor: styling?.primaryColor || '#3b82f6',
-                                  backgroundColor: styling?.backgroundColor || '#f3f4f6',
-                                  buttonColor: styling?.buttonColor || '#000000',
-                                  buttonTextColor: styling?.buttonTextColor || '#ffffff',
-                                  fontFamily: styling?.fontFamily || 'system',
-                                  buttonRadius: styling?.buttonRadius || 8,
                                   showFieldNumbers: !styling?.showFieldNumbers,
-                                } as FormStyling;
-                                onStylingChange(newStyling);
+                                } as FormStyling);
                               }}
                               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${styling?.showFieldNumbers ? 'bg-black' : 'bg-gray-200'}`}
                             >

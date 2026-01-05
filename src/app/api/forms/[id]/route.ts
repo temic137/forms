@@ -19,6 +19,11 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ id: st
         quizMode: true,
         limitOneResponse: true,
         saveAndEdit: true,
+        // Scheduling & Access Control
+        closesAt: true,
+        opensAt: true,
+        isClosed: true,
+        closedMessage: true,
       },
     });
     if (!form) return NextResponse.json({ error: "Not found" }, { status: 404 });

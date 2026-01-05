@@ -8,9 +8,35 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
-    const { title, fields, multiStepConfig, styling, translations, notifications, conversationalMode, quizMode, limitOneResponse, saveAndEdit } = body ?? {};
+    const { 
+      title, 
+      fields, 
+      multiStepConfig, 
+      styling, 
+      translations, 
+      notifications, 
+      conversationalMode, 
+      quizMode, 
+      limitOneResponse, 
+      saveAndEdit,
+      // Scheduling & Access Control
+      closesAt,
+      opensAt,
+      isClosed,
+      closedMessage,
+    } = body ?? {};
     if (!title || !Array.isArray(fields)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
+
+    // Validation: opensAt < closesAt
+    if (opensAt && closesAt) {
+      if (new Date(opensAt) >= new Date(closesAt)) {
+        return NextResponse.json(
+          { error: "Opening time must be before closing time" },
+          { status: 400 }
+        );
+      }
     }
 
     const created = await prisma.form.create({
@@ -26,6 +52,11 @@ export async function POST(req: Request) {
         limitOneResponse: limitOneResponse || false,
         saveAndEdit: saveAndEdit || false,
         userId: session?.user?.id || null,
+        // Scheduling & Access Control
+        closesAt: closesAt ? new Date(closesAt) : null,
+        opensAt: opensAt ? new Date(opensAt) : null,
+        isClosed: isClosed || false,
+        closedMessage: closedMessage || null,
       },
       select: { id: true },
     });
