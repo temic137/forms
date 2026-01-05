@@ -64,7 +64,7 @@ export default function VoiceInputHelpModal({ isOpen, onClose }: VoiceInputHelpM
         >
           <h2
             id="help-modal-title"
-            className="text-xl font-semibold"
+            className="text-xl font-semibold font-paper"
             style={{ color: 'var(--foreground)' }}
           >
             Voice Input Help & Best Practices
@@ -93,7 +93,7 @@ export default function VoiceInputHelpModal({ isOpen, onClose }: VoiceInputHelpM
           {/* Best Practices Section */}
           <section>
             <h3
-              className="text-lg font-semibold mb-3 flex items-center gap-2"
+              className="text-lg font-semibold mb-3 flex items-center gap-2 font-paper"
               style={{ color: 'var(--foreground)' }}
             >
               <BestPracticesIcon />
@@ -130,7 +130,7 @@ export default function VoiceInputHelpModal({ isOpen, onClose }: VoiceInputHelpM
 
           {/* Example Phrases Section */}
           <section>
-            <h3 className="text-lg font-semibold text-black mb-3 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-black mb-3 flex items-center gap-2 font-paper">
               <ExamplesIcon />
               Example Phrases That Work Well
             </h3>
@@ -160,7 +160,7 @@ export default function VoiceInputHelpModal({ isOpen, onClose }: VoiceInputHelpM
 
           {/* Troubleshooting Section */}
           <section>
-            <h3 className="text-lg font-semibold text-black mb-3 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-black mb-3 flex items-center gap-2 font-paper">
               <TroubleshootIcon />
               Troubleshooting Common Issues
             </h3>
@@ -217,7 +217,7 @@ export default function VoiceInputHelpModal({ isOpen, onClose }: VoiceInputHelpM
 
           {/* Tips Section */}
           <section>
-            <h3 className="text-lg font-semibold text-black mb-3 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-black mb-3 flex items-center gap-2 font-paper">
               <TipsIcon />
               Pro Tips
             </h3>
@@ -242,7 +242,7 @@ export default function VoiceInputHelpModal({ isOpen, onClose }: VoiceInputHelpM
         >
           <button
             onClick={onClose}
-            className="btn btn-primary w-full font-medium"
+            className="btn btn-primary w-full font-medium font-paper"
           >
             Got It
           </button>
@@ -262,8 +262,8 @@ interface BestPracticeItemProps {
 function BestPracticeItem({ title, description, example }: BestPracticeItemProps) {
   return (
     <div className="surface-muted p-4">
-      <h4 className="font-medium mb-1" style={{ color: 'var(--foreground)' }}>{title}</h4>
-      <p className="text-sm mb-2" style={{ color: 'var(--foreground-muted)' }}>{description}</p>
+      <h4 className="font-medium mb-1 font-paper" style={{ color: 'var(--foreground)' }}>{title}</h4>
+      <p className="text-sm mb-2 font-paper" style={{ color: 'var(--foreground-muted)' }}>{description}</p>
       <div
         className="surface-muted"
         style={{
@@ -271,7 +271,7 @@ function BestPracticeItem({ title, description, example }: BestPracticeItemProps
           borderColor: 'var(--divider)',
         }}
       >
-        <p className="text-xs italic" style={{ color: 'var(--foreground)' }}>Example: {example}</p>
+        <p className="text-xs italic font-paper" style={{ color: 'var(--foreground)' }}>Example: {example}</p>
       </div>
     </div>
   );
@@ -295,7 +295,7 @@ function ExamplePhrase({ text, category }: ExamplePhraseProps) {
         >
           {category}
         </span>
-        <p className="text-sm italic" style={{ color: 'var(--foreground)' }}>"{text}"</p>
+        <p className="text-sm italic font-paper" style={{ color: 'var(--foreground)' }}>"{text}"</p>
       </div>
     </div>
   );
@@ -310,7 +310,7 @@ function TroubleshootItem({ problem, solutions }: TroubleshootItemProps) {
   return (
     <div className="surface-muted p-4">
       <h4
-        className="font-medium mb-2 flex items-center gap-2"
+        className="font-medium mb-2 flex items-center gap-2 font-paper"
         style={{ color: 'var(--foreground)' }}
       >
         <WarningIcon />
@@ -318,7 +318,7 @@ function TroubleshootItem({ problem, solutions }: TroubleshootItemProps) {
       </h4>
       <ul className="space-y-1.5">
         {solutions.map((solution, index) => (
-          <li key={index} className="text-sm flex items-start gap-2" style={{ color: 'var(--foreground-muted)' }}>
+          <li key={index} className="text-sm flex items-start gap-2 font-paper" style={{ color: 'var(--foreground-muted)' }}>
             <span className="shrink-0" style={{ color: 'var(--foreground-muted)' }}>•</span>
             <span>{solution}</span>
           </li>
@@ -336,7 +336,7 @@ function TipItem({ text }: TipItemProps) {
   return (
     <div className="flex items-start gap-2">
       <LightbulbIcon />
-      <p className="text-sm" style={{ color: 'var(--accent)' }}>{text}</p>
+      <p className="text-sm font-paper" style={{ color: 'var(--accent)' }}>{text}</p>
     </div>
   );
 }

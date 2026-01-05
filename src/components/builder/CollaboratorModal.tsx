@@ -118,7 +118,7 @@ export default function CollaboratorModal({
           className="flex items-center justify-between px-5 py-4 border-b"
           style={{ borderColor: "var(--divider)" }}
         >
-          <h2 className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>
+          <h2 className="text-lg font-semibold font-paper" style={{ color: "var(--foreground)" }}>
             Collaborators
           </h2>
           <button
@@ -133,7 +133,7 @@ export default function CollaboratorModal({
         <div className="p-5">
           {/* Invite Form */}
           <form onSubmit={handleInvite} className="mb-6">
-            <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground-muted)" }}>
+            <label className="block text-sm font-medium mb-2 font-paper" style={{ color: "var(--foreground-muted)" }}>
               Invite by Email
             </label>
             <div className="flex gap-2">
@@ -142,7 +142,7 @@ export default function CollaboratorModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="colleague@example.com"
-                className="flex-1 px-3 py-2 rounded-lg text-sm bg-transparent border focus:outline-none focus:ring-1"
+                className="flex-1 px-3 py-2 rounded-lg text-sm bg-transparent border focus:outline-none focus:ring-1 font-paper"
                 style={{
                   borderColor: "var(--input-border)",
                   color: "var(--foreground)",
@@ -152,7 +152,7 @@ export default function CollaboratorModal({
               <button
                 type="submit"
                 disabled={inviting}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 font-paper"
                 style={{
                   background: "var(--accent)",
                   color: "var(--accent-dark)",
@@ -166,15 +166,15 @@ export default function CollaboratorModal({
                 )}
               </button>
             </div>
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && <p className="text-red-500 text-sm mt-2 font-paper">{error}</p>}
           </form>
 
           {/* List */}
           <div className="space-y-3 max-h-60 overflow-y-auto">
             {loading ? (
-              <p className="text-center py-4" style={{ color: "var(--foreground-muted)" }}>Loading...</p>
+              <p className="text-center py-4 font-paper" style={{ color: "var(--foreground-muted)" }}>Loading...</p>
             ) : collaborators.length === 0 ? (
-              <p className="text-center py-4 text-sm" style={{ color: "var(--foreground-muted)" }}>
+              <p className="text-center py-4 text-sm font-paper" style={{ color: "var(--foreground-muted)" }}>
                 No collaborators yet. Invite someone above.
               </p>
             ) : (
@@ -193,11 +193,11 @@ export default function CollaboratorModal({
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                      <p className="text-sm font-medium font-paper" style={{ color: "var(--foreground)" }}>
                         {c.user?.name || c.email}
                       </p>
                       {c.user?.name && (
-                        <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+                        <p className="text-xs font-paper" style={{ color: "var(--foreground-muted)" }}>
                           {c.email}
                         </p>
                       )}

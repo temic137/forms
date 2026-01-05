@@ -44,7 +44,7 @@ function ToastItem({ toast, onRemove }: ToastProps) {
       role="alert"
       aria-live={toast.type === "error" ? "assertive" : "polite"}
     >
-      <p className="flex-1 text-sm text-white">{toast.message}</p>
+      <p className="flex-1 text-sm text-white font-paper">{toast.message}</p>
       <button
         onClick={() => {
           setIsVisible(false);

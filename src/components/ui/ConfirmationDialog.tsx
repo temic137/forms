@@ -155,7 +155,7 @@ export function ConfirmationDialog({
         >
           <h2
             id="confirmation-dialog-title"
-            className="text-lg font-semibold"
+            className="text-lg font-semibold font-paper"
             style={{ color: "var(--foreground)" }}
           >
             {title}
@@ -182,7 +182,7 @@ export function ConfirmationDialog({
         <div className="px-5 py-4">
           <p
             id="confirmation-dialog-message"
-            className="mb-6"
+            className="mb-6 font-paper"
             style={{ color: "var(--foreground-muted)" }}
           >
             {message}
@@ -192,7 +192,7 @@ export function ConfirmationDialog({
           <div className="flex gap-3 justify-end">
             <button
               onClick={onCancel}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all font-paper"
               style={{
                 background: "var(--card-bg)",
                 border: "1px solid var(--card-border)",
@@ -211,7 +211,7 @@ export function ConfirmationDialog({
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all font-paper"
               style={variantStyles.confirmButton}
               onMouseEnter={(e) => {
                 Object.assign(e.currentTarget.style, variantStyles.confirmButtonHover);

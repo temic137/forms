@@ -93,10 +93,10 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                    <h3 className="text-xl font-semibold mb-2 font-paper" style={{ color: 'var(--foreground)' }}>
                         Account Upgraded!
                     </h3>
-                    <p className="text-sm mb-4" style={{ color: 'var(--foreground-muted)' }}>
+                    <p className="text-sm mb-4 font-paper" style={{ color: 'var(--foreground-muted)' }}>
                         Your account has been upgraded. Signing you in...
                     </p>
                     <Spinner size="sm" variant="primary" />
@@ -119,10 +119,10 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 sm:p-5 border-b" style={{ borderColor: 'var(--card-border)' }}>
                     <div>
-                        <h2 className="text-lg sm:text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
+                        <h2 className="text-lg sm:text-xl font-semibold font-paper" style={{ color: 'var(--foreground)' }}>
                             Upgrade Your Account
                         </h2>
-                        <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--foreground-muted)' }}>
+                        <p className="text-xs sm:text-sm mt-0.5 font-paper" style={{ color: 'var(--foreground-muted)' }}>
                             Keep your forms forever
                         </p>
                     </div>
@@ -142,7 +142,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                         className="p-3 rounded-lg text-sm"
                         style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}
                     >
-                        <p style={{ color: '#3b82f6' }}>
+                        <p className="font-paper" style={{ color: '#3b82f6' }}>
                             ✨ All your forms will be preserved when you upgrade.
                         </p>
                     </div>
@@ -170,13 +170,13 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                             />
                         </svg>
-                        <span className="text-sm font-medium text-gray-700">Continue with Google</span>
+                        <span className="text-sm font-medium text-gray-700 font-paper">Continue with Google</span>
                     </button>
 
                     {/* Divider */}
                     <div className="flex items-center gap-3">
                         <div className="h-px flex-1" style={{ background: 'var(--card-border)' }} />
-                        <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--foreground-muted)' }}>
+                        <span className="text-xs uppercase tracking-wide font-paper" style={{ color: 'var(--foreground-muted)' }}>
                             or with email
                         </span>
                         <div className="h-px flex-1" style={{ background: 'var(--card-border)' }} />
@@ -186,7 +186,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                     <form onSubmit={handleSubmit} className="space-y-3">
                         {error && (
                             <div
-                                className="p-3 rounded-lg text-sm"
+                                className="p-3 rounded-lg text-sm font-paper"
                                 style={{
                                     background: 'rgba(239, 68, 68, 0.1)',
                                     color: '#ef4444',
@@ -200,7 +200,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                         <div>
                             <label
                                 htmlFor="upgrade-name"
-                                className="block text-sm font-medium mb-1.5"
+                                className="block text-sm font-medium mb-1.5 font-paper"
                                 style={{ color: 'var(--foreground)' }}
                             >
                                 Name (optional)
@@ -210,7 +210,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40 font-paper"
                                 style={{
                                     background: 'var(--background)',
                                     border: '1px solid var(--card-border)',
@@ -223,7 +223,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                         <div>
                             <label
                                 htmlFor="upgrade-email"
-                                className="block text-sm font-medium mb-1.5"
+                                className="block text-sm font-medium mb-1.5 font-paper"
                                 style={{ color: 'var(--foreground)' }}
                             >
                                 Email
@@ -234,7 +234,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40 font-paper"
                                 style={{
                                     background: 'var(--background)',
                                     border: '1px solid var(--card-border)',
@@ -247,7 +247,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                         <div>
                             <label
                                 htmlFor="upgrade-password"
-                                className="block text-sm font-medium mb-1.5"
+                                className="block text-sm font-medium mb-1.5 font-paper"
                                 style={{ color: 'var(--foreground)' }}
                             >
                                 Password
@@ -259,7 +259,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 minLength={8}
-                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40 font-paper"
                                 style={{
                                     background: 'var(--background)',
                                     border: '1px solid var(--card-border)',
@@ -272,7 +272,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                         <div>
                             <label
                                 htmlFor="upgrade-confirm"
-                                className="block text-sm font-medium mb-1.5"
+                                className="block text-sm font-medium mb-1.5 font-paper"
                                 style={{ color: 'var(--foreground)' }}
                             >
                                 Confirm Password
@@ -283,7 +283,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
-                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                className="w-full px-3 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/40 font-paper"
                                 style={{
                                     background: 'var(--background)',
                                     border: '1px solid var(--card-border)',
@@ -296,7 +296,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 font-paper"
                             style={{
                                 background: 'var(--foreground)',
                                 color: 'var(--background)',
