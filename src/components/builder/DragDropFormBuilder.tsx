@@ -11,7 +11,7 @@ import FieldRenderer from "./FieldRenderer";
 import NotificationSettings from "./NotificationSettings";
 import QuizSettings from "./QuizSettings";
 import StyleEditor from "./StyleEditor";
-import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle, Layout, Bell, Palette, GraduationCap, Users, ArrowUp, CalendarClock, History, PlayCircle, Clock } from "lucide-react";
+import { Settings, Save, Eye, FileText, Plus, ArrowLeft, Menu, X, MoreVertical, HelpCircle, Layout, Bell, Palette, GraduationCap, Users, ArrowUp, CalendarClock, History, PlayCircle, Clock, Sparkles } from "lucide-react";
 import PageDivider from "./PageDivider";
 import PageDropZone from "./PageDropZone";
 import ShareCollaboratorButton from "./ShareCollaboratorButton";
@@ -19,6 +19,7 @@ import CollaboratorModal from "./CollaboratorModal";
 import BuilderOnboarding from "./BuilderOnboarding";
 import { Spinner } from "@/components/ui/Spinner";
 import { SingleAIButton } from "./InlineAIButton";
+import InlineAIChat from "./InlineAIChat";
 
 const DISPLAY_ONLY_FIELD_TYPES = new Set([
   "display-text",
@@ -123,6 +124,7 @@ export default function DragDropFormBuilder({
   }, [fields]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [showFieldPalette, setShowFieldPalette] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [hoveredDropIndex, setHoveredDropIndex] = useState<number | null>(null);
@@ -925,6 +927,20 @@ export default function DragDropFormBuilder({
                 <span>Preview</span>
               </button>
 
+              <button
+                onClick={() => {
+                  setShowAIChat(!showAIChat);
+                  setShowSettings(false);
+                }}
+                className={`hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1 ${
+                  showAIChat ? "bg-black/5" : ""
+                }`}
+                title="AI Assistant"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI</span>
+              </button>
+
               <div className="hidden sm:block w-px h-4 bg-black/10" />
 
               {currentFormId && (
@@ -946,7 +962,10 @@ export default function DragDropFormBuilder({
               <div className="hidden sm:block w-px h-4 bg-black/10" />
 
               <button
-                onClick={() => setShowSettings(!showSettings)}
+                onClick={() => {
+                  setShowSettings(!showSettings);
+                  setShowAIChat(false);
+                }}
                 className={`p-1.5 rounded-full border border-black/10 transition-colors ${showSettings
                   ? "bg-black/5 text-black"
                   : "text-black hover:bg-black/5"
@@ -1042,7 +1061,25 @@ export default function DragDropFormBuilder({
                 <button
                   onClick={() => {
                     setShowMobileActions(false);
+                    setShowAIChat(true);
+                    setShowSettings(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">AI Assistant</div>
+                    <div className="text-xs text-gray-500">Edit form with AI</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowMobileActions(false);
                     setShowSettings(true);
+                    setShowAIChat(false);
                     setActiveSettingsTab('general');
                   }}
                   className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -1851,6 +1888,16 @@ export default function DragDropFormBuilder({
           </div>
         )
       }
+
+      {/* Inline AI Chat Panel */}
+      <InlineAIChat
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        formTitle={formTitle}
+        fields={fields}
+        onFieldsChange={onFieldsChange}
+        onFormTitleChange={onFormTitleChange}
+      />
     </div >
   );
 }
