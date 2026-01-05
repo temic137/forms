@@ -1884,7 +1884,10 @@ export default function FormRenderer({
       {formTitle && (
         <h1 
           className="text-3xl font-bold mb-6"
-          style={{ color: styling?.primaryColor || 'var(--foreground)' }}
+          style={{ 
+            color: styling?.primaryColor || 'var(--foreground)',
+            fontFamily: fontFamily,
+          }}
         >
           {formTitle}
         </h1>
