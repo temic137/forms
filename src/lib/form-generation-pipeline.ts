@@ -417,17 +417,43 @@ async function optimizeFieldTypes(
   const result = fields.map((field, idx) => {
     const analysis = analyses[idx];
     
-    // Only upgrade if confidence is high enough
-    if (analysis.confidence >= 0.7 && analysis.recommendedType !== field.type) {
-      upgradeCount++;
-      console.log(`      🔄 Upgrade: "${field.label.substring(0, 30)}..." ${field.type} → ${analysis.recommendedType} (confidence: ${(analysis.confidence * 100).toFixed(0)}%)`);
+    // Check if this is a type upgrade
+    const isTypeUpgrade = analysis.confidence >= 0.7 && analysis.recommendedType !== field.type;
+    
+    // For multiple-choice fields, ensure we apply suggested options if the current field has empty options
+    const needsOptions = (analysis.recommendedType === 'multiple-choice' || field.type === 'multiple-choice') &&
+                         analysis.suggestedOptions && 
+                         analysis.suggestedOptions.length > 0 &&
+                         (!field.options || field.options.length === 0 || field.options.every(o => !o || o.trim() === '' || o.startsWith('Option ')));
+    
+    if (isTypeUpgrade || needsOptions) {
+      if (isTypeUpgrade) {
+        upgradeCount++;
+        console.log(`      🔄 Upgrade: "${field.label.substring(0, 30)}..." ${field.type} → ${analysis.recommendedType} (confidence: ${(analysis.confidence * 100).toFixed(0)}%)`);
+      }
+      if (needsOptions && !isTypeUpgrade) {
+        console.log(`      📝 Options: "${field.label.substring(0, 30)}..." added ${analysis.suggestedOptions?.length || 0} options`);
+      }
+      
+      // Build updated quiz config if we have a suggested correct answer
+      let updatedQuizConfig = field.quizConfig;
+      if (analysis.suggestedCorrectAnswer && formContext.toLowerCase().includes('quiz')) {
+        updatedQuizConfig = {
+          ...field.quizConfig,
+          correctAnswer: analysis.suggestedCorrectAnswer,
+          points: field.quizConfig?.points || 1,
+          explanation: field.quizConfig?.explanation || '',
+        };
+        console.log(`      ✅ Correct: "${field.label.substring(0, 25)}..." → "${analysis.suggestedCorrectAnswer.substring(0, 20)}..."`);
+      }
       
       return {
         ...field,
-        type: analysis.recommendedType,
+        type: isTypeUpgrade ? analysis.recommendedType : field.type,
         placeholder: analysis.suggestedPlaceholder || field.placeholder,
         helpText: analysis.suggestedHelpText || field.helpText,
         options: analysis.suggestedOptions || field.options,
+        quizConfig: updatedQuizConfig,
       };
     }
 
@@ -593,6 +619,11 @@ export async function runFormGenerationPipeline(
       const hasOptUpgrade = opt && opt.type !== field.type;
       const hasEnhancement = enh && enh.label !== field.label;
       
+      // Merge quizConfig - prefer opt's quizConfig if it has correctAnswer set
+      const mergedQuizConfig = opt?.quizConfig?.correctAnswer 
+        ? opt.quizConfig 
+        : (enh?.quizConfig || field.quizConfig);
+      
       return {
         ...field,
         type: hasOptUpgrade ? opt.type : field.type,
@@ -600,6 +631,7 @@ export async function runFormGenerationPipeline(
         helpText: enh?.helpText || opt?.helpText || field.helpText,
         placeholder: enh?.placeholder || opt?.placeholder || field.placeholder,
         options: opt?.options || enh?.options || field.options,
+        quizConfig: mergedQuizConfig,
       };
     });
 

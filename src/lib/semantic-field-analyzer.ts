@@ -224,9 +224,164 @@ export interface FieldAnalysisResult {
   reasoning: string;
   alternativeTypes?: FieldTypeKey[];
   suggestedOptions?: string[];
+  suggestedCorrectAnswer?: string; // For quiz questions - which option is correct
   suggestedPlaceholder?: string;
   suggestedHelpText?: string;
   suggestedValidation?: Record<string, unknown>;
+}
+
+// ============================================================================
+// DYNAMIC AI-POWERED QUIZ OPTION GENERATION
+// ============================================================================
+
+interface QuizOptionsResult {
+  options: string[];
+  correctAnswer: string;
+}
+
+/**
+ * Dynamically generate quiz options using AI based on the question context
+ * This works for ANY topic - physics, chemistry, history, literature, etc.
+ */
+export async function generateQuizOptionsWithAI(questionLabel: string, helpText?: string): Promise<QuizOptionsResult> {
+  console.log(`         🧠 [Quiz Option Generator] Generating options for: "${questionLabel.substring(0, 40)}..."`);
+  
+  const systemPrompt = `You are an expert quiz creator. Given a quiz question, generate 4 multiple choice options where exactly ONE is correct.
+
+CRITICAL RULES:
+1. Generate exactly 4 options
+2. One option MUST be the correct answer
+3. The other 3 must be plausible but WRONG (good distractors)
+4. Options should be concise and clear
+5. For math/science questions, show actual calculated values
+6. For factual questions, use realistic alternatives
+7. Make distractors believable - common misconceptions work well
+
+Return ONLY valid JSON in this exact format:
+{
+  "options": ["option1", "option2", "option3", "option4"],
+  "correctAnswer": "the correct option text exactly as it appears in options array"
+}`;
+
+  const userPrompt = `Generate 4 multiple choice options for this quiz question:
+
+QUESTION: ${questionLabel}
+${helpText ? `CONTEXT/HINT: ${helpText}` : ''}
+
+Remember:
+- One option must be correct
+- Three options must be plausible but wrong
+- Return valid JSON only`;
+
+  try {
+    const result = await executeWithFallback({
+      purpose: 'quiz-generation',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.3,
+      maxTokens: 500,
+      responseFormat: 'json',
+      timeoutMs: 3000,
+    });
+
+    const parsed = JSON.parse(result.content);
+    
+    // Validate the response
+    if (parsed.options && Array.isArray(parsed.options) && parsed.options.length >= 4 && parsed.correctAnswer) {
+      // Ensure correctAnswer is in options
+      if (!parsed.options.includes(parsed.correctAnswer)) {
+        parsed.options[0] = parsed.correctAnswer;
+      }
+      console.log(`         ✅ [Quiz Option Generator] Generated ${parsed.options.length} options, correct: "${parsed.correctAnswer.substring(0, 20)}..."`);
+      return {
+        options: parsed.options.slice(0, 4),
+        correctAnswer: parsed.correctAnswer,
+      };
+    }
+    
+    throw new Error('Invalid AI response format');
+  } catch (error) {
+    console.error(`         ⚠️ [Quiz Option Generator] AI generation failed:`, error instanceof Error ? error.message : error);
+    // Ultimate fallback - generic options that clearly indicate they need editing
+    return {
+      options: ['[Option 1 - needs editing]', '[Option 2 - needs editing]', '[Option 3 - needs editing]', '[Option 4 - needs editing]'],
+      correctAnswer: '[Option 1 - needs editing]',
+    };
+  }
+}
+
+/**
+ * Batch generate quiz options for multiple questions efficiently
+ */
+async function batchGenerateQuizOptions(questions: { label: string; helpText?: string }[]): Promise<QuizOptionsResult[]> {
+  console.log(`         🧠 [Quiz Option Generator] Batch generating options for ${questions.length} questions...`);
+  
+  const systemPrompt = `You are an expert quiz creator. Given multiple quiz questions, generate 4 multiple choice options for EACH question where exactly ONE is correct per question.
+
+CRITICAL RULES:
+1. Generate exactly 4 options per question
+2. One option per question MUST be the correct answer
+3. The other 3 must be plausible but WRONG (good distractors)
+4. For math/science, calculate actual values
+5. For factual questions, use realistic alternatives
+6. Make distractors believable
+
+Return ONLY valid JSON array:
+[
+  { "options": ["opt1", "opt2", "opt3", "opt4"], "correctAnswer": "correct option text" },
+  ...
+]`;
+
+  const questionsText = questions.map((q, i) => 
+    `${i + 1}. ${q.label}${q.helpText ? ` (Hint: ${q.helpText})` : ''}`
+  ).join('\n');
+
+  const userPrompt = `Generate 4 multiple choice options for EACH of these ${questions.length} quiz questions:
+
+${questionsText}
+
+Return a JSON array with one object per question, in the same order.`;
+
+  try {
+    const result = await executeWithFallback({
+      purpose: 'quiz-generation',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.3,
+      maxTokens: 2000,
+      responseFormat: 'json',
+      timeoutMs: 5000,
+    });
+
+    const parsed = JSON.parse(result.content);
+    const results = Array.isArray(parsed) ? parsed : (parsed.results || parsed.questions || []);
+    
+    console.log(`         ✅ [Quiz Option Generator] Batch generated options for ${results.length} questions`);
+    
+    return results.map((r: Record<string, unknown>) => {
+      const options = (r.options as string[]) || [];
+      const correctAnswer = (r.correctAnswer as string) || options[0] || '[Needs editing]';
+      
+      if (options.length >= 4 && correctAnswer) {
+        return { options: options.slice(0, 4), correctAnswer };
+      }
+      return {
+        options: ['[Option 1 - needs editing]', '[Option 2 - needs editing]', '[Option 3 - needs editing]', '[Option 4 - needs editing]'],
+        correctAnswer: '[Option 1 - needs editing]',
+      };
+    });
+  } catch (error) {
+    console.error(`         ⚠️ [Quiz Option Generator] Batch generation failed:`, error instanceof Error ? error.message : error);
+    // Return fallback for all questions
+    return questions.map(() => ({
+      options: ['[Option 1 - needs editing]', '[Option 2 - needs editing]', '[Option 3 - needs editing]', '[Option 4 - needs editing]'],
+      correctAnswer: '[Option 1 - needs editing]',
+    }));
+  }
 }
 
 /**
@@ -296,11 +451,20 @@ CRITICAL RULES:
 4. For quizzes, use "multiple-choice" or "checkboxes" appropriately
 5. Provide confidence scores based on how clear the semantic match is
 
+${isQuiz ? `QUIZ-SPECIFIC RULES (VERY IMPORTANT):
+- ALL quiz questions MUST be "multiple-choice" type
+- You MUST provide "suggestedOptions" array with 4 answer choices for EVERY question
+- One option should be the correct answer, others should be plausible but incorrect distractors
+- For questions about formulas, equations, or calculations, provide the actual answers as options (e.g., "H₂O", "2Ca + O₂ → 2CaO")
+- Make distractors realistic - common misconceptions or similar-looking answers
+- NEVER leave suggestedOptions empty for quiz questions` : ''}
+
 Return JSON array with analysis for each field.`;
 
   const userPrompt = `Analyze these form fields and recommend optimal field types:
 
 FORM CONTEXT: ${formContext || 'General form'}
+${isQuiz ? 'THIS IS A QUIZ - All questions MUST have multiple-choice options generated!' : ''}
 
 FIELDS TO ANALYZE:
 ${JSON.stringify(fields, null, 2)}
@@ -313,7 +477,8 @@ For each field, return:
   "alternativeTypes": ["backup", "options"],
   "suggestedPlaceholder": "if applicable",
   "suggestedHelpText": "if helpful",
-  "suggestedOptions": ["if", "choice", "field"]
+  "suggestedOptions": ["option1", "option2", "option3", "option4"]${isQuiz ? ' // REQUIRED for quiz - provide 4 actual answer choices' : ' // if choice field'},
+  "suggestedCorrectAnswer": "the correct option text"${isQuiz ? ' // REQUIRED - must exactly match one of the suggestedOptions' : ' // if quiz'}
 }
 
 Return a JSON array with one result per input field, in the same order.`;
@@ -342,20 +507,53 @@ Return a JSON array with one result per input field, in the same order.`;
     // Handle both array and object with results property
     const results = Array.isArray(parsed) ? parsed : (parsed.results || parsed.fields || []);
     
+    // First pass: identify fields that need AI-generated options
+    const fieldsNeedingOptions: { index: number; label: string; helpText?: string }[] = [];
+    
     // Log analysis results
     let upgradeCount = 0;
-    const analysisResults = results.map((r: Record<string, unknown>, idx: number) => {
+    const preliminaryResults = results.map((r: Record<string, unknown>, idx: number) => {
       let recommended = (r.recommendedType as FieldTypeKey) || fields[idx].currentType || 'short-answer';
       const original = fields[idx].currentType || 'unknown';
+      let suggestedOptions = r.suggestedOptions as string[] | undefined;
+      let suggestedCorrectAnswer = r.suggestedCorrectAnswer as string | undefined;
+      let needsOptionGeneration = false;
       
       // FORCE quiz fields to be multiple-choice if they're text fields
       if (isQuiz && (recommended === 'short-answer' || recommended === 'long-answer' || original === 'short-answer' || original === 'long-answer')) {
         recommended = 'multiple-choice';
         console.log(`         🎯 [Semantic Analyzer] QUIZ OVERRIDE: "${fields[idx].label.substring(0, 25)}..." ${original} ➜ multiple-choice (FORCED)`);
         upgradeCount++;
+        
+        // Check if AI provided valid options
+        if (!suggestedOptions || suggestedOptions.length === 0 || suggestedOptions.every(opt => !opt || opt.trim() === '')) {
+          needsOptionGeneration = true;
+        }
       } else if (recommended !== original) {
         upgradeCount++;
         console.log(`         📈 [Semantic Analyzer] "${fields[idx].label.substring(0, 25)}..." → ${original} ➜ ${recommended} (${((r.confidence as number) * 100).toFixed(0)}% conf)`);
+      }
+      
+      // Ensure multiple-choice fields have options
+      if (recommended === 'multiple-choice' && (!suggestedOptions || suggestedOptions.length === 0)) {
+        suggestedOptions = r.suggestedOptions as string[] || fields[idx].options;
+        if (!suggestedOptions || suggestedOptions.length === 0) {
+          needsOptionGeneration = true;
+        }
+      }
+      
+      // Track fields that need AI option generation
+      if (needsOptionGeneration) {
+        fieldsNeedingOptions.push({
+          index: idx,
+          label: fields[idx].label,
+          helpText: fields[idx].helpText,
+        });
+      }
+      
+      // If we have options but no correct answer for a quiz, try to set first option as fallback
+      if (isQuiz && suggestedOptions && suggestedOptions.length > 0 && !suggestedCorrectAnswer) {
+        suggestedCorrectAnswer = (r.suggestedCorrectAnswer as string) || suggestedOptions[0];
       }
       
       return {
@@ -363,11 +561,39 @@ Return a JSON array with one result per input field, in the same order.`;
         confidence: (r.confidence as number) || 0.5,
         reasoning: (r.reasoning as string) || '',
         alternativeTypes: r.alternativeTypes as FieldTypeKey[] | undefined,
-        suggestedOptions: r.suggestedOptions as string[] | undefined,
+        suggestedOptions: suggestedOptions,
+        suggestedCorrectAnswer: suggestedCorrectAnswer,
         suggestedPlaceholder: r.suggestedPlaceholder as string | undefined,
         suggestedHelpText: r.suggestedHelpText as string | undefined,
         suggestedValidation: r.suggestedValidation as Record<string, unknown> | undefined,
+        needsOptionGeneration,
       };
+    });
+    
+    // Second pass: batch generate options for fields that need them using AI
+    if (fieldsNeedingOptions.length > 0) {
+      console.log(`         🧠 [Semantic Analyzer] ${fieldsNeedingOptions.length} questions need AI-generated options...`);
+      
+      const generatedOptions = await batchGenerateQuizOptions(fieldsNeedingOptions);
+      
+      // Apply generated options to results
+      fieldsNeedingOptions.forEach((field, genIdx) => {
+        const result = preliminaryResults[field.index];
+        const generated = generatedOptions[genIdx];
+        
+        if (generated && generated.options && generated.options.length > 0) {
+          result.suggestedOptions = generated.options;
+          result.suggestedCorrectAnswer = generated.correctAnswer;
+          console.log(`         ✅ [Semantic Analyzer] Options generated for: "${field.label.substring(0, 30)}..."`);
+        }
+      });
+    }
+    
+    // Clean up the internal flag before returning
+    const analysisResults = preliminaryResults.map((r: FieldAnalysisResult & { needsOptionGeneration?: boolean }) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { needsOptionGeneration, ...rest } = r;
+      return rest as FieldAnalysisResult;
     });
     
     console.log(`         📊 [Semantic Analyzer] Summary: ${upgradeCount} field type upgrades recommended`);
