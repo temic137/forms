@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 function buildSystemPrompt(formContext: FormContext): string {
   const fieldsDescription = formContext.fields.length > 0
     ? formContext.fields.map((f, i) => 
-        `${i + 1}. [ID: ${f.id}] "${f.label}" (type: ${f.type})${f.required ? " *required" : ""}${f.options ? ` options: [${f.options.join(", ")}]` : ""}`
+        `${i + 1}. [ID: ${f.id}] "${f.label}" (type: ${f.type})${f.required ? " *required" : ""}${Array.isArray(f.options) && f.options.length > 0 ? ` options: [${f.options.join(", ")}]` : ""}`
       ).join("\n")
     : "No fields yet";
 
