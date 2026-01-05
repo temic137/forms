@@ -141,19 +141,13 @@ export async function POST(req: Request) {
       console.log('│      🎯 GENERATE-ENHANCED API - MULTI-MODEL PIPELINE ACTIVATED              │');
       console.log('└─────────────────────────────────────────────────────────────────────────────┘');
       console.log(`📥 Request received:`);
-      console.log(`   • Content: "${content.substring(0, 60)}${content.length > 60 ? '...' : ''}"`);
-      console.log(`   • Question count: ${options?.questionCount || 'auto'}`);
+      console.log(`   • Prompt: "${content}"`);
       console.log(`   • Reference data: ${referenceData ? 'YES (' + referenceData.length + ' chars)' : 'NO'}`);
-      console.log(`   • Source type: ${sourceType}`);
       console.log(`   • User context: ${userContext ? 'YES' : 'NO'}`);
-      
-      const questionCount = options?.questionCount
-        ? Math.min(Math.max(options.questionCount, 1), 120)
-        : undefined;
 
       const result = await runFormGenerationPipeline({
         prompt: content,
-        questionCount,
+        questionCount: options?.questionCount,
         referenceData,
         userContext,
       }, {
