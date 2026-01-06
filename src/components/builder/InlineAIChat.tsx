@@ -3,7 +3,27 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Field, FieldType, QuizConfig } from "@/types/form";
 import { Spinner } from "@/components/ui/Spinner";
-import { Send, MessageSquare, Trash2, Plus, Edit2, Sparkles, Undo2, Redo2, MousePointer2, GraduationCap, X, Check } from "lucide-react";
+import { 
+  Send, 
+  MessageSquare, 
+  Trash2, 
+  Plus, 
+  Edit2, 
+  Sparkles, 
+  Undo2, 
+  Redo2, 
+  MousePointer2, 
+  GraduationCap, 
+  X, 
+  Check,
+  History,
+  Target,
+  Zap,
+  ChevronUp,
+  Eye,
+  Award,
+  HelpCircle
+} from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -32,6 +52,7 @@ interface HistoryState {
   fields: Field[];
   formTitle: string;
   timestamp: Date;
+  description?: string; // Description of what changed
 }
 
 interface InlineAIChatProps {
@@ -45,6 +66,7 @@ interface InlineAIChatProps {
   onFieldSelect?: (fieldId: string | null) => void;
   highlightedFieldId?: string;
   onHighlightField?: (fieldId: string | null) => void;
+  quizModeEnabled?: boolean;
 }
 
 export default function InlineAIChat({
@@ -57,6 +79,7 @@ export default function InlineAIChat({
   selectedFieldId,
   onFieldSelect,
   onHighlightField,
+  quizModeEnabled = false,
 }: InlineAIChatProps) {
   // highlightedFieldId is passed but handled externally via onHighlightField callbacks
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -64,6 +87,8 @@ export default function InlineAIChat({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFieldPicker, setShowFieldPicker] = useState(false);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [showQuizQuickActions, setShowQuizQuickActions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -71,6 +96,10 @@ export default function InlineAIChat({
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isUndoRedo, setIsUndoRedo] = useState(false);
+  const [lastChangeDescription, setLastChangeDescription] = useState<string>("");
+
+  // Track the last AI modification for better undo descriptions
+  const [pendingDescription, setPendingDescription] = useState<string>("");
 
   // Save current state to history when fields or title change (but not during undo/redo)
   useEffect(() => {
@@ -83,6 +112,7 @@ export default function InlineAIChat({
       fields: [...fields],
       formTitle,
       timestamp: new Date(),
+      description: pendingDescription || generateChangeDescription(history[historyIndex]?.fields || [], fields, history[historyIndex]?.formTitle || "", formTitle),
     };
     
     // Use refs to avoid stale closure issues
@@ -107,17 +137,51 @@ export default function InlineAIChat({
       return newHistory;
     });
     setHistoryIndex(prev => prev + 1);
+    setPendingDescription(""); // Clear pending description after saving
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields, formTitle]);
+
+  // Generate a human-readable description of what changed
+  const generateChangeDescription = (oldFields: Field[], newFields: Field[], oldTitle: string, newTitle: string): string => {
+    if (oldTitle !== newTitle) {
+      return `Changed title to "${newTitle}"`;
+    }
+    
+    const oldCount = oldFields.length;
+    const newCount = newFields.length;
+    
+    if (newCount > oldCount) {
+      const addedField = newFields[newFields.length - 1];
+      return `Added "${addedField?.label || "field"}"`;
+    }
+    
+    if (newCount < oldCount) {
+      return `Removed a field`;
+    }
+    
+    // Check for updates
+    for (let i = 0; i < newFields.length; i++) {
+      if (JSON.stringify(oldFields[i]) !== JSON.stringify(newFields[i])) {
+        return `Updated "${newFields[i]?.label || "field"}"`;
+      }
+    }
+    
+    return "Modified form";
+  };
 
   // Undo function
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
       setIsUndoRedo(true);
       const previousState = history[historyIndex - 1];
+      const currentState = history[historyIndex];
       setHistoryIndex(historyIndex - 1);
       onFieldsChange(previousState.fields);
       onFormTitleChange(previousState.formTitle);
+      setLastChangeDescription(`Undid: ${currentState?.description || "last change"}`);
+      
+      // Clear the feedback after 3 seconds
+      setTimeout(() => setLastChangeDescription(""), 3000);
     }
   }, [historyIndex, history, onFieldsChange, onFormTitleChange]);
 
@@ -129,6 +193,26 @@ export default function InlineAIChat({
       setHistoryIndex(historyIndex + 1);
       onFieldsChange(nextState.fields);
       onFormTitleChange(nextState.formTitle);
+      setLastChangeDescription(`Redid: ${nextState?.description || "change"}`);
+      
+      // Clear the feedback after 3 seconds
+      setTimeout(() => setLastChangeDescription(""), 3000);
+    }
+  }, [historyIndex, history, onFieldsChange, onFormTitleChange]);
+
+  // Jump to specific history state
+  const jumpToHistoryState = useCallback((index: number) => {
+    if (index >= 0 && index < history.length && index !== historyIndex) {
+      setIsUndoRedo(true);
+      const targetState = history[index];
+      setHistoryIndex(index);
+      onFieldsChange(targetState.fields);
+      onFormTitleChange(targetState.formTitle);
+      setLastChangeDescription(`Restored: ${targetState?.description || "state"}`);
+      setShowHistoryPanel(false);
+      
+      // Clear the feedback after 3 seconds
+      setTimeout(() => setLastChangeDescription(""), 3000);
     }
   }, [historyIndex, history, onFieldsChange, onFormTitleChange]);
 
@@ -151,6 +235,7 @@ export default function InlineAIChat({
 
   const applyModifications = useCallback((modifications: FieldModification[], newTitle?: string) => {
     let updatedFields = [...fields];
+    const changeDescriptions: string[] = [];
 
     for (const mod of modifications) {
       switch (mod.action) {
@@ -170,23 +255,28 @@ export default function InlineAIChat({
               quizConfig: mod.field.quizConfig,
             };
             updatedFields.push(newField);
+            changeDescriptions.push(`Added "${mod.field.label || "field"}"`);
           }
           break;
 
         case "update":
           if (mod.fieldId && mod.field) {
+            const fieldToUpdate = updatedFields.find(f => f.id === mod.fieldId);
             updatedFields = updatedFields.map(f => {
               if (f.id === mod.fieldId) {
                 return { ...f, ...mod.field };
               }
               return f;
             });
+            changeDescriptions.push(`Updated "${fieldToUpdate?.label || "field"}"`);
           }
           break;
 
         case "delete":
           if (mod.fieldId) {
+            const fieldToDelete = updatedFields.find(f => f.id === mod.fieldId);
             updatedFields = updatedFields.filter(f => f.id !== mod.fieldId);
+            changeDescriptions.push(`Deleted "${fieldToDelete?.label || "field"}"`);
           }
           break;
 
@@ -196,12 +286,14 @@ export default function InlineAIChat({
             if (fieldIndex !== -1) {
               const [field] = updatedFields.splice(fieldIndex, 1);
               updatedFields.splice(mod.newIndex, 0, field);
+              changeDescriptions.push(`Reordered "${field.label}"`);
             }
           }
           break;
 
         case "quiz-config":
           if (mod.fieldId && mod.quizConfig) {
+            const fieldToConfig = updatedFields.find(f => f.id === mod.fieldId);
             updatedFields = updatedFields.map(f => {
               if (f.id === mod.fieldId) {
                 return { 
@@ -214,6 +306,7 @@ export default function InlineAIChat({
               }
               return f;
             });
+            changeDescriptions.push(`Set quiz config for "${fieldToConfig?.label || "field"}"`);
           }
           break;
       }
@@ -221,10 +314,17 @@ export default function InlineAIChat({
 
     // Update order property
     updatedFields = updatedFields.map((f, i) => ({ ...f, order: i }));
+    
+    // Set the description for history tracking
+    if (changeDescriptions.length > 0) {
+      setPendingDescription(changeDescriptions.join(", "));
+    }
+    
     onFieldsChange(updatedFields);
 
     if (newTitle) {
       onFormTitleChange(newTitle);
+      setPendingDescription(prev => prev ? `${prev}, Changed title` : "Changed title");
     }
   }, [fields, onFieldsChange, onFormTitleChange]);
 
@@ -372,7 +472,11 @@ export default function InlineAIChat({
     
     // Add quiz-related actions if there are fields
     if (fields.length > 0) {
-      contextActions.push("Set correct answer for question 1");
+      // Add quiz mode actions when quiz mode is enabled
+      if (quizModeEnabled) {
+        contextActions.push("Set correct answer for question 1");
+        contextActions.push("Make question 1 worth 5 points");
+      }
       contextActions.push("Make all fields required");
     }
     
@@ -381,11 +485,22 @@ export default function InlineAIChat({
       const selectedField = fields.find(f => f.id === selectedFieldId);
       if (selectedField) {
         contextActions.push(`Update the selected field`);
+        if (quizModeEnabled) {
+          contextActions.push(`Set correct answer for selected field`);
+        }
       }
     }
 
     return [...contextActions, ...baseActions].slice(0, 5);
-  }, [canUndo, fields, selectedFieldId]);
+  }, [canUndo, fields, selectedFieldId, quizModeEnabled]);
+
+  // Quiz-specific quick actions
+  const quizQuickActions = [
+    { label: "Set correct answer", icon: Check, command: "Set the correct answer for question 1 to" },
+    { label: "Assign points", icon: Award, command: "Make question 1 worth 10 points" },
+    { label: "Add explanation", icon: HelpCircle, command: "Add explanation for question 1:" },
+    { label: "Multiple correct", icon: Target, command: "Set multiple correct answers for question 1:" },
+  ];
 
   const quickActions = getQuickActions();
 
@@ -397,6 +512,11 @@ export default function InlineAIChat({
       setInput(action);
       inputRef.current?.focus();
     }
+  };
+
+  // Format time for history display
+  const formatHistoryTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   if (!isOpen) return null;
@@ -433,32 +553,75 @@ export default function InlineAIChat({
                       onClick={() => insertFieldReference(field, index)}
                       onMouseEnter={() => onHighlightField?.(field.id)}
                       onMouseLeave={() => onHighlightField?.(null)}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-3 ${
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-start gap-3 ${
                         selectedFieldId === field.id
                           ? "bg-black/10 border border-black/20"
                           : "hover:bg-gray-100 border border-transparent"
                       }`}
                     >
-                      <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center text-xs font-semibold text-gray-700">
+                      <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center text-xs font-semibold text-gray-700 flex-shrink-0 mt-0.5">
                         {index + 1}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{field.label}</p>
-                        <p className="text-xs text-gray-500">{field.type}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-gray-500">{field.type}</span>
+                          {field.required && (
+                            <span className="text-[10px] px-1 bg-red-100 text-red-600 rounded">Required</span>
+                          )}
+                        </div>
+                        {/* Show quiz config details */}
+                        {field.quizConfig && (field.quizConfig.correctAnswer !== undefined || field.quizConfig.points) && (
+                          <div className="flex items-center gap-2 mt-1">
+                            {field.quizConfig.correctAnswer !== undefined && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded flex items-center gap-0.5">
+                                <Check className="w-2.5 h-2.5" />
+                                {typeof field.quizConfig.correctAnswer === 'string' 
+                                  ? field.quizConfig.correctAnswer.substring(0, 15) + (field.quizConfig.correctAnswer.length > 15 ? '...' : '')
+                                  : 'Set'}
+                              </span>
+                            )}
+                            {field.quizConfig.points && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded flex items-center gap-0.5">
+                                <Award className="w-2.5 h-2.5" />
+                                {field.quizConfig.points} pts
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {/* Show options preview for choice fields */}
+                        {field.options && field.options.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {field.options.slice(0, 3).map((opt, i) => (
+                              <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded truncate max-w-[80px]">
+                                {opt}
+                              </span>
+                            ))}
+                            {field.options.length > 3 && (
+                              <span className="text-[10px] text-gray-400">+{field.options.length - 3}</span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {field.quizConfig?.correctAnswer && (
-                        <span title="Has quiz config">
-                          <GraduationCap className="w-4 h-4 text-amber-500" />
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1 flex-shrink-0">
+                        {field.quizConfig?.correctAnswer !== undefined && (
+                          <span title="Has correct answer">
+                            <GraduationCap className="w-4 h-4 text-amber-500" />
+                          </span>
+                        )}
+                        <Eye className="w-3.5 h-3.5 text-gray-300" />
+                      </div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <div className="px-4 py-3 border-t border-gray-200">
+            <div className="px-4 py-3 border-t border-gray-200 space-y-2">
               <p className="text-xs text-gray-500 text-center">
                 Click a field to reference it in your message
+              </p>
+              <p className="text-[10px] text-gray-400 text-center">
+                Hover to highlight field in the builder
               </p>
             </div>
           </div>
@@ -471,8 +634,31 @@ export default function InlineAIChat({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-black" />
             <h2 className="text-base font-semibold text-gray-900">AI Assistant</h2>
+            {quizModeEnabled && (
+              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
+                Quiz
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
+            {/* History Button */}
+            <button
+              onClick={() => setShowHistoryPanel(!showHistoryPanel)}
+              className={`p-1.5 rounded-md transition-colors relative ${
+                history.length > 1
+                  ? "text-gray-600 hover:text-black hover:bg-gray-100"
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
+              disabled={history.length <= 1}
+              title={history.length > 1 ? `View history (${history.length} states)` : "No history yet"}
+            >
+              <History className="w-4 h-4" />
+              {history.length > 1 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-black text-white text-[9px] rounded-full flex items-center justify-center">
+                  {Math.min(history.length, 99)}
+                </span>
+              )}
+            </button>
             {/* Undo Button */}
             <button
               onClick={handleUndo}
@@ -482,7 +668,7 @@ export default function InlineAIChat({
                   ? "text-gray-600 hover:text-black hover:bg-gray-100"
                   : "text-gray-300 cursor-not-allowed"
               }`}
-              title={canUndo ? "Undo (Ctrl+Z)" : "Nothing to undo"}
+              title={canUndo ? `Undo: ${history[historyIndex]?.description || "last change"} (Ctrl+Z)` : "Nothing to undo"}
             >
               <Undo2 className="w-4 h-4" />
             </button>
@@ -495,7 +681,7 @@ export default function InlineAIChat({
                   ? "text-gray-600 hover:text-black hover:bg-gray-100"
                   : "text-gray-300 cursor-not-allowed"
               }`}
-              title={canRedo ? "Redo (Ctrl+Shift+Z)" : "Nothing to redo"}
+              title={canRedo ? `Redo: ${history[historyIndex + 1]?.description || "change"} (Ctrl+Shift+Z)` : "Nothing to redo"}
             >
               <Redo2 className="w-4 h-4" />
             </button>
@@ -508,6 +694,65 @@ export default function InlineAIChat({
             </button>
           </div>
         </div>
+
+        {/* Undo/Redo Feedback Toast */}
+        {lastChangeDescription && (
+          <div className="px-4 py-2 bg-black text-white text-xs flex items-center gap-2 animate-in slide-in-from-top duration-200">
+            <Check className="w-3.5 h-3.5" />
+            <span>{lastChangeDescription}</span>
+          </div>
+        )}
+
+        {/* History Panel */}
+        {showHistoryPanel && history.length > 1 && (
+          <div className="border-b border-gray-200 bg-gray-50 max-h-48 overflow-y-auto">
+            <div className="px-4 py-2 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-gray-50">
+              <span className="text-xs font-medium text-gray-700">History ({history.length} states)</span>
+              <button
+                onClick={() => setShowHistoryPanel(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {history.slice().reverse().map((state, reverseIndex) => {
+                const actualIndex = history.length - 1 - reverseIndex;
+                const isCurrent = actualIndex === historyIndex;
+                return (
+                  <button
+                    key={actualIndex}
+                    onClick={() => jumpToHistoryState(actualIndex)}
+                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors ${
+                      isCurrent 
+                        ? "bg-black/5" 
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold ${
+                      isCurrent 
+                        ? "bg-black text-white" 
+                        : "bg-gray-200 text-gray-600"
+                    }`}>
+                      {actualIndex + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs truncate ${isCurrent ? "font-medium text-black" : "text-gray-700"}`}>
+                        {state.description || `${state.fields.length} fields`}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {formatHistoryTime(state.timestamp)}
+                      </p>
+                    </div>
+                    {isCurrent && (
+                      <span className="px-1.5 py-0.5 bg-black text-white text-[9px] rounded">Current</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Selected Field Indicator */}
         {selectedFieldId && (
@@ -550,6 +795,26 @@ export default function InlineAIChat({
                   <Undo2 className="w-4 h-4 text-blue-500 mb-1" />
                   <p className="text-xs font-medium text-gray-700">Undo/Redo</p>
                   <p className="text-[10px] text-gray-500">Ctrl+Z to undo</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <Zap className="w-4 h-4 text-purple-500 mb-1" />
+                  <p className="text-xs font-medium text-gray-700">Multi-Step</p>
+                  <p className="text-[10px] text-gray-500">Complex commands</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <MousePointer2 className="w-4 h-4 text-green-500 mb-1" />
+                  <p className="text-xs font-medium text-gray-700">Field Picker</p>
+                  <p className="text-[10px] text-gray-500">Click to reference</p>
+                </div>
+              </div>
+
+              {/* Example commands */}
+              <div className="text-left mb-4">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-2">Try saying:</p>
+                <div className="space-y-1.5">
+                  <p className="text-xs text-gray-600">&quot;Add name and email fields, make them required&quot;</p>
+                  <p className="text-xs text-gray-600">&quot;The answer to question 1 is option B&quot;</p>
+                  <p className="text-xs text-gray-600">&quot;Make field 2 similar to field 1&quot;</p>
                 </div>
               </div>
 
@@ -625,6 +890,40 @@ export default function InlineAIChat({
 
         {/* Input */}
         <div className="p-4 border-t border-gray-200 bg-gray-50">
+          {/* Quiz Quick Actions Panel */}
+          {showQuizQuickActions && quizModeEnabled && (
+            <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-amber-800 flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Quiz Commands
+                </span>
+                <button
+                  onClick={() => setShowQuizQuickActions(false)}
+                  className="text-amber-600 hover:text-amber-800"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {quizQuickActions.map((qa, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setInput(qa.command);
+                      setShowQuizQuickActions(false);
+                      inputRef.current?.focus();
+                    }}
+                    className="flex items-center gap-1.5 px-2 py-1.5 bg-white text-amber-800 text-xs rounded border border-amber-200 hover:border-amber-400 transition-colors text-left"
+                  >
+                    <qa.icon className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{qa.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {messages.length > 0 && (
             <div className="flex items-center justify-between mb-3">
               <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
@@ -662,6 +961,20 @@ export default function InlineAIChat({
                 <MousePointer2 className="w-4 h-4" />
               </button>
             )}
+            {/* Quiz Actions Button */}
+            {quizModeEnabled && fields.length > 0 && (
+              <button
+                onClick={() => setShowQuizQuickActions(!showQuizQuickActions)}
+                className={`p-2.5 rounded-lg border transition-colors ${
+                  showQuizQuickActions 
+                    ? "border-amber-400 bg-amber-50 text-amber-600" 
+                    : "border-gray-200 bg-white text-gray-500 hover:text-amber-600 hover:border-amber-300"
+                }`}
+                title="Quiz commands"
+              >
+                <GraduationCap className="w-4 h-4" />
+              </button>
+            )}
             <textarea
               ref={inputRef}
               value={input}
@@ -669,9 +982,9 @@ export default function InlineAIChat({
               onKeyDown={handleKeyDown}
               placeholder={selectedFieldId 
                 ? `Describe changes for the selected field...` 
-                : "Ask me to modify your form..."}
-              rows={1}
-              className="flex-1 resize-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black/20 max-h-24"
+                : quizModeEnabled
+                  ? "Try: 'Set the answer to question 1 as B'"
+                  : "Ask me to modify your form..."}
               style={{ minHeight: "42px" }}
             />
             <button

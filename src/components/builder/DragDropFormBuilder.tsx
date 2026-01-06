@@ -1903,8 +1903,8 @@ export default function DragDropFormBuilder({
         selectedFieldId={selectedFieldId || undefined}
         onFieldSelect={setSelectedFieldId}
         onHighlightField={setHighlightedFieldId}
+        quizModeEnabled={quizMode?.enabled}
       />
-    </div >
+    </div>
   );
 }
-
