@@ -99,6 +99,7 @@ export default function DragDropFormBuilder({
 }: DragDropFormBuilderProps) {
   const router = useRouter();
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
 
   const DISPLAY_ONLY_FIELD_TYPES = new Set([
     "display-text",
@@ -1247,6 +1248,7 @@ export default function DragDropFormBuilder({
                                     index={globalIndex}
                                     displayNumber={fieldDisplayNumbers.get(field.id)}
                                     isSelected={selectedFieldId === field.id}
+                                    isHighlighted={highlightedFieldId === field.id}
                                     styling={styling}
                                     isQuizMode={quizMode?.enabled}
                                     onSelect={() => setSelectedFieldId(field.id)}
@@ -1326,6 +1328,7 @@ export default function DragDropFormBuilder({
                           index={index}
                           displayNumber={fieldDisplayNumbers.get(field.id)}
                           isSelected={selectedFieldId === field.id}
+                          isHighlighted={highlightedFieldId === field.id}
                           styling={styling}
                           isQuizMode={quizMode?.enabled}
                           onSelect={() => setSelectedFieldId(field.id)}
@@ -1499,7 +1502,7 @@ export default function DragDropFormBuilder({
                 </div>
 
                 {/* Tab Content */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                <div className="flex-1 overflow-y-auto p-5 pb-20 space-y-6">
                   {/* General Tab */}
                   {activeSettingsTab === 'general' && (
                     <div className="space-y-6 animate-in fade-in duration-200">
@@ -1897,6 +1900,9 @@ export default function DragDropFormBuilder({
         fields={fields}
         onFieldsChange={onFieldsChange}
         onFormTitleChange={onFormTitleChange}
+        selectedFieldId={selectedFieldId || undefined}
+        onFieldSelect={setSelectedFieldId}
+        onHighlightField={setHighlightedFieldId}
       />
     </div >
   );

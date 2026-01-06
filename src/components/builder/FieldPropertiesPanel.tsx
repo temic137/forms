@@ -451,6 +451,22 @@ export default function FieldPropertiesPanel({ field, onUpdate, onClose, quizMod
                 + Add Option
               </button>
             </div>
+
+            {/* Allow Other Option */}
+            <div className="mt-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={field.allowOther || false}
+                  onChange={(e) => onUpdate({ allowOther: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Allow &quot;Other&quot; Option</div>
+                  <div className="text-xs text-gray-500">Adds an &quot;Other&quot; option with a text field for custom answers</div>
+                </div>
+              </label>
+            </div>
           </div>
         )}
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Field, FieldType } from "@/types/form";
+import { Field, FieldType, QuizConfig } from "@/types/form";
 import { Spinner } from "@/components/ui/Spinner";
-import { Send, MessageSquare, Trash2, Plus, Edit2, Sparkles } from "lucide-react";
+import { Send, MessageSquare, Trash2, Plus, Edit2, Sparkles, Undo2, Redo2, MousePointer2, GraduationCap, X, Check } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -14,15 +14,24 @@ interface ChatMessage {
 }
 
 interface FieldModification {
-  action: "add" | "update" | "delete" | "reorder";
+  action: "add" | "update" | "delete" | "reorder" | "quiz-config";
   fieldId?: string;
   field?: Partial<Field>;
   newIndex?: number;
+  quizConfig?: QuizConfig;
 }
 
 interface FormContext {
   title: string;
   fields: Field[];
+  selectedFieldId?: string;
+}
+
+// History state for undo/redo
+interface HistoryState {
+  fields: Field[];
+  formTitle: string;
+  timestamp: Date;
 }
 
 interface InlineAIChatProps {
@@ -32,6 +41,10 @@ interface InlineAIChatProps {
   fields: Field[];
   onFieldsChange: (fields: Field[]) => void;
   onFormTitleChange: (title: string) => void;
+  selectedFieldId?: string;
+  onFieldSelect?: (fieldId: string | null) => void;
+  highlightedFieldId?: string;
+  onHighlightField?: (fieldId: string | null) => void;
 }
 
 export default function InlineAIChat({
@@ -41,13 +54,86 @@ export default function InlineAIChat({
   fields,
   onFieldsChange,
   onFormTitleChange,
+  selectedFieldId,
+  onFieldSelect,
+  onHighlightField,
 }: InlineAIChatProps) {
+  // highlightedFieldId is passed but handled externally via onHighlightField callbacks
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFieldPicker, setShowFieldPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // History for undo/redo functionality
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isUndoRedo, setIsUndoRedo] = useState(false);
+
+  // Save current state to history when fields or title change (but not during undo/redo)
+  useEffect(() => {
+    if (isUndoRedo) {
+      setIsUndoRedo(false);
+      return;
+    }
+    // Only save if there are meaningful changes
+    const currentState: HistoryState = {
+      fields: [...fields],
+      formTitle,
+      timestamp: new Date(),
+    };
+    
+    // Use refs to avoid stale closure issues
+    setHistory(prevHistory => {
+      // Check if this is actually a new state (not a duplicate)
+      if (prevHistory.length > 0) {
+        const lastState = prevHistory[prevHistory.length - 1];
+        if (lastState && 
+            JSON.stringify(lastState.fields) === JSON.stringify(fields) && 
+            lastState.formTitle === formTitle) {
+          return prevHistory; // No change, don't save
+        }
+      }
+      
+      const newHistory = [...prevHistory, currentState];
+      
+      // Keep max 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift();
+      }
+      
+      return newHistory;
+    });
+    setHistoryIndex(prev => prev + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields, formTitle]);
+
+  // Undo function
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      setIsUndoRedo(true);
+      const previousState = history[historyIndex - 1];
+      setHistoryIndex(historyIndex - 1);
+      onFieldsChange(previousState.fields);
+      onFormTitleChange(previousState.formTitle);
+    }
+  }, [historyIndex, history, onFieldsChange, onFormTitleChange]);
+
+  // Redo function
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      setIsUndoRedo(true);
+      const nextState = history[historyIndex + 1];
+      setHistoryIndex(historyIndex + 1);
+      onFieldsChange(nextState.fields);
+      onFormTitleChange(nextState.formTitle);
+    }
+  }, [historyIndex, history, onFieldsChange, onFormTitleChange]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -81,6 +167,7 @@ export default function InlineAIChat({
               order: updatedFields.length,
               conditionalLogic: [],
               color: "#ffffff",
+              quizConfig: mod.field.quizConfig,
             };
             updatedFields.push(newField);
           }
@@ -110,6 +197,23 @@ export default function InlineAIChat({
               const [field] = updatedFields.splice(fieldIndex, 1);
               updatedFields.splice(mod.newIndex, 0, field);
             }
+          }
+          break;
+
+        case "quiz-config":
+          if (mod.fieldId && mod.quizConfig) {
+            updatedFields = updatedFields.map(f => {
+              if (f.id === mod.fieldId) {
+                return { 
+                  ...f, 
+                  quizConfig: { 
+                    ...f.quizConfig, 
+                    ...mod.quizConfig 
+                  } 
+                };
+              }
+              return f;
+            });
           }
           break;
       }
@@ -143,9 +247,10 @@ export default function InlineAIChat({
       const formContext: FormContext = {
         title: formTitle,
         fields: fields,
+        selectedFieldId: selectedFieldId || undefined,
       };
 
-      const history = messages.map(m => ({
+      const chatHistory = messages.map(m => ({
         role: m.role,
         content: m.content,
       }));
@@ -155,7 +260,7 @@ export default function InlineAIChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage.content,
-          history,
+          history: chatHistory,
           formContext,
         }),
       });
@@ -192,6 +297,15 @@ export default function InlineAIChat({
       e.preventDefault();
       sendMessage();
     }
+    // Keyboard shortcuts for undo/redo
+    if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+      e.preventDefault();
+      if (e.shiftKey) {
+        handleRedo();
+      } else {
+        handleUndo();
+      }
+    }
   };
 
   const clearChat = () => {
@@ -207,6 +321,10 @@ export default function InlineAIChat({
         return <Edit2 className="w-3 h-3 text-blue-600" />;
       case "delete":
         return <Trash2 className="w-3 h-3 text-red-600" />;
+      case "quiz-config":
+        return <GraduationCap className="w-3 h-3 text-amber-600" />;
+      case "reorder":
+        return <Sparkles className="w-3 h-3 text-purple-600" />;
       default:
         return <Sparkles className="w-3 h-3 text-purple-600" />;
     }
@@ -222,19 +340,64 @@ export default function InlineAIChat({
         return `Removed field`;
       case "reorder":
         return `Reordered field`;
+      case "quiz-config":
+        return `Updated quiz settings`;
       default:
         return "Modified form";
     }
   };
 
-  // Quick action suggestions
-  const quickActions = [
-    "Add a name field",
-    "Add an email field",
-    "Add a message textarea",
-    "Make all fields required",
-    "Add rating question",
-  ];
+  // Insert field reference into input
+  const insertFieldReference = (field: Field, index: number) => {
+    const reference = `field ${index + 1} ("${field.label}")`;
+    setInput(prev => prev + (prev ? " " : "") + reference);
+    setShowFieldPicker(false);
+    inputRef.current?.focus();
+  };
+
+  // Quick action suggestions - dynamically updated based on context
+  const getQuickActions = useCallback(() => {
+    const baseActions = [
+      "Add a name field",
+      "Add an email field",
+      "Add a message textarea",
+    ];
+
+    const contextActions: string[] = [];
+    
+    // Add undo action if possible
+    if (canUndo) {
+      contextActions.push("Undo last change");
+    }
+    
+    // Add quiz-related actions if there are fields
+    if (fields.length > 0) {
+      contextActions.push("Set correct answer for question 1");
+      contextActions.push("Make all fields required");
+    }
+    
+    // Add reference to selected field
+    if (selectedFieldId) {
+      const selectedField = fields.find(f => f.id === selectedFieldId);
+      if (selectedField) {
+        contextActions.push(`Update the selected field`);
+      }
+    }
+
+    return [...contextActions, ...baseActions].slice(0, 5);
+  }, [canUndo, fields, selectedFieldId]);
+
+  const quickActions = getQuickActions();
+
+  // Handle quick action click - special handling for undo
+  const handleQuickAction = (action: string) => {
+    if (action === "Undo last change") {
+      handleUndo();
+    } else {
+      setInput(action);
+      inputRef.current?.focus();
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -246,22 +409,121 @@ export default function InlineAIChat({
         onClick={onClose}
       />
 
+      {/* Field Picker Modal */}
+      {showFieldPicker && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm max-h-[70vh] flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="font-semibold text-gray-900">Select a Field</h3>
+              <button
+                onClick={() => setShowFieldPicker(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {fields.length === 0 ? (
+                <p className="text-center text-gray-500 py-8 text-sm">No fields in the form yet</p>
+              ) : (
+                <div className="space-y-1">
+                  {fields.map((field, index) => (
+                    <button
+                      key={field.id}
+                      onClick={() => insertFieldReference(field, index)}
+                      onMouseEnter={() => onHighlightField?.(field.id)}
+                      onMouseLeave={() => onHighlightField?.(null)}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-3 ${
+                        selectedFieldId === field.id
+                          ? "bg-black/10 border border-black/20"
+                          : "hover:bg-gray-100 border border-transparent"
+                      }`}
+                    >
+                      <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center text-xs font-semibold text-gray-700">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{field.label}</p>
+                        <p className="text-xs text-gray-500">{field.type}</p>
+                      </div>
+                      {field.quizConfig?.correctAnswer && (
+                        <span title="Has quiz config">
+                          <GraduationCap className="w-4 h-4 text-amber-500" />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-4 py-3 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center">
+                Click a field to reference it in your message
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-96 max-w-full bg-white border-l border-gray-200 z-50 flex flex-col">
         {/* Header */}
-        <div className="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
+        <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-black" />
             <h2 className="text-base font-semibold text-gray-900">AI Assistant</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Undo Button */}
+            <button
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className={`p-1.5 rounded-md transition-colors ${
+                canUndo
+                  ? "text-gray-600 hover:text-black hover:bg-gray-100"
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
+              title={canUndo ? "Undo (Ctrl+Z)" : "Nothing to undo"}
+            >
+              <Undo2 className="w-4 h-4" />
+            </button>
+            {/* Redo Button */}
+            <button
+              onClick={handleRedo}
+              disabled={!canRedo}
+              className={`p-1.5 rounded-md transition-colors ${
+                canRedo
+                  ? "text-gray-600 hover:text-black hover:bg-gray-100"
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
+              title={canRedo ? "Redo (Ctrl+Shift+Z)" : "Nothing to redo"}
+            >
+              <Redo2 className="w-4 h-4" />
+            </button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              onClick={onClose}
+              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
+
+        {/* Selected Field Indicator */}
+        {selectedFieldId && (
+          <div className="px-4 py-2 bg-black/5 border-b border-gray-200 flex items-center gap-2">
+            <Check className="w-3.5 h-3.5 text-black" />
+            <span className="text-xs text-gray-600">
+              Selected: <span className="font-medium text-black">{fields.find(f => f.id === selectedFieldId)?.label || "Field"}</span>
+            </span>
+            <button
+              onClick={() => onFieldSelect?.(null)}
+              className="ml-auto text-xs text-gray-500 hover:text-gray-700"
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -274,16 +536,28 @@ export default function InlineAIChat({
                 How can I help?
               </h3>
               <p className="text-sm text-gray-500 mb-4">
-                I can add, edit, or remove fields from your form. Just ask!
+                I can add, edit, or remove fields, configure quiz settings, and more. Just ask!
               </p>
+              
+              {/* Feature highlights */}
+              <div className="grid grid-cols-2 gap-2 mb-4 text-left">
+                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <GraduationCap className="w-4 h-4 text-amber-500 mb-1" />
+                  <p className="text-xs font-medium text-gray-700">Quiz Mode</p>
+                  <p className="text-[10px] text-gray-500">Set answers & points</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <Undo2 className="w-4 h-4 text-blue-500 mb-1" />
+                  <p className="text-xs font-medium text-gray-700">Undo/Redo</p>
+                  <p className="text-[10px] text-gray-500">Ctrl+Z to undo</p>
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-2 justify-center">
                 {quickActions.slice(0, 3).map((action, i) => (
                   <button
                     key={i}
-                    onClick={() => {
-                      setInput(action);
-                      inputRef.current?.focus();
-                    }}
+                    onClick={() => handleQuickAction(action)}
                     className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full hover:bg-black/10 transition-colors"
                   >
                     {action}
@@ -357,12 +631,12 @@ export default function InlineAIChat({
                 {quickActions.map((action, i) => (
                   <button
                     key={i}
-                    onClick={() => {
-                      setInput(action);
-                      inputRef.current?.focus();
-                    }}
-                    className="text-xs px-2.5 py-1 bg-white text-gray-600 rounded-full border border-gray-200 hover:border-black/20 hover:bg-black/5 transition-colors whitespace-nowrap"
+                    onClick={() => handleQuickAction(action)}
+                    className={`text-xs px-2.5 py-1 bg-white text-gray-600 rounded-full border border-gray-200 hover:border-black/20 hover:bg-black/5 transition-colors whitespace-nowrap ${
+                      action === "Undo last change" ? "border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50" : ""
+                    }`}
                   >
+                    {action === "Undo last change" && <Undo2 className="w-3 h-3 inline mr-1" />}
                     {action}
                   </button>
                 ))}
@@ -378,12 +652,24 @@ export default function InlineAIChat({
           )}
           
           <div className="flex items-end gap-2">
+            {/* Field Picker Button */}
+            {fields.length > 0 && (
+              <button
+                onClick={() => setShowFieldPicker(true)}
+                className="p-2.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-black hover:border-black/20 transition-colors"
+                title="Select a field to reference"
+              >
+                <MousePointer2 className="w-4 h-4" />
+              </button>
+            )}
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask me to modify your form..."
+              placeholder={selectedFieldId 
+                ? `Describe changes for the selected field...` 
+                : "Ask me to modify your form..."}
               rows={1}
               className="flex-1 resize-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black/20 max-h-24"
               style={{ minHeight: "42px" }}

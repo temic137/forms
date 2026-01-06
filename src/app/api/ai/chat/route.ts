@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAICompletion } from "@/lib/ai-provider";
-import { Field, FieldType } from "@/types/form";
+import { Field, FieldType, QuizConfig } from "@/types/form";
 
 export const runtime = "nodejs";
 
@@ -12,6 +12,7 @@ interface ChatMessage {
 interface FormContext {
   title: string;
   fields: Field[];
+  selectedFieldId?: string;
 }
 
 interface ChatRequest {
@@ -21,11 +22,12 @@ interface ChatRequest {
 }
 
 interface FieldModification {
-  action: "add" | "update" | "delete" | "reorder";
+  action: "add" | "update" | "delete" | "reorder" | "quiz-config";
   fieldId?: string;
   field?: Partial<Field>;
   position?: number; // For reorder
   newIndex?: number; // For reorder
+  quizConfig?: QuizConfig; // For quiz configuration
 }
 
 interface ChatResponse {
@@ -105,17 +107,34 @@ export async function POST(req: NextRequest) {
 
 function buildSystemPrompt(formContext: FormContext): string {
   const fieldsDescription = formContext.fields.length > 0
-    ? formContext.fields.map((f, i) => 
-        `${i + 1}. [ID: ${f.id}] "${f.label}" (type: ${f.type})${f.required ? " *required" : ""}${Array.isArray(f.options) && f.options.length > 0 ? ` options: [${f.options.join(", ")}]` : ""}`
-      ).join("\n")
+    ? formContext.fields.map((f, i) => {
+        let desc = `${i + 1}. [ID: ${f.id}] "${f.label}" (type: ${f.type})${f.required ? " *required" : ""}`;
+        if (Array.isArray(f.options) && f.options.length > 0) {
+          desc += ` options: [${f.options.join(", ")}]`;
+        }
+        if (f.quizConfig) {
+          if (f.quizConfig.correctAnswer !== undefined) {
+            desc += ` [QUIZ: correct="${f.quizConfig.correctAnswer}"`;
+            if (f.quizConfig.points) desc += `, points=${f.quizConfig.points}`;
+            if (f.quizConfig.explanation) desc += `, has explanation`;
+            desc += `]`;
+          }
+        }
+        return desc;
+      }).join("\n")
     : "No fields yet";
 
-  return `You are an intelligent form builder assistant. You help users create and modify forms through natural conversation.
+  const selectedFieldInfo = formContext.selectedFieldId 
+    ? `\n\nCURRENTLY SELECTED FIELD: ${formContext.fields.find(f => f.id === formContext.selectedFieldId)?.label || formContext.selectedFieldId}
+When the user says "this field", "selected field", or similar, they are referring to this field.`
+    : "";
+
+  return `You are an intelligent form builder assistant with advanced natural language understanding. You help users create and modify forms through natural conversation.
 
 CURRENT FORM STATE:
 Title: "${formContext.title}"
 Fields:
-${fieldsDescription}
+${fieldsDescription}${selectedFieldInfo}
 
 YOUR CAPABILITIES:
 1. Add new fields to the form
@@ -123,7 +142,9 @@ YOUR CAPABILITIES:
 3. Delete fields
 4. Reorder fields
 5. Update form title
-6. Answer questions about form best practices
+6. Configure quiz settings (correct answers, points, explanations)
+7. Answer questions about form best practices
+8. Handle complex multi-step requests
 
 VALID FIELD TYPES:
 - Text inputs: "short-answer", "long-answer", "text", "textarea"
@@ -148,7 +169,12 @@ RESPONSE FORMAT (JSON):
         "required": false,
         "placeholder": "Optional placeholder",
         "helpText": "Optional help text",
-        "options": ["Option 1", "Option 2"] // Only for choice fields
+        "options": ["Option 1", "Option 2"], // Only for choice fields
+        "quizConfig": { // Optional quiz configuration
+          "correctAnswer": "Option 1", // or ["Option 1", "Option 2"] for multiple, or number for rating
+          "points": 10,
+          "explanation": "Explanation shown after submission"
+        }
       }
     },
     {
@@ -167,35 +193,76 @@ RESPONSE FORMAT (JSON):
       "action": "reorder",
       "fieldId": "field_id",
       "newIndex": 0 // 0-based index
+    },
+    {
+      "action": "quiz-config",
+      "fieldId": "field_id",
+      "quizConfig": {
+        "correctAnswer": "Option B", // The correct answer
+        "points": 5, // Points for correct answer
+        "explanation": "Why this is correct" // Optional explanation
+      }
     }
   ],
   "newTitle": "New Form Title" // Optional, only if changing title
 }
 
+NATURAL LANGUAGE UNDERSTANDING:
+1. MULTI-STEP COMMANDS: When user says things like "Add name and email fields, then make them required", execute ALL steps:
+   - First add both fields
+   - Then update both to be required
+   - Return all modifications in one response
+
+2. FIELD REFERENCES: Understand various ways users refer to fields:
+   - "field 1", "question 1", "the first field" → First field (index 0)
+   - "the name field", "the email question" → Match by label
+   - "this field", "the selected field" → Use selectedFieldId if available
+   - "the last field", "the previous one" → Most recently mentioned or last in list
+   - "all fields", "every field" → Apply to all fields
+
+3. CORRECTIONS: Handle corrections gracefully:
+   - "No, I meant field 3" → Undo previous action on wrong field, apply to field 3
+   - "Actually, make it optional" → Update the field from previous action
+   - "Wait, not that one" → Ask for clarification
+
+4. COMPARISONS: Understand comparative requests:
+   - "Add a field like the previous one" → Clone similar properties
+   - "Make this field similar to field 2 but optional" → Copy properties, override required
+   - "Same as above but for phone" → Similar structure, different context
+
+5. QUIZ MODE COMMANDS: Recognize quiz-related requests:
+   - "The answer to question 1 is B" or "The correct answer is Option B" → Set correctAnswer
+   - "Make question 2 worth 5 points" → Set points
+   - "Add explanation: [text]" → Set explanation
+   - "This is a quiz question" → Recognize quiz intent
+
 GUIDELINES:
 1. Be conversational and helpful
-2. Explain what changes you're making
-3. If the user's request is unclear, ask for clarification
+2. Explain what changes you're making clearly
+3. If the user's request is ambiguous, ask for clarification
 4. Suggest improvements when appropriate
 5. For multiple-choice type fields, always include sensible options
 6. Use appropriate field types based on context (e.g., "email" for email addresses)
 7. When adding multiple fields, add them in logical order
 8. Reference existing fields by their number (1-based) or label when updating/deleting
 9. If user asks to add a field that seems to already exist, confirm or suggest updating instead
+10. For multi-step commands, execute all steps and explain each action
+11. Remember context from the conversation to understand references like "it" or "that field"
 
 IMPORTANT:
 - Always respond with valid JSON
 - The "message" field is required
 - Include "modifications" only when making changes
 - Use field IDs exactly as shown when updating or deleting
-- Generate new unique IDs for new fields (format: field_{timestamp}_{random})`;
+- Generate new unique IDs for new fields (format: field_{timestamp}_{random})
+- For quiz-config action, always include fieldId and at least one quiz property`;
 }
 
 function sanitizeModification(mod: FieldModification, formContext: FormContext): FieldModification {
   const sanitized = { ...mod };
 
   // Ensure action is valid
-  if (!["add", "update", "delete", "reorder"].includes(mod.action)) {
+  if (!["add", "update", "delete", "reorder", "quiz-config"].includes(mod.action)) {
     sanitized.action = "add";
   }
 
@@ -235,8 +302,8 @@ function sanitizeModification(mod: FieldModification, formContext: FormContext):
     sanitized.field = field;
   }
 
-  // For update/delete, verify fieldId exists
-  if ((mod.action === "update" || mod.action === "delete" || mod.action === "reorder") && mod.fieldId) {
+  // For update/delete/reorder/quiz-config, verify fieldId exists
+  if ((mod.action === "update" || mod.action === "delete" || mod.action === "reorder" || mod.action === "quiz-config") && mod.fieldId) {
     const fieldExists = formContext.fields.some(f => f.id === mod.fieldId);
     if (!fieldExists) {
       // Try to find field by index (1-based) or partial label match
@@ -251,6 +318,20 @@ function sanitizeModification(mod: FieldModification, formContext: FormContext):
         if (matchingField) {
           sanitized.fieldId = matchingField.id;
         }
+      }
+    }
+  }
+
+  // For quiz-config action, ensure quizConfig exists
+  if (mod.action === "quiz-config") {
+    if (!mod.quizConfig) {
+      sanitized.quizConfig = {};
+    }
+    // Validate quiz config properties
+    if (sanitized.quizConfig) {
+      // Ensure points is a number if provided
+      if (sanitized.quizConfig.points !== undefined) {
+        sanitized.quizConfig.points = Number(sanitized.quizConfig.points) || 1;
       }
     }
   }

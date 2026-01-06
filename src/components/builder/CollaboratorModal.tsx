@@ -152,10 +152,9 @@ export default function CollaboratorModal({
               <button
                 type="submit"
                 disabled={inviting}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 font-paper"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 font-paper text-white"
                 style={{
                   background: "var(--accent)",
-                  color: "var(--accent-dark)",
                 }}
               >
                 {inviting ? "Inviting..." : (

@@ -675,10 +675,34 @@ export default function FormRenderer({
       return; // Prevent submission if validation fails
     }
     
+    // Process "Other" option values - replace __other__ with actual text
+    const processedValues = { ...values };
+    Object.keys(processedValues).forEach(key => {
+      // Skip the _other_text fields, they'll be used to replace __other__ values
+      if (key.endsWith('_other_text')) return;
+      
+      const value = processedValues[key];
+      const otherTextKey = `${key}_other_text`;
+      const otherText = values[otherTextKey] as string;
+      
+      if (value === '__other__' && otherText) {
+        // Single selection (radio, dropdown) - replace with text
+        processedValues[key] = `Other: ${otherText}`;
+        delete processedValues[otherTextKey];
+      } else if (Array.isArray(value) && value.includes('__other__') && otherText) {
+        // Multiple selection (checkboxes) - replace __other__ in array with text
+        processedValues[key] = value.map(v => v === '__other__' ? `Other: ${otherText}` : v);
+        delete processedValues[otherTextKey];
+      } else if (otherText !== undefined) {
+        // Clean up unused _other_text fields
+        delete processedValues[otherTextKey];
+      }
+    });
+    
     setStatus("submitting");
     try {
       if (onSubmitOverride) {
-        await onSubmitOverride(values);
+        await onSubmitOverride(processedValues);
         setStatus("idle");
         return;
       }
@@ -689,8 +713,8 @@ export default function FormRenderer({
         
       const method = isEditMode ? "PUT" : "POST";
       const body = isEditMode 
-        ? { ...values, editToken } 
-        : { ...values, respondentId };
+        ? { ...processedValues, editToken } 
+        : { ...processedValues, respondentId };
 
       const res = await fetch(url, {
         method,
@@ -1258,47 +1282,107 @@ export default function FormRenderer({
               accentColor: styling?.primaryColor || 'var(--accent)',
               '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => {
+              setValue(id, event.target.value);
+              // Clear the "other" text field when selecting a predefined option
+              setValue(`${id}_other_text`, '');
+            } } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
           />
           <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>{optValue}</span>
         </label>
       );
     })}
+    {/* "Other" option for radio/multiple-choice */}
+    {f.allowOther && (
+      <div className="space-y-2">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            id={`${id}_other`}
+            type="radio"
+            value="__other__"
+            checked={formValues[id] === '__other__'}
+            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            className="w-4 h-4 focus:ring-2 transition-colors"
+            style={{
+              accentColor: styling?.primaryColor || 'var(--accent)',
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+          />
+          <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>Other</span>
+        </label>
+        {formValues[id] === '__other__' && (
+          <input
+            type="text"
+            placeholder="Please specify..."
+            value={(formValues[`${id}_other_text`] as string) || ''}
+            className="ml-7 w-[calc(100%-1.75rem)] px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors text-sm"
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_other_text`, event.target.value) } : register(`${id}_other_text`))}
+          />
+        )}
+      </div>
+    )}
   </div>
 )}
 
         {(type === "dropdown" || type === "select") && (
-          <select
-            id={id}
-            value={(formValues[id] as string) || ''}
-            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
-              hasError ? "border-red-500" : ""
-            }`}
-            style={{
-              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
-              background: 'var(--card-bg)',
-              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
-              color: 'var(--foreground)',
-            } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id } : register(id, { required }))}
-            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLSelectElement>) => setValue(id, event.target.value) } : {})}
-            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
-            aria-describedby={helpText ? helpTextId : undefined}
-            aria-invalid={hasError ? "true" : "false"}
-            aria-errormessage={hasError ? errorId : undefined}
-            aria-required={required ? "true" : "false"}
-          >
-            <option value="">Select an option...</option>
-            {options.map((opt, i) => {
-              const optValue = getOptionValue(opt);
-              return (
-                <option key={i} value={optValue}>
-                  {optValue}
-                </option>
-              );
-            })}
-          </select>
+          <div>
+            <select
+              id={id}
+              value={(formValues[id] as string) || ''}
+              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+                hasError ? "border-red-500" : ""
+              }`}
+              style={{
+                '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                background: 'var(--card-bg)',
+                borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+                color: 'var(--foreground)',
+              } as React.CSSProperties}
+              {...(isPreviewMode ? { name: id } : register(id, { required }))}
+              {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLSelectElement>) => setValue(id, event.target.value) } : {})}
+              onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+              aria-describedby={helpText ? helpTextId : undefined}
+              aria-invalid={hasError ? "true" : "false"}
+              aria-errormessage={hasError ? errorId : undefined}
+              aria-required={required ? "true" : "false"}
+            >
+              <option value="">Select an option...</option>
+              {options.map((opt, i) => {
+                const optValue = getOptionValue(opt);
+                return (
+                  <option key={i} value={optValue}>
+                    {optValue}
+                  </option>
+                );
+              })}
+              {f.allowOther && <option value="__other__">Other</option>}
+            </select>
+            {/* "Other" text field for dropdown */}
+            {f.allowOther && formValues[id] === '__other__' && (
+              <input
+                type="text"
+                placeholder="Please specify..."
+                value={(formValues[`${id}_other_text`] as string) || ''}
+                className="mt-2 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors text-sm"
+                style={{
+                  '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                  background: 'var(--card-bg)',
+                  borderColor: 'var(--card-border)',
+                  color: 'var(--foreground)',
+                } as React.CSSProperties}
+                {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_other_text`, event.target.value) } : register(`${id}_other_text`))}
+              />
+            )}
+          </div>
         )}
 
         {(type === "checkboxes" || type === "multiselect") && (
@@ -1329,6 +1413,10 @@ export default function FormRenderer({
                           ? [...selectedValues, optValue]
                           : selectedValues.filter((v: string) => v !== optValue);
                         setValue(id, newSelectedValues);
+                        // Clear "other" text when unchecking "other"
+                        if (!event.target.checked && optValue === '__other__') {
+                          setValue(`${id}_other_text`, '');
+                        }
                       },
                     } : {})}
                     onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1337,6 +1425,60 @@ export default function FormRenderer({
                 </label>
               );
             })}
+            {/* "Other" option for checkboxes/multiselect */}
+            {f.allowOther && (() => {
+              const currentValue = formValues[id];
+              const selectedValues = Array.isArray(currentValue) ? currentValue : (currentValue ? [currentValue] : []);
+              const isOtherChecked = selectedValues.includes('__other__');
+              
+              return (
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      id={`${id}_other`}
+                      type="checkbox"
+                      value="__other__"
+                      checked={isOtherChecked}
+                      {...(isPreviewMode ? { name: id } : register(id, { required }))}
+                      className="w-4 h-4 rounded focus:ring-2 transition-colors"
+                      style={{
+                        accentColor: styling?.primaryColor || 'var(--accent)',
+                        '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                      } as React.CSSProperties}
+                      {...(isPreviewMode ? {
+                        onChange: (event: ChangeEvent<HTMLInputElement>) => {
+                          const newSelectedValues = event.target.checked
+                            ? [...selectedValues, '__other__']
+                            : selectedValues.filter((v: string) => v !== '__other__');
+                          setValue(id, newSelectedValues);
+                          // Clear "other" text when unchecking
+                          if (!event.target.checked) {
+                            setValue(`${id}_other_text`, '');
+                          }
+                        },
+                      } : {})}
+                      onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+                    />
+                    <span className="text-sm" style={{ color: styling?.primaryColor || 'var(--foreground)' }}>Other</span>
+                  </label>
+                  {isOtherChecked && (
+                    <input
+                      type="text"
+                      placeholder="Please specify..."
+                      value={(formValues[`${id}_other_text`] as string) || ''}
+                      className="ml-7 w-[calc(100%-1.75rem)] px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors text-sm"
+                      style={{
+                        '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+                        background: 'var(--card-bg)',
+                        borderColor: 'var(--card-border)',
+                        color: 'var(--foreground)',
+                      } as React.CSSProperties}
+                      {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_other_text`, event.target.value) } : register(`${id}_other_text`))}
+                    />
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 

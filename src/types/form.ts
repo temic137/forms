@@ -144,6 +144,7 @@ export interface Field {
   matrixRows?: string[]; // For choice-matrix field type
   allowMultipleSelection?: boolean; // For choice-matrix field type (checkbox grid behavior)
   quizConfig?: QuizConfig; // Quiz/scoring configuration
+  allowOther?: boolean; // Allow "Other" option with text input for choice fields
 }
 
 // Multi-Step Form Types

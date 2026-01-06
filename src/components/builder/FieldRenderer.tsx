@@ -436,6 +436,24 @@ export default function FieldRenderer({ field, isPreview = false, styling, displ
                 <span className="text-black">{option}</span>
               </label>
             ))}
+            {/* "Other" option preview */}
+            {field.allowOther && (
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded-full group-hover:border-black/40">
+                    <input type="radio" name={field.id} disabled={!isPreview} className="peer sr-only" />
+                    <div className="w-2.5 h-2.5 bg-black rounded-full opacity-0 peer-checked:opacity-100 transition-opacity" />
+                  </div>
+                  <span className="text-black">Other</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Please specify..."
+                  className="ml-7 w-[calc(100%-1.75rem)] px-3 py-1.5 text-sm border border-black/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-black/30 bg-white/50"
+                  disabled={!isPreview}
+                />
+              </div>
+            )}
           </div>
         );
 
@@ -450,6 +468,7 @@ export default function FieldRenderer({ field, isPreview = false, styling, displ
             {normalizeOptions(field.options).map((option, idx) => (
               <option key={idx} value={option}>{option}</option>
             ))}
+            {field.allowOther && <option value="__other__">Other</option>}
           </select>
         );
 
@@ -468,6 +487,26 @@ export default function FieldRenderer({ field, isPreview = false, styling, displ
                 <span className="text-black">{option}</span>
               </label>
             ))}
+            {/* "Other" option preview */}
+            {field.allowOther && (
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-5 h-5 border border-black/20 rounded group-hover:border-black/40">
+                    <input type="checkbox" disabled={!isPreview} className="peer sr-only" />
+                    <svg className="w-3.5 h-3.5 text-black opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-black">Other</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Please specify..."
+                  className="ml-7 w-[calc(100%-1.75rem)] px-3 py-1.5 text-sm border border-black/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-black/30 bg-white/50"
+                  disabled={!isPreview}
+                />
+              </div>
+            )}
           </div>
         );
 

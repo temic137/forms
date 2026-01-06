@@ -56,6 +56,7 @@ interface DraggableFieldProps {
   index: number;
   displayNumber?: number;
   isSelected: boolean;
+  isHighlighted?: boolean;
   styling?: FormStyling;
   isQuizMode?: boolean;
   onSelect: () => void;
@@ -76,6 +77,7 @@ export default function DraggableField({
   index,
   displayNumber,
   isSelected,
+  isHighlighted,
   styling,
   isQuizMode,
   onSelect,
@@ -108,7 +110,9 @@ export default function DraggableField({
       style={dragStyle}
       className={`group relative rounded-xl border bg-white p-3 transition-all font-paper shadow-none ${isSelected
         ? "border-black/30 ring-1 ring-black/5"
-        : "border-black/10 hover:border-black/20"
+        : isHighlighted
+          ? "border-blue-400 ring-2 ring-blue-100 bg-blue-50/30"
+          : "border-black/10 hover:border-black/20"
         } ${isDragging ? "opacity-80" : ""}`}
       onClick={onSelect}
       role="presentation"
@@ -789,6 +793,28 @@ function FieldEditor({
                 className="flex-shrink-0"
               />
             )}
+          </div>
+
+          {/* Allow Other Option */}
+          <div className="mt-3 pt-3 border-t border-black/10">
+            <label 
+              className="flex items-center gap-2 cursor-pointer group"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                checked={field.allowOther || false}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onUpdate({ allowOther: e.target.checked });
+                }}
+                className="w-4 h-4 rounded border-black/20 text-black focus:ring-black/20"
+              />
+              <div>
+                <div className="text-sm font-medium text-black">Allow &quot;Other&quot; option</div>
+                <div className="text-xs text-black/50">Let users add a custom answer</div>
+              </div>
+            </label>
           </div>
         </div>
       )}
