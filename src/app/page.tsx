@@ -13,7 +13,7 @@ const DragDropFormBuilder = dynamic(() => import("@/components/builder/DragDropF
   ssr: false
 });
 import { Spinner } from "@/components/ui/Spinner";
-import { Mic, Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText } from "lucide-react";
+import { Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
@@ -89,11 +89,7 @@ export default function Home() {
     handleFileSelect,
     removeFile,
     clearAttachments,
-    generateForm,
-    handleVoiceClick,
-    isListening,
-    isSupported,
-    autoSubmitCountdown
+    generateForm
   } = useFormGenerator({
     confirm,
     onSuccess: (data) => {
@@ -316,20 +312,6 @@ export default function Home() {
                     }}
                     disabled={loading}
                   />
-                  {isSupported && (
-                    <button
-                      type="button"
-                      onClick={handleVoiceClick}
-                      className="absolute right-2 bottom-2 p-2 rounded-full transition-colors"
-                      style={{
-                        background: isListening ? '#ef4444' : 'var(--background)',
-                        color: isListening ? '#fff' : 'var(--foreground-muted)',
-                      }}
-                      title={isListening ? 'Stop recording' : 'Start voice input'}
-                    >
-                      <Mic className="w-4 h-4" />
-                    </button>
-                  )}
                 </div>
 
                 {/* Attachments Area */}
@@ -499,12 +481,6 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-
-                {isListening && autoSubmitCountdown !== null && (
-                  <div className="text-center text-xs font-bold animate-pulse text-black">
-                    Auto-generating in {autoSubmitCountdown}s...
-                  </div>
-                )}
 
                 <div className="flex gap-2 justify-center">
                   <button

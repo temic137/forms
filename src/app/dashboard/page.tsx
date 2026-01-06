@@ -86,11 +86,7 @@ export default function DashboardPage() {
     handleFileSelect,
     removeFile,
     clearAttachments,
-    generateForm,
-    handleVoiceClick,
-    isListening,
-    isSupported,
-    autoSubmitCountdown
+    generateForm
   } = useFormGenerator({
     confirm,
     onSuccess: (data) => {
@@ -612,32 +608,6 @@ export default function DashboardPage() {
                   }}
                   disabled={generatingForm}
                 />
-                {isSupported && (
-                  <button
-                    type="button"
-                    onClick={handleVoiceClick}
-                    className="absolute right-3 bottom-3 p-2 rounded-full border border-black/10 hover:bg-black/5 transition-all active:scale-95"
-                    style={{
-                      background: isListening ? '#000' : '#fff',
-                      color: isListening ? '#fff' : '#000',
-                    }}
-                    title={isListening ? 'Stop recording' : 'Start voice input'}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill={isListening ? 'currentColor' : 'none'}
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                      />
-                    </svg>
-                  </button>
-                )}
               </div>
 
               {/* Attachments Area */}
@@ -803,12 +773,6 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-
-              {isListening && autoSubmitCountdown !== null && (
-                <div className="text-center text-base font-bold animate-pulse text-black">
-                  Auto-generating in {autoSubmitCountdown}s...
-                </div>
-              )}
 
               <div className="flex gap-3">
                 <button
