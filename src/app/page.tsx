@@ -266,6 +266,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center gap-2 mb-6 paper-badge text-black text-sm">
               THE AI FORM BUILDER
+              <span className="ml-2 pl-2 border-l border-black/20 text-black/50">IT'S FREE</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-black mb-6 leading-tight">
@@ -275,7 +276,7 @@ export default function Home() {
             <AnimatedLandingDescription />
 
             {/* Ghost Access Button - Subtle Version */}
-            <div className="mb-8 flex justify-center">
+            <div className="mb-8 flex flex-col items-center justify-center">
               <button
                 onClick={handleGuestSignIn}
                 disabled={isSigningIn}
@@ -285,6 +286,10 @@ export default function Home() {
                 <span>Try Ghost Mode</span>
                 <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
               </button>
+              <p className="mt-3 text-xs text-black/50 text-center max-w-sm">
+                What is this? Instant anonymous access to try the builder.<br/>
+                No login, no emails, just build.
+              </p>
             </div>
 
 

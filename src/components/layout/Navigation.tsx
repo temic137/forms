@@ -12,6 +12,13 @@ export default function Navigation() {
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showPricingAnimation, setShowPricingAnimation] = useState(false);
+
+  const handlePricingClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPricingAnimation(true);
+    setTimeout(() => setShowPricingAnimation(false), 2000);
+  };
 
   return (
     <nav
@@ -37,12 +44,20 @@ export default function Navigation() {
                 >
                   Why Switch
                 </Link>
-                <Link
-                  href="#"
-                  className="text-base font-bold text-black hover:underline transition-all"
-                >
-                  Pricing
-                </Link>
+                <div className="relative group">
+                  <Link
+                    href="#"
+                    onClick={handlePricingClick}
+                    className="text-base font-bold text-black hover:underline transition-all"
+                  >
+                    Pricing
+                  </Link>
+                  {showPricingAnimation && (
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 px-3 py-1 bg-black text-white text-xs font-bold rounded-full animate-bounce whitespace-nowrap z-50">
+                      It's Free! 👻
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -86,13 +101,27 @@ export default function Navigation() {
             >
               Why Switch
             </Link>
-            <Link
-              href="#"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-3 py-2 text-base font-bold text-black hover:bg-white rounded-full"
-            >
-              Pricing
-            </Link>
+            <div className="relative">
+              <Link
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowPricingAnimation(true);
+                  setTimeout(() => {
+                    setShowPricingAnimation(false);
+                    setIsMobileMenuOpen(false);
+                  }, 1500);
+                }}
+                className="block px-3 py-2 text-base font-bold text-black hover:bg-white rounded-full"
+              >
+                Pricing
+              </Link>
+              {showPricingAnimation && (
+                <div className="absolute top-2 right-4 px-3 py-1 bg-black text-white text-xs font-bold rounded-full animate-bounce whitespace-nowrap">
+                  It's Free! 👻
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
