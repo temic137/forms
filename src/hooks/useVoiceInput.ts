@@ -28,6 +28,7 @@ export interface UseVoiceInputReturn {
   error: VoiceError | null;
   isSupported: boolean;
   audioLevel: number;
+  isMobile: boolean;
   
   // Controls
   startListening: () => Promise<void>;
@@ -74,6 +75,10 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
   const noSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpeechTimeRef = useRef<number>(0);
   
+  // Mobile-specific refs
+  const mobileRetryCountRef = useRef(0);
+  const maxMobileRetries = 3;
+  
   // Initialize service once using useMemo
   const service = useMemo(() => {
     if (typeof window !== 'undefined') {
@@ -90,13 +95,18 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
       onEnd: () => {},
       onStart: () => {},
       onAudioLevel: () => {},
+      getIsMobile: () => false,
+      getIsIOS: () => false,
+      requestMicrophonePermission: async () => { throw new Error('Not supported'); },
     } as unknown as SpeechRecognitionService;
   }, []);
 
   const [isSupported, setIsSupported] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setIsSupported(service.isSupported());
+    setIsMobile(service.getIsMobile());
   }, [service]);
 
   /**
@@ -126,14 +136,19 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     // Update last speech time
     lastSpeechTimeRef.current = Date.now();
     
-    // Set new timeout for 10 seconds
+    // Shorter timeout on mobile (8 seconds) vs desktop (10 seconds)
+    const timeoutDuration = isMobile ? 8000 : 10000;
+    
+    // Set new timeout
     noSpeechTimeoutRef.current = setTimeout(() => {
-      // Auto-pause if no speech detected for 10 seconds
+      // Auto-pause if no speech detected
       service.stop();
       
       const noSpeechError: VoiceError = {
         type: 'no-speech',
-        message: 'No speech detected for 10 seconds. Recording paused automatically.',
+        message: isMobile 
+          ? 'No speech detected. Tap the microphone to try again.'
+          : 'No speech detected for 10 seconds. Recording paused automatically.',
         recoverable: true,
       };
       
@@ -143,8 +158,8 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
       if (onErrorCallback) {
         onErrorCallback(noSpeechError);
       }
-    }, 10000); // 10 seconds
-  }, [service, onErrorCallback]);
+    }, timeoutDuration);
+  }, [service, onErrorCallback, isMobile]);
 
   /**
    * Debounced interim transcript update for performance optimization
@@ -202,8 +217,19 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
    * Handle speech recognition errors
    */
   const handleError = useCallback((voiceError: VoiceError) => {
+    // On mobile, some errors are expected and should trigger retry
+    if (isMobile && voiceError.type === 'no-speech' && mobileRetryCountRef.current < maxMobileRetries) {
+      mobileRetryCountRef.current++;
+      console.log(`Mobile: no-speech error, retry ${mobileRetryCountRef.current}/${maxMobileRetries}`);
+      // Don't set error state for mobile no-speech, let it restart
+      return;
+    }
+    
     setError(voiceError);
     setIsListening(false);
+    
+    // Reset mobile retry count on actual error
+    mobileRetryCountRef.current = 0;
 
     // Track error in analytics (Requirement 15.3)
     voiceAnalytics.trackError(
@@ -216,7 +242,7 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     if (onErrorCallback) {
       onErrorCallback(voiceError);
     }
-  }, [onErrorCallback]);
+  }, [onErrorCallback, isMobile]);
 
   /**
    * Handle speech recognition end event
@@ -232,6 +258,9 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
   const handleStart = useCallback(() => {
     setIsListening(true);
     setError(null);
+    
+    // Reset mobile retry count on successful start
+    mobileRetryCountRef.current = 0;
     
     // Start no-speech timeout when listening begins
     resetNoSpeechTimeout();
@@ -278,7 +307,9 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     if (!isSupported) {
       const notSupportedError: VoiceError = {
         type: 'not-supported',
-        message: 'Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.',
+        message: isMobile 
+          ? 'Voice input is not supported in this browser. Try Safari on iOS or Chrome on Android.'
+          : 'Voice input is not supported in this browser. Please use Chrome, Edge, or Safari.',
         recoverable: false,
       };
       setError(notSupportedError);
@@ -290,6 +321,9 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
 
     // Clear any previous errors
     setError(null);
+    
+    // Reset mobile retry count
+    mobileRetryCountRef.current = 0;
 
     // Track voice input activation time (Requirement 12.1: < 500ms)
     performanceMonitor.mark('voice-activation');
@@ -298,6 +332,25 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     initializeService();
 
     try {
+      // On mobile, request microphone permission first for better UX
+      if (isMobile) {
+        try {
+          await service.requestMicrophonePermission();
+        } catch {
+          // If permission denied, show specific error
+          const permissionError: VoiceError = {
+            type: 'permission-denied',
+            message: 'Microphone access is required. Please allow microphone permissions in your browser settings.',
+            recoverable: true,
+          };
+          setError(permissionError);
+          if (onErrorCallback) {
+            onErrorCallback(permissionError);
+          }
+          return;
+        }
+      }
+      
       await service.start();
       
       // Measure activation time
@@ -318,7 +371,7 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
         onErrorCallback(voiceError);
       }
     }
-  }, [service, isSupported, initializeService, onErrorCallback]);
+  }, [service, isSupported, isMobile, initializeService, onErrorCallback]);
 
   /**
    * Stop listening for speech input
@@ -391,6 +444,7 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     error,
     isSupported,
     audioLevel,
+    isMobile,
     
     // Controls
     startListening,

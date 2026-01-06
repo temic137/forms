@@ -40,6 +40,31 @@ export function isIOSSafari(): boolean {
 }
 
 /**
+ * Detect iOS device (any browser)
+ */
+export function isIOSDevice(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false;
+  }
+  
+  const userAgent = navigator.userAgent;
+  return /iPad|iPhone|iPod/.test(userAgent) || 
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+/**
+ * Detect Android Chrome
+ */
+export function isAndroidChrome(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false;
+  }
+  
+  const userAgent = navigator.userAgent;
+  return /Android/.test(userAgent) && /Chrome/.test(userAgent);
+}
+
+/**
  * Check if the device supports haptic feedback
  */
 function supportsHaptics(): boolean {
@@ -53,6 +78,22 @@ function supportsHaptics(): boolean {
 function supportsWakeLock(): boolean {
   if (typeof navigator === 'undefined') return false;
   return 'wakeLock' in navigator;
+}
+
+/**
+ * Check microphone permission status
+ */
+async function checkMicrophonePermission(): Promise<PermissionState | 'unknown'> {
+  if (typeof navigator === 'undefined' || !navigator.permissions) {
+    return 'unknown';
+  }
+  
+  try {
+    const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+    return result.state;
+  } catch {
+    return 'unknown';
+  }
 }
 
 /**
@@ -76,6 +117,7 @@ const HAPTIC_PATTERNS: Record<HapticPattern, number | number[]> = {
  * - Network status
  * - Device detection
  * - Viewport adjustments
+ * - Microphone permission handling
  */
 export function useMobileOptimizations() {
   // Initialize with actual values using lazy initialization
@@ -85,7 +127,16 @@ export function useMobileOptimizations() {
   const [isLandscape, setIsLandscape] = useState(() => typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : false);
   const [hasHaptics] = useState(() => supportsHaptics());
   const [hasWakeLock] = useState(() => supportsWakeLock());
+  const [micPermission, setMicPermission] = useState<PermissionState | 'unknown'>('unknown');
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  
+  // Check microphone permission on mount
+  useEffect(() => {
+    if (isMobile) {
+      checkMicrophonePermission().then(setMicPermission);
+    }
+  }, [isMobile]);
   
   // Set up event listeners on mount
   useEffect(() => {
@@ -175,11 +226,60 @@ export function useMobileOptimizations() {
     }
   }, []);
   
-  // Clean up wake lock on unmount
+  /**
+   * Request microphone permission explicitly (useful on mobile)
+   * Returns the media stream if successful
+   */
+  const requestMicrophonePermission = useCallback(async (): Promise<MediaStream | null> => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn('MediaDevices API not available');
+      return null;
+    }
+    
+    try {
+      // Request with speech-optimized constraints
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          // Optimize for speech on mobile
+          ...(isMobile ? {
+            sampleRate: { ideal: 16000 },
+            channelCount: { exact: 1 },
+          } : {})
+        }
+      });
+      
+      mediaStreamRef.current = stream;
+      setMicPermission('granted');
+      
+      return stream;
+    } catch (error) {
+      console.error('Microphone permission request failed:', error);
+      setMicPermission('denied');
+      return null;
+    }
+  }, [isMobile]);
+  
+  /**
+   * Release microphone stream
+   */
+  const releaseMicrophoneStream = useCallback(() => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+  }, []);
+  
+  // Clean up wake lock and microphone on unmount
   useEffect(() => {
     return () => {
       if (wakeLockRef.current) {
         wakeLockRef.current.release().catch(() => {});
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
@@ -235,16 +335,21 @@ export function useMobileOptimizations() {
     isTouch,
     isOnline,
     isLandscape,
-    isIOS: typeof window !== 'undefined' && isIOSSafari(),
+    isIOS: typeof window !== 'undefined' && isIOSDevice(),
+    isIOSSafari: typeof window !== 'undefined' && isIOSSafari(),
+    isAndroidChrome: typeof window !== 'undefined' && isAndroidChrome(),
     
     // Capabilities
     hasHaptics,
     hasWakeLock,
+    micPermission,
     
     // Actions
     triggerHaptic,
     requestWakeLock,
     releaseWakeLock,
+    requestMicrophonePermission,
+    releaseMicrophoneStream,
     
     // Touch helpers
     getTouchCoordinates,

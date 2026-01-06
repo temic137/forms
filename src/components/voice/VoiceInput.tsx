@@ -101,6 +101,7 @@ export default function VoiceInput({
     error,
     isSupported,
     audioLevel,
+    isMobile: isMobileVoice,
     startListening,
     stopListening,
     resetTranscript,
@@ -119,6 +120,9 @@ export default function VoiceInput({
       }
     },
   });
+  
+  // Use mobile state from voice hook or mobile optimizations
+  const isMobileActual = isMobileDevice || isMobileVoice;
 
   // Load saved transcription on mount and check tutorial/privacy status
   useEffect(() => {
@@ -279,7 +283,7 @@ export default function VoiceInput({
     setSuccessMessage(null);
     
     // Check network status on mobile
-    if (isMobileDevice && !isOnline) {
+    if (isMobileActual && !isOnline) {
       setErrorMessage('Voice input requires an internet connection. Please check your network.');
       announce('No internet connection. Voice input unavailable.', 'assertive');
       return;
@@ -287,7 +291,7 @@ export default function VoiceInput({
     
     try {
       // Request wake lock on mobile to prevent screen sleep during recording
-      if (isMobileDevice) {
+      if (isMobileActual) {
         await requestWakeLock();
       }
       
@@ -300,10 +304,12 @@ export default function VoiceInput({
       voiceAnalytics.startSession(sessionId, language);
       
       // Announce to screen readers (Requirement 8.2)
-      announce('Voice input started. Recording in progress.', 'polite');
+      announce(isMobileActual 
+        ? 'Voice input started. Speak clearly into your microphone.' 
+        : 'Voice input started. Recording in progress.', 'polite');
     } catch (err) {
       // Release wake lock if start failed
-      if (isMobileDevice) {
+      if (isMobileActual) {
         await releaseWakeLock();
       }
       // Error is already handled by useVoiceInput hook
@@ -324,7 +330,7 @@ export default function VoiceInput({
     stopListening();
     
     // Release wake lock on mobile
-    if (isMobileDevice) {
+    if (isMobileActual) {
       await releaseWakeLock();
     }
     
@@ -417,7 +423,7 @@ export default function VoiceInput({
     if (!onGenerateForm || !editableTranscript.trim()) return;
     
     // Check network status on mobile
-    if (isMobileDevice && !isOnline) {
+    if (isMobileActual && !isOnline) {
       setErrorMessage('Form generation requires an internet connection. Please check your network.');
       triggerHaptic('error');
       announce('No internet connection. Cannot generate form.', 'assertive');
@@ -473,7 +479,7 @@ export default function VoiceInput({
     } finally {
       setIsGenerating(false);
     }
-  }, [onGenerateForm, editableTranscript, language, announce, isMobileDevice, isOnline, triggerHaptic]);
+  }, [onGenerateForm, editableTranscript, language, announce, isMobileActual, isOnline, triggerHaptic]);
 
   // Auto-submit after 3 seconds of silence when listening
   useEffect(() => {
@@ -673,7 +679,7 @@ export default function VoiceInput({
         </div>
       )}
       
-      {/* Mobile Device Hint */}
+      {/* Mobile Device Hint - Enhanced with more helpful tips */}
       {browserSupport.isMobile && (
         <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-2">
@@ -683,11 +689,16 @@ export default function VoiceInput({
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-amber-900">
-                <strong>Mobile Tip:</strong> Speak clearly and pause briefly between phrases. 
-                Voice recognition will automatically restart if it stops. 
-                For best results, use Safari on iOS or Chrome on Android.
+              <p className="text-xs font-semibold text-amber-900 mb-1">
+                Mobile Voice Input Tips
               </p>
+              <ul className="text-xs text-amber-800 space-y-0.5">
+                <li>• Speak clearly and at a moderate pace</li>
+                <li>• Hold your phone close to your mouth</li>
+                <li>• Ensure microphone permissions are allowed</li>
+                <li>• Voice recognition may restart between phrases - this is normal</li>
+                <li>• For best results: Safari on iOS, Chrome on Android</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -773,12 +784,14 @@ export default function VoiceInput({
               <span className="text-xs sm:text-sm text-neutral-600 font-medium">
                 {autoSubmitCountdown !== null && autoSubmitCountdown > 0 
                   ? `Auto-submit: ${autoSubmitCountdown}s` 
-                  : 'Recording...'}
+                  : isMobileActual 
+                    ? 'Listening...' 
+                    : 'Recording...'}
               </span>
             </div>
             
-            {/* Audio Level Meter - Hidden on very small screens */}
-            <div className="hidden sm:block">
+            {/* Audio Level Meter - Shows on mobile when audio is detected */}
+            <div className={isMobileActual ? (audioLevel > 5 ? 'block' : 'hidden') : 'hidden sm:block'}>
               <AudioLevelMeter level={audioLevel} />
             </div>
           </div>
