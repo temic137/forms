@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,7 @@ const DragDropFormBuilder = dynamic(() => import("@/components/builder/DragDropF
   ssr: false
 });
 import { Spinner } from "@/components/ui/Spinner";
-import { Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText } from "lucide-react";
+import { Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText, Zap, Brain, Shield, BarChart3, Palette, Code2, Clock, Users } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
@@ -521,8 +521,142 @@ export default function Home() {
         </section>
 
 
+        {/* Problem Statement Section */}
+        <section className="py-16 bg-transparent">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
+                Form builders shouldn't feel like work
+              </h2>
+              <p className="text-lg text-black/60 font-bold max-w-2xl mx-auto">
+                Traditional form builders force you to click through endless menus, drag fields one by one, 
+                and manually configure every validation rule. We believe there's a better way.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="paper-card p-6 bg-white border-2 border-black/10">
+                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-black mb-2">Time Wasted</h3>
+                <p className="text-sm text-black/60 font-bold">
+                  Spending 10+ minutes clicking through menus to create a simple contact form
+                </p>
+              </div>
+
+              <div className="paper-card p-6 bg-white border-2 border-black/10">
+                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-black mb-2">Manual Labor</h3>
+                <p className="text-sm text-black/60 font-bold">
+                  Copying data from spreadsheets or documents field by field into your form
+                </p>
+              </div>
+
+              <div className="paper-card p-6 bg-white border-2 border-black/10">
+                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-black mb-2">Limited Access</h3>
+                <p className="text-sm text-black/60 font-bold">
+                  Non-technical team members struggling with complex form builder interfaces
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bento Grid Features Section */}
+        <section className="py-16 bg-transparent">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
+                Features that actually matter
+              </h2>
+              <p className="text-lg text-black/60 font-bold">
+                Everything you need to create, customize, and deploy forms in seconds
+              </p>
+            </div>
+
+            {/* Bento Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Large Feature - AI Generation */}
+              <div className="md:col-span-2 md:row-span-2 paper-card p-8 bg-white relative overflow-hidden border-2 border-black/10">
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl bg-black flex items-center justify-center mb-6">
+                    <Brain className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-black mb-3">AI-Powered Generation</h3>
+                  <p className="text-base text-black/70 font-bold mb-6 max-w-md">
+                    Just describe what you need in plain English. Our AI understands context, creates proper validation, 
+                    and even generates quiz questions with correct answers.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 bg-black/5 border border-black/10 rounded-full text-xs font-bold text-black">Natural Language</span>
+                    <span className="px-3 py-1 bg-black/5 border border-black/10 rounded-full text-xs font-bold text-black">Smart Validation</span>
+                    <span className="px-3 py-1 bg-black/5 border border-black/10 rounded-full text-xs font-bold text-black">Quiz Mode</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* File Import */}
+              <div className="paper-card p-6 bg-white border-2 border-black/10">
+                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center mb-4">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-black mb-2">Import Anything</h3>
+                <p className="text-sm text-black/60 font-bold">
+                  Upload PDFs, CSVs, JSON, or scan documents. We'll extract and structure the data.
+                </p>
+              </div>
+
+              {/* Real-time Analytics */}
+              <div className="paper-card p-6 bg-white border-2 border-black/10">
+                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center mb-4">
+                  <BarChart3 className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-black mb-2">Live Analytics</h3>
+                <p className="text-sm text-black/60 font-bold">
+                  Track responses in real-time with beautiful charts and export to Google Sheets.
+                </p>
+              </div>
+
+              {/* Custom Styling */}
+              <div className="paper-card p-6 bg-white border-2 border-black/10">
+                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center mb-4">
+                  <Palette className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-black mb-2">Full Customization</h3>
+                <p className="text-sm text-black/60 font-bold">
+                  Brand your forms with custom colors, fonts, and layouts. No coding required.
+                </p>
+              </div>
+
+              {/* Embed Anywhere */}
+              <div className="md:col-span-2 paper-card p-6 bg-white border-2 border-black/10">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                    <Code2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-black mb-2">Embed Anywhere</h3>
+                    <p className="text-sm text-black/60 font-bold mb-3">
+                      One line of code to embed your form on any website. Works with WordPress, Webflow, Notion, and more.
+                    </p>
+                    <code className="text-xs bg-black/5 border border-black/10 px-3 py-1.5 rounded font-mono text-black/80 inline-block">
+                      &lt;script src=&quot;anyform.com/embed.js&quot;&gt;&lt;/script&gt;
+                    </code>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Comparison Section */}
-        <section id="comparison" className="py-10 bg-transparent">
+        <section id="comparison" className="py-16 bg-transparent">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 paper-card p-6 bg-white">
             <h2 className="text-2xl font-bold text-black mb-6 text-center">vs Google Forms</h2>
 
