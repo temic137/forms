@@ -771,11 +771,11 @@ export default function DragDropFormBuilder({
       </div>
 
       {/* Main Canvas */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col overflow-hidden relative font-paper">
         {/* Top Bar */}
-        <div className="border-b border-black/10 bg-white/80 px-2 sm:px-3 py-1.5 sm:py-2">
+        <div className="border-b border-black/20 bg-white px-1.5 sm:px-2 py-1 sm:py-1.5">
           {/* Mobile Header */}
-          <div className="flex items-center gap-2 sm:hidden">
+          <div className="flex items-center gap-1.5 sm:hidden">
             <button
               type="button"
               onClick={(e) => {
@@ -783,17 +783,17 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 onCancel();
               }}
-              className="flex h-8 items-center justify-center gap-1 rounded-full border border-black/10 px-2 text-black transition-colors hover:bg-black/5"
+              className="flex h-6 items-center justify-center gap-0.5 rounded-full border border-black/30 px-1.5 text-black transition-colors hover:bg-black/5"
               title="Back to Dashboard"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span className="text-xs font-bold">Back</span>
+              <ArrowLeft className="h-3 w-3" />
+              <span className="text-[10px] font-bold">Back</span>
             </button>
 
             {/* Status Badge (Mobile) */}
             {isClosed && (
-              <div className="px-2 py-0.5 bg-transparent border border-black/20 text-black text-[10px] font-bold rounded-full flex items-center gap-1">
-                <History className="w-3 h-3" />
+              <div className="px-1.5 py-0.5 bg-white border border-black/30 text-black text-[9px] font-bold rounded-full flex items-center gap-0.5">
+                <History className="w-2.5 h-2.5" />
                 <span>Closed</span>
               </div>
             )}
@@ -804,7 +804,7 @@ export default function DragDropFormBuilder({
                 type="text"
                 value={formTitle}
                 onChange={(e) => onFormTitleChange(e.target.value)}
-                className="w-full rounded-md border border-black/10 bg-transparent px-2 py-1 text-sm font-bold text-black placeholder:text-black/40 focus:border-black/30 focus:outline-none focus:ring-0"
+                className="w-full rounded-lg border border-black/30 bg-white px-1.5 py-0.5 text-[11px] font-bold text-black placeholder:text-black/40 focus:border-black/60 focus:outline-none focus:ring-0"
                 placeholder="Form title"
               />
             </div>
@@ -818,7 +818,7 @@ export default function DragDropFormBuilder({
                 }
               }}
               disabled={saving}
-              className="flex items-center gap-1 rounded-full border border-black/20 bg-white px-2 py-1 text-xs font-bold text-black transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-0.5 rounded-full border border-black/30 bg-white px-1.5 py-0.5 text-[10px] font-bold text-black transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <>
@@ -827,7 +827,7 @@ export default function DragDropFormBuilder({
                 </>
               ) : (
                 <>
-                  <Save className="h-3.5 w-3.5" />
+                  <Save className="h-3 w-3" />
                   <span>Save</span>
                 </>
               )}
@@ -839,15 +839,15 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 setShowMobileActions(true);
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-black transition-colors hover:bg-black/5"
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-black/30 text-black transition-colors hover:bg-black/5"
               title="More actions"
             >
-              <MoreVertical className="h-3.5 w-3.5" />
+              <MoreVertical className="h-3 w-3" />
             </button>
           </div>
 
           {/* Desktop Header */}
-          <div className="hidden sm:flex w-full items-center gap-2">
+          <div className="hidden sm:flex w-full items-center gap-1">
             <button
               type="button"
               onClick={(e) => {
@@ -855,23 +855,23 @@ export default function DragDropFormBuilder({
                 e.stopPropagation();
                 onCancel();
               }}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors z-10 relative shrink-0"
+              className="flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-bold text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors z-10 relative shrink-0"
               title="Back to Dashboard"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <ArrowLeft className="w-3 h-3" />
               <span>Dashboard</span>
             </button>
 
             {/* Status Indicators (Desktop) */}
             {isClosed && (
-              <div className="px-2 py-0.5 border border-black/20 text-black text-[10px] font-bold rounded-full flex items-center gap-1 animate-in fade-in">
-                <History className="w-3 h-3" />
+              <div className="px-1.5 py-0.5 border border-black/30 text-black text-[9px] font-bold rounded-full flex items-center gap-0.5 animate-in fade-in">
+                <History className="w-2.5 h-2.5" />
                 <span>Closed</span>
               </div>
             )}
             {!isClosed && opensAt && new Date(opensAt) > new Date() && (
-              <div className="px-2 py-0.5 border border-black/20 text-black text-[10px] font-bold rounded-full flex items-center gap-1 animate-in fade-in">
-                <Clock className="w-3 h-3" />
+              <div className="px-1.5 py-0.5 border border-black/30 text-black text-[9px] font-bold rounded-full flex items-center gap-0.5 animate-in fade-in">
+                <Clock className="w-2.5 h-2.5" />
                 <span>Scheduled</span>
               </div>
             )}
@@ -879,9 +879,9 @@ export default function DragDropFormBuilder({
             {isClosed && (
               <button
                 onClick={() => onIsClosedChange?.(false)}
-                className="hidden lg:flex items-center gap-1 px-2 py-0.5 border border-black/20 hover:bg-black/5 rounded-full text-[10px] font-bold transition-colors"
+                className="hidden lg:flex items-center gap-0.5 px-1.5 py-0.5 border border-black/30 hover:bg-black/5 rounded-full text-[9px] font-bold transition-colors"
               >
-                <PlayCircle className="w-3 h-3" />
+                <PlayCircle className="w-2.5 h-2.5" />
                 Reopen Form
               </button>
             )}
@@ -891,40 +891,40 @@ export default function DragDropFormBuilder({
                 type="text"
                 value={formTitle}
                 onChange={(e) => onFormTitleChange(e.target.value)}
-                className="text-base font-bold w-full px-2 py-1 border-0 focus:outline-none focus:ring-0 bg-transparent text-black placeholder:text-black/40"
+                className="text-sm font-bold w-full px-1.5 py-0.5 border-0 focus:outline-none focus:ring-0 bg-transparent text-black placeholder:text-black/40"
                 placeholder="Form title"
               />
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowFieldPalette(true)}
-                className="lg:hidden p-1.5 text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors"
+                className="lg:hidden p-1 text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors"
                 title="Add Fields"
               >
-                <Menu className="w-4 h-4" />
+                <Menu className="w-3.5 h-3.5" />
               </button>
 
               {multiStepConfig?.enabled && (
                 <>
                   <button
                     onClick={handleAddPage}
-                    className="hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1"
+                    className="hidden sm:flex px-2 py-0.5 text-[10px] text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors font-bold items-center gap-0.5"
                     title="Add Page"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                     <span>Add Page</span>
                   </button>
-                  <div className="hidden sm:block w-px h-4 bg-black/10" />
+                  <div className="hidden sm:block w-px h-3 bg-black/20" />
                 </>
               )}
 
               <button
                 onClick={handlePreview}
-                className="hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1"
+                className="hidden sm:flex px-2 py-0.5 text-[10px] text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors font-bold items-center gap-0.5"
                 title="Preview Form"
               >
-                <Eye className="w-3.5 h-3.5" />
+                <Eye className="w-3 h-3" />
                 <span>Preview</span>
               </button>
 
@@ -933,54 +933,54 @@ export default function DragDropFormBuilder({
                   setShowAIChat(!showAIChat);
                   setShowSettings(false);
                 }}
-                className={`hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1 ${
+                className={`hidden sm:flex px-2 py-0.5 text-[10px] text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors font-bold items-center gap-0.5 ${
                   showAIChat ? "bg-black/5" : ""
                 }`}
                 title="AI Assistant"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3 h-3" />
                 <span>AI</span>
               </button>
 
-              <div className="hidden sm:block w-px h-4 bg-black/10" />
+              <div className="hidden sm:block w-px h-3 bg-black/20" />
 
               {currentFormId && (
                 <>
                   <ShareCollaboratorButton formId={currentFormId} />
-                  <div className="hidden sm:block w-px h-4 bg-black/10" />
+                  <div className="hidden sm:block w-px h-3 bg-black/20" />
                 </>
               )}
 
               <button
                 onClick={() => setShowOnboarding(true)}
-                className="hidden sm:flex px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold items-center gap-1"
+                className="hidden sm:flex px-2 py-0.5 text-[10px] text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors font-bold items-center gap-0.5"
                 title="Help & Tour"
               >
-                <HelpCircle className="w-3.5 h-3.5" />
+                <HelpCircle className="w-3 h-3" />
                 <span>Help</span>
               </button>
 
-              <div className="hidden sm:block w-px h-4 bg-black/10" />
+              <div className="hidden sm:block w-px h-3 bg-black/20" />
 
               <button
                 onClick={() => {
                   setShowSettings(!showSettings);
                   setShowAIChat(false);
                 }}
-                className={`p-1.5 rounded-full border border-black/10 transition-colors ${showSettings
+                className={`p-1 rounded-full border border-black/30 transition-colors ${showSettings
                   ? "bg-black/5 text-black"
                   : "text-black hover:bg-black/5"
                   }`}
                 title="Settings"
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Settings className="w-3 h-3" />
               </button>
 
-              <div className="hidden sm:block w-px h-4 bg-black/10" />
+              <div className="hidden sm:block w-px h-3 bg-black/20" />
 
               <button
                 onClick={onCancel}
-                className="hidden sm:block px-2.5 py-1 text-xs text-black hover:bg-black/5 rounded-full border border-black/10 transition-colors font-bold"
+                className="hidden sm:block px-2 py-0.5 text-[10px] text-black hover:bg-black/5 rounded-full border border-black/30 transition-colors font-bold"
               >
                 Cancel
               </button>
@@ -988,16 +988,16 @@ export default function DragDropFormBuilder({
               <button
                 onClick={onSave}
                 disabled={saving}
-                className="px-3 py-1 text-xs bg-white text-black border border-black/20 rounded-full hover:bg-black/5 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-2.5 py-0.5 text-[10px] bg-black text-white border border-black rounded-full hover:bg-black/80 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-0.5"
               >
                 {saving ? (
                   <>
-                    <Spinner size="sm" variant="primary" className="w-3 h-3" />
+                    <Spinner size="sm" variant="primary" className="w-2.5 h-2.5" />
                     <span className="hidden sm:inline">Saving</span>
                   </>
                 ) : (
                   <>
-                    <Save className="w-3.5 h-3.5" />
+                    <Save className="w-3 h-3" />
                     <span className="hidden sm:inline">Save</span>
                   </>
                 )}
@@ -1007,39 +1007,39 @@ export default function DragDropFormBuilder({
         </div>
 
         {showMobileActions && (
-          <div className="sm:hidden fixed inset-0 z-50">
+          <div className="sm:hidden fixed inset-0 z-50 font-paper">
             <div
               className="absolute inset-0 bg-black/50"
               onClick={() => setShowMobileActions(false)}
             />
             <div
-              className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white shadow-xl flex flex-col max-h-[85vh]"
+              className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white border-t border-black/30 flex flex-col max-h-[80vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <span className="text-base font-semibold text-gray-900">Form Actions</span>
+              <div className="p-3 border-b border-black/20 flex items-center justify-between">
+                <span className="text-sm font-bold text-black">Form Actions</span>
                 <button
                   onClick={() => setShowMobileActions(false)}
-                  className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full"
+                  className="p-1 text-black/60 hover:bg-black/5 rounded-full"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-4 space-y-2 overflow-y-auto">
+              <div className="p-2.5 space-y-1.5 overflow-y-auto">
                 <button
                   onClick={() => {
                     setShowMobileActions(false);
                     setShowFieldPalette(true);
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                 >
-                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                    <Menu className="w-5 h-5" />
+                  <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                    <Menu className="w-4 h-4" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">Add Fields</div>
-                    <div className="text-xs text-gray-500">Open field library</div>
+                    <div className="font-bold text-black text-[11px]">Add Fields</div>
+                    <div className="text-[9px] text-black/60">Open field library</div>
                   </div>
                 </button>
 
@@ -1048,14 +1048,14 @@ export default function DragDropFormBuilder({
                     setShowMobileActions(false);
                     handlePreview();
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                 >
-                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                    <Eye className="w-5 h-5" />
+                  <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                    <Eye className="w-4 h-4" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">Preview</div>
-                    <div className="text-xs text-gray-500">Test your form</div>
+                    <div className="font-bold text-black text-[11px]">Preview</div>
+                    <div className="text-[9px] text-black/60">Test your form</div>
                   </div>
                 </button>
 
@@ -1065,14 +1065,14 @@ export default function DragDropFormBuilder({
                     setShowAIChat(true);
                     setShowSettings(false);
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                 >
-                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                    <Sparkles className="w-5 h-5" />
+                  <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                    <Sparkles className="w-4 h-4" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">AI Assistant</div>
-                    <div className="text-xs text-gray-500">Edit form with AI</div>
+                    <div className="font-bold text-black text-[11px]">AI Assistant</div>
+                    <div className="text-[9px] text-black/60">Edit form with AI</div>
                   </div>
                 </button>
 
@@ -1083,14 +1083,14 @@ export default function DragDropFormBuilder({
                     setShowAIChat(false);
                     setActiveSettingsTab('general');
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                 >
-                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                    <Settings className="w-5 h-5" />
+                  <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                    <Settings className="w-4 h-4" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">Settings</div>
-                    <div className="text-xs text-gray-500">General, Styling, Logic</div>
+                    <div className="font-bold text-black text-[11px]">Settings</div>
+                    <div className="text-[9px] text-black/60">General, Styling, Logic</div>
                   </div>
                 </button>
 
@@ -1100,14 +1100,14 @@ export default function DragDropFormBuilder({
                       setShowMobileActions(false);
                       handleAddPage();
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                   >
-                    <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                      <Plus className="w-5 h-5" />
+                    <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                      <Plus className="w-4 h-4" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-gray-900">Add Page</div>
-                      <div className="text-xs text-gray-500">Create new step</div>
+                      <div className="font-bold text-black text-[11px]">Add Page</div>
+                      <div className="text-[9px] text-black/60">Create new step</div>
                     </div>
                   </button>
                 )}
@@ -1118,14 +1118,14 @@ export default function DragDropFormBuilder({
                       setShowMobileActions(false);
                       setShowCollaboratorModal(true);
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                   >
-                    <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                      <Users className="w-5 h-5" />
+                    <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                      <Users className="w-4 h-4" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-gray-900">Collaborate</div>
-                      <div className="text-xs text-gray-500">Invite team members</div>
+                      <div className="font-bold text-black text-[11px]">Collaborate</div>
+                      <div className="text-[9px] text-black/60">Invite team members</div>
                     </div>
                   </button>
                 )}
@@ -1135,14 +1135,14 @@ export default function DragDropFormBuilder({
                     setShowMobileActions(false);
                     setShowOnboarding(true);
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center gap-2 p-2 rounded-xl bg-white border border-black/20 hover:bg-black/5 transition-colors"
                 >
-                  <div className="p-2 bg-white rounded-lg shadow-sm text-black">
-                    <HelpCircle className="w-5 h-5" />
+                  <div className="p-1.5 bg-white border border-black/30 rounded-lg text-black">
+                    <HelpCircle className="w-4 h-4" />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium text-gray-900">Help & Tour</div>
-                    <div className="text-xs text-gray-500">View guide</div>
+                    <div className="font-bold text-black text-[11px]">Help & Tour</div>
+                    <div className="text-[9px] text-black/60">View guide</div>
                   </div>
                 </button>
 
