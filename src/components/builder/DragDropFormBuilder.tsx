@@ -1764,6 +1764,7 @@ export default function DragDropFormBuilder({
                           <StyleEditor
                             styling={styling}
                             onChange={onStylingChange}
+                            formId={currentFormId || undefined}
                           />
                         </div>
                       )}

@@ -172,6 +172,7 @@ export interface FormStyling {
   fontFamily: "system" | "sans" | "serif" | "mono" | "inter" | "roboto" | "open-sans" | "lato" | "montserrat" | "playfair" | "merriweather" | "courier" | "arial" | "georgia" | "times" | "poppins" | "raleway" | "nunito" | "rubik" | "pt-serif" | "source-serif" | "fira-code" | "jetbrains-mono" | "patrick-hand";
   buttonRadius: number;
   showFieldNumbers?: boolean;
+  headerImage?: string;
 }
 
 // Notification Configuration

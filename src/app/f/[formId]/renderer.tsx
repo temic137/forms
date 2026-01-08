@@ -2023,6 +2023,15 @@ export default function FormRenderer({
 
   return (
     <div role="main">
+      {styling?.headerImage && (
+        <div className="mb-6 rounded-lg overflow-hidden">
+          <img 
+            src={styling.headerImage} 
+            alt={formTitle || "Header"} 
+            className="w-full h-auto object-cover max-h-64"
+          />
+        </div>
+      )}
       {formTitle && (
         <h1 
           className="text-3xl font-bold mb-6"

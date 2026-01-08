@@ -2,10 +2,13 @@
 
 import { FormStyling } from "@/types/form";
 import { useRef, useState } from "react";
+import { Spinner } from "@/components/ui/Spinner";
+import { Upload, X } from "lucide-react";
 
 interface StyleEditorProps {
   styling: FormStyling | undefined;
   onChange: (styling: FormStyling) => void;
+  formId?: string;
 }
 
 const defaultStyling: FormStyling = {
@@ -17,17 +20,61 @@ const defaultStyling: FormStyling = {
   buttonRadius: 8,
 };
 
-export default function StyleEditor({ styling, onChange }: StyleEditorProps) {
+export default function StyleEditor({ styling, onChange, formId }: StyleEditorProps) {
   const currentStyling = styling || defaultStyling;
   const [showPreview, setShowPreview] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const primaryColorRef = useRef<HTMLInputElement>(null);
   const backgroundColorRef = useRef<HTMLInputElement>(null);
   const buttonColorRef = useRef<HTMLInputElement>(null);
   const buttonTextColorRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function updateStyling(patch: Partial<FormStyling>) {
     onChange({ ...currentStyling, ...patch });
   }
+
+  const handleHeaderImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (e.g., 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size exceeds 5MB limit");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("formId", formId || "temp-builder");
+    formData.append("submissionId", "builder-assets");
+    formData.append("fieldId", "header-image");
+    formData.append("acceptedTypes", "images");
+
+    try {
+      const res = await fetch("/api/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await res.json();
+      updateStyling({ headerImage: data.url });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+      // Reset input so the same file can be selected again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   const ColorPicker = ({ 
     label, 
@@ -70,7 +117,55 @@ export default function StyleEditor({ styling, onChange }: StyleEditorProps) {
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
+      {/* Header Image Section */}
+      <div>
+        <h3 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Header Image</h3>
+        <div className="space-y-2">
+          {currentStyling.headerImage ? (
+            <div className="relative rounded-md border border-gray-200 overflow-hidden group">
+              <img 
+                src={currentStyling.headerImage} 
+                alt="Header" 
+                className="w-full h-24 object-cover"
+              />
+              <button
+                onClick={() => updateStyling({ headerImage: undefined })}
+                className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white text-gray-600 hover:text-red-500 transition-colors"
+                title="Remove image"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors"
+            >
+              {uploading ? (
+                <div className="flex flex-col items-center gap-2 text-gray-500">
+                  <Spinner size="sm" />
+                  <span className="text-xs">Uploading...</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-gray-500">
+                  <Upload className="w-5 h-5" />
+                  <span className="text-xs font-medium">Click to upload header image</span>
+                </div>
+              )}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleHeaderImageUpload}
+            disabled={uploading}
+          />
+        </div>
+      </div>
+
       {/* Form Colors Section */}
       <div>
         <h3 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Form Colors</h3>
