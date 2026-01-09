@@ -7,8 +7,37 @@ import FormClosedMessage from "@/components/FormClosedMessage";
 import { formatInTimezone, getLocalTimezone } from "@/lib/timezone";
 import type { FormStyling } from "@/types/form";
 import type { CSSProperties } from "react";
+import { Metadata } from "next";
 
 type Props = { params: Promise<{ formId: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { formId: paramId } = await params;
+  const id = String(paramId || "").trim();
+
+  if (!id) return { title: "Form Not Found" };
+
+  const form = await prisma.form.findUnique({
+    where: { id },
+    select: { title: true }
+  });
+
+  if (!form) return { title: "Form Not Found" };
+
+  return {
+    title: form.title,
+    openGraph: {
+      title: form.title,
+      description: "Fill out this form on AnyForm",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: form.title,
+      description: "Fill out this form on AnyForm",
+    }
+  };
+}
 
 export default async function PublicFormPage({ params }: Props) {
   const { formId: paramId } = await params;
@@ -89,6 +118,19 @@ export default async function PublicFormPage({ params }: Props) {
             }}
           >
             <FormClosedMessage message={closedMessage} />
+            
+            {/* Branding for closed forms */}
+            <div className="mt-6 pt-4 border-t text-center" style={{ borderColor: 'var(--card-border)' }}>
+              <a 
+                href="/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium opacity-60 hover:opacity-100 transition-opacity"
+                style={{ color: 'var(--foreground)' }}
+              >
+                Powered by <strong>AnyForm</strong>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -146,10 +188,21 @@ export default async function PublicFormPage({ params }: Props) {
               />
             </div>
           </ErrorBoundary>
+
+          {/* Powered By Footer */}
+          <div className="mt-8 pt-6 border-t text-center" style={{ borderColor: 'var(--card-border)' }}>
+             <a 
+               href="/" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               className="inline-flex items-center gap-1.5 text-xs font-bold opacity-60 hover:opacity-100 transition-opacity font-paper"
+               style={{ color: 'var(--foreground)' }}
+             >
+               Powered by <strong>AnyForm</strong>
+             </a>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-

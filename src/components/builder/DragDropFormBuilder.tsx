@@ -50,6 +50,8 @@ interface DragDropFormBuilderProps {
   onQuizModeChange?: (config: QuizModeConfig | undefined) => void;
   onLimitOneResponseChange?: (enabled: boolean) => void;
   onSaveAndEditChange?: (enabled: boolean) => void;
+  conversationalMode?: boolean;
+  onConversationalModeChange?: (enabled: boolean) => void;
 
   // Scheduling Props
   closesAt?: string;
@@ -83,6 +85,8 @@ export default function DragDropFormBuilder({
   onQuizModeChange,
   onLimitOneResponseChange,
   onSaveAndEditChange,
+  conversationalMode,
+  onConversationalModeChange,
   onSave,
   onCancel,
   saving = false,
@@ -715,7 +719,7 @@ export default function DragDropFormBuilder({
       notifications: notifications,
       limitOneResponse: limitOneResponse,
       saveAndEdit: saveAndEdit,
-      conversationalMode: false, // Preview always shows standard mode
+      conversationalMode: conversationalMode,
       closesAt: closesAt,
       opensAt: opensAt,
       isClosed: isClosed,
@@ -1506,6 +1510,53 @@ export default function DragDropFormBuilder({
                   {/* General Tab */}
                   {activeSettingsTab === 'general' && (
                     <div className="space-y-6 animate-in fade-in duration-200">
+                      {/* Form Experience - Conversational Mode (Commented out for now) */}
+                      {/* <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Form Experience
+                        </h3>
+                        <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-100">
+                          {onConversationalModeChange && (
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <label className="text-sm text-gray-700 font-medium cursor-pointer" htmlFor="conversational-mode">
+                                    Conversational Mode
+                                  </label>
+                                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide">
+                                    New
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  Present form as a modern chat interface
+                                </p>
+                              </div>
+                              <button
+                                id="conversational-mode"
+                                role="switch"
+                                aria-checked={conversationalMode || false}
+                                onClick={() => {
+                                  if (onConversationalModeChange) {
+                                    onConversationalModeChange(!conversationalMode);
+                                    // Disable multi-step if enabling conversational
+                                    if (!conversationalMode && multiStepConfig?.enabled) {
+                                      onMultiStepConfigChange({ ...multiStepConfig, enabled: false });
+                                    }
+                                  }
+                                }}
+                                className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${conversationalMode ? 'bg-black' : 'bg-gray-200'}`}
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${conversationalMode ? 'translate-x-4' : 'translate-x-0'}`}
+                                />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div> */}
+
                       {/* Multi-page settings */}
                       <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">

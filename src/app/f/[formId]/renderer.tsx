@@ -772,6 +772,9 @@ export default function FormRenderer({
           primaryColor: styling?.primaryColor,
           backgroundColor: styling?.backgroundColor,
           buttonColor: styling?.buttonColor,
+          buttonTextColor: styling?.buttonTextColor,
+          fontFamily: styling?.fontFamily,
+          headerImage: styling?.headerImage,
         }}
       />
     );
@@ -794,6 +797,19 @@ export default function FormRenderer({
         <p style={{ color: 'var(--foreground-muted)' }}>
           Your response has been recorded.
         </p>
+
+        <div className="mt-8 pt-8 border-t border-dashed" style={{ borderColor: 'var(--card-border)' }}>
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+            Want to create a form like this?
+          </p>
+          <a
+            href="/"
+            target="_blank"
+            className="paper-button paper-button-primary inline-flex items-center justify-center px-5 py-2.5 text-sm shadow-sm hover:shadow-md transition-all"
+          >
+            Create Your Own Form
+          </a>
+        </div>
 
         {quizScore && (
           <div className="mt-8 max-w-md mx-auto">

@@ -214,6 +214,20 @@ export default function EmbedFormRenderer({
         <p style={{ color: "var(--foreground-muted)" }}>
           Your response has been submitted successfully.
         </p>
+        
+        <div className="mt-8 pt-6 border-t border-dashed" style={{ borderColor: 'var(--card-border, rgba(0,0,0,0.1))' }}>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+            Want to create a form like this?
+          </p>
+          <a
+            href="/"
+            target="_blank"
+            className="inline-block px-4 py-2 bg-black text-white text-xs font-bold rounded-full hover:bg-gray-800 transition-colors"
+            style={{ fontFamily: 'var(--font-patrick-hand, cursive)' }}
+          >
+            Create Your Own Form
+          </a>
+        </div>
       </div>
     );
   }

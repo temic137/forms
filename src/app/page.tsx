@@ -58,6 +58,7 @@ export default function Home() {
   const [previewNotifications, setPreviewNotifications] = useState<NotificationConfig | undefined>(undefined);
   const [previewMultiStepConfig, setPreviewMultiStepConfig] = useState<MultiStepConfig | undefined>(undefined);
   const [previewQuizMode, setPreviewQuizMode] = useState<QuizModeConfig | undefined>(undefined);
+  const [previewConversationalMode, setPreviewConversationalMode] = useState(false);
   const [limitOneResponse, setLimitOneResponse] = useState(false);
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
@@ -98,6 +99,7 @@ export default function Home() {
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
       setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
+      setPreviewConversationalMode(data.conversationalMode || false);
       setShowBuilder(true);
       if (typeof window !== 'undefined') {
         localStorage.setItem('hasCreatedForm', 'true');
@@ -126,6 +128,7 @@ export default function Home() {
     setPreviewFields([]);
     setPreviewStyling(undefined);
     setPreviewMultiStepConfig(undefined);
+    setPreviewConversationalMode(false);
     setShowBuilder(true);
   };
 
@@ -145,6 +148,7 @@ export default function Home() {
         notifications: previewNotifications,
         multiStepConfig: previewMultiStepConfig,
         quizMode: previewQuizMode,
+        conversationalMode: previewConversationalMode,
         limitOneResponse,
         saveAndEdit
       };
@@ -202,6 +206,7 @@ export default function Home() {
         notifications={previewNotifications}
         multiStepConfig={previewMultiStepConfig}
         quizMode={previewQuizMode}
+        conversationalMode={previewConversationalMode}
         limitOneResponse={limitOneResponse}
         saveAndEdit={saveAndEdit}
         currentFormId={null} // No ID yet as it's not saved
@@ -211,6 +216,7 @@ export default function Home() {
         onNotificationsChange={setPreviewNotifications}
         onMultiStepConfigChange={setPreviewMultiStepConfig}
         onQuizModeChange={setPreviewQuizMode}
+        onConversationalModeChange={setPreviewConversationalMode}
         onLimitOneResponseChange={setLimitOneResponse}
         onSaveAndEditChange={setSaveAndEdit}
         onSave={handleSave}

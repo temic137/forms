@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const [previewNotifications, setPreviewNotifications] = useState<NotificationConfig | undefined>(undefined);
   const [previewMultiStepConfig, setPreviewMultiStepConfig] = useState<MultiStepConfig | undefined>(undefined);
   const [previewQuizMode, setPreviewQuizMode] = useState<QuizModeConfig | undefined>(undefined);
+  const [previewConversationalMode, setPreviewConversationalMode] = useState(false);
   const [limitOneResponse, setLimitOneResponse] = useState(false);
   const [saveAndEdit, setSaveAndEdit] = useState(false);
 
@@ -95,6 +96,7 @@ export default function DashboardPage() {
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
       setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
+      setPreviewConversationalMode(data.conversationalMode || false);
       // Reset scheduling for generated forms
       setClosesAt(undefined);
       setOpensAt(undefined);
@@ -114,6 +116,7 @@ export default function DashboardPage() {
     if (data.notifications !== undefined) setPreviewNotifications(data.notifications);
     if (data.multiStepConfig !== undefined) setPreviewMultiStepConfig(data.multiStepConfig);
     if (data.quizMode !== undefined) setPreviewQuizMode(data.quizMode);
+    if (data.conversationalMode !== undefined) setPreviewConversationalMode(data.conversationalMode);
     if (data.limitOneResponse !== undefined) setLimitOneResponse(data.limitOneResponse);
     if (data.limitOneResponse !== undefined) setLimitOneResponse(data.limitOneResponse);
     if (data.saveAndEdit !== undefined) setSaveAndEdit(data.saveAndEdit);
@@ -157,6 +160,7 @@ export default function DashboardPage() {
       setPreviewMultiStepConfig(previewData.multiStepConfig || undefined);
       // Restore quiz mode configuration
       setPreviewQuizMode(previewData.quizMode || undefined);
+      setPreviewConversationalMode(previewData.conversationalMode || false);
       // Restore other settings
       setLimitOneResponse(previewData.limitOneResponse || false);
       setSaveAndEdit(previewData.saveAndEdit || false);
@@ -204,6 +208,7 @@ export default function DashboardPage() {
     setPreviewStyling(undefined); // Use defaults from StyleEditor
     setPreviewNotifications(undefined);
     setPreviewMultiStepConfig(undefined);
+    setPreviewConversationalMode(false);
     setLimitOneResponse(false);
     setLimitOneResponse(false);
     setSaveAndEdit(false);
@@ -227,6 +232,7 @@ export default function DashboardPage() {
         setPreviewNotifications(data.notifications as NotificationConfig | undefined);
         setPreviewMultiStepConfig(data.multiStepConfig as MultiStepConfig | undefined);
         setPreviewQuizMode(data.quizMode as QuizModeConfig | undefined);
+        setPreviewConversationalMode(data.conversationalMode || false);
         setLimitOneResponse(data.limitOneResponse || false);
         setLimitOneResponse(data.limitOneResponse || false);
         setSaveAndEdit(data.saveAndEdit || false);
@@ -295,6 +301,7 @@ export default function DashboardPage() {
           notifications: previewNotifications,
           multiStepConfig: previewMultiStepConfig,
           quizMode: previewQuizMode,
+          conversationalMode: previewConversationalMode,
           limitOneResponse,
           saveAndEdit,
           closesAt,
@@ -364,6 +371,7 @@ export default function DashboardPage() {
         setPreviewStyling(undefined);
         setPreviewNotifications(undefined);
         setPreviewMultiStepConfig(undefined);
+        setPreviewConversationalMode(false);
         setLimitOneResponse(false);
         setSaveAndEdit(false);
       }
@@ -372,6 +380,7 @@ export default function DashboardPage() {
       setEditingFormId(null);
       setPreviewStyling(undefined);
       setPreviewMultiStepConfig(undefined);
+      setPreviewConversationalMode(false);
       setLimitOneResponse(false);
       setLimitOneResponse(false);
       setSaveAndEdit(false);
@@ -485,6 +494,7 @@ export default function DashboardPage() {
             notifications={previewNotifications}
             multiStepConfig={previewMultiStepConfig}
             quizMode={previewQuizMode}
+            conversationalMode={previewConversationalMode}
             limitOneResponse={limitOneResponse}
             saveAndEdit={saveAndEdit}
             currentFormId={editingFormId}
@@ -494,6 +504,7 @@ export default function DashboardPage() {
             onNotificationsChange={setPreviewNotifications}
             onMultiStepConfigChange={setPreviewMultiStepConfig}
             onQuizModeChange={setPreviewQuizMode}
+            onConversationalModeChange={setPreviewConversationalMode}
             onLimitOneResponseChange={setLimitOneResponse}
             onSaveAndEditChange={setSaveAndEdit}
 
