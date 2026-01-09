@@ -389,7 +389,7 @@ export default function ShareButton({
 
   const embedCode = useMemo(() => {
     const widthAttr = embedWidth.includes("%") ? embedWidth : `${embedWidth}px`;
-    return `<iframe src="${embedUrl}" width="${widthAttr}" height="${embedHeight}" frameborder="0" style="border: none; border-radius: 8px;"></iframe>`;
+    return `<iframe src="${embedUrl}" width="${widthAttr}" height="${embedHeight}" frameborder="0" style="border: none; border-radius: 8px; overflow:hidden;"></iframe><div style="text-align:center; margin-top:8px;"><a href="https://www.anyform.live" target="_blank" style="font-family:sans-serif; font-size:12px; color:#666; text-decoration:none;">Powered by AnyForm</a></div>`;
   }, [embedUrl, embedWidth, embedHeight]);
 
   const handleCopyEmbed = async () => {

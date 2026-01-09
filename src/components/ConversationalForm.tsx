@@ -356,9 +356,15 @@ export default function ConversationalForm({
             
             const toggleOption = (opt: string) => {
                 if (currentSelection.includes(opt)) {
-                    setInputValue(prev => (prev as any[]).filter(v => v !== opt));
+                    setInputValue((prev) => {
+                        const prevArray = Array.isArray(prev) ? prev : [];
+                        return prevArray.filter((v: string) => v !== opt) as any;
+                    });
                 } else {
-                    setInputValue(prev => [...(prev as any[] || []), opt] as any);
+                    setInputValue((prev) => {
+                        const prevArray = Array.isArray(prev) ? prev : [];
+                        return [...prevArray, opt] as any;
+                    });
                 }
             };
 
@@ -445,6 +451,7 @@ export default function ConversationalForm({
 
         // 5. Rating / Opinion Scale / Slider / Ranking
         if (["star-rating", "rating", "opinion-scale", "number", "slider", "ranking"].includes(field.type)) {
+            // @ts-ignore - "rating" might not be in generic Field type but is handled here for backward compatibility
             if (field.type === "star-rating" || field.type === "rating") {
                 return (
                     <div className="flex gap-1 justify-center py-2 animate-in slide-in-from-bottom-4 fade-in duration-500">
@@ -732,7 +739,7 @@ export default function ConversationalForm({
         <div 
             className="flex flex-col h-screen w-full mx-auto max-w-3xl relative overflow-hidden font-sans"
             style={{ 
-                fontFamily: fontFamily !== "inherit" ? fontFamily : undefined,
+                fontFamily: (fontFamily as string) !== "inherit" ? fontFamily : undefined,
                 backgroundColor: backgroundColor
             }}
         >
