@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
+import { prisma } from '@/lib/prisma';
 
-export const runtime = 'edge';
 export const alt = 'Form Preview';
 export const size = {
   width: 1200,
@@ -11,16 +11,15 @@ export const contentType = 'image/png';
 export default async function Image({ params }: { params: Promise<{ formId: string }> }) {
   const { formId } = await params;
 
-  // Fetch form title from API route (since Prisma doesn't work in Edge Runtime)
+  // Fetch form title directly from DB (Node.js runtime allows this)
   let title = 'Form';
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/forms/${formId}`, {
-      cache: 'no-store',
+    const form = await prisma.form.findUnique({
+      where: { id: formId },
+      select: { title: true }
     });
-    if (response.ok) {
-      const data = await response.json();
-      title = data.title || 'Form';
+    if (form?.title) {
+      title = form.title;
     }
   } catch (error) {
     console.error('Failed to fetch form title for OG image:', error);

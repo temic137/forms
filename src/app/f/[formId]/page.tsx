@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FormRenderer from "./renderer";
 import ShareButton from "@/components/ShareButton";
+import FormErrorFallback from "@/components/FormErrorFallback";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import FormClosedMessage from "@/components/FormClosedMessage";
 import { formatInTimezone, getLocalTimezone } from "@/lib/timezone";
@@ -172,22 +173,7 @@ export default async function PublicFormPage({ params }: Props) {
             <ShareButton label="Share" />
           </div>
           <ErrorBoundary
-            fallback={
-              <div className="text-center py-12">
-                <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
-                  Unable to load form
-                </h2>
-                <p className="mb-4" style={{ color: 'var(--foreground-muted)' }}>
-                  There was an error loading this form. Please try refreshing the page.
-                </p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="btn btn-primary"
-                >
-                  Refresh Page
-                </button>
-              </div>
-            }
+            fallback={<FormErrorFallback />}
           >
             <div>
               <FormRenderer
