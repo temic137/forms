@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { prisma } from '@/lib/prisma';
+import fs from 'fs';
+import path from 'path';
 
 export const alt = 'Form Preview';
 export const size = {
@@ -11,7 +13,7 @@ export const contentType = 'image/png';
 export default async function Image({ params }: { params: Promise<{ formId: string }> }) {
   const { formId } = await params;
 
-  // Fetch form title directly from DB (Node.js runtime allows this)
+  // Fetch form title directly from DB
   let title = 'Form';
   try {
     const form = await prisma.form.findUnique({
@@ -25,10 +27,10 @@ export default async function Image({ params }: { params: Promise<{ formId: stri
     console.error('Failed to fetch form title for OG image:', error);
   }
 
-  // Fetch Patrick Hand font
-  const fontData = await fetch(
-    new URL('../../../assets/fonts/PatrickHand-Regular.ttf', import.meta.url)
-  ).then((res) => res.arrayBuffer());
+  // Load Patrick Hand font from the file system
+  // We need to resolve the path relative to the process working directory in production
+  const fontPath = path.join(process.cwd(), 'src/assets/fonts/PatrickHand-Regular.ttf');
+  const fontData = fs.readFileSync(fontPath);
 
   return new ImageResponse(
     (
