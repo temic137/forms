@@ -26,122 +26,222 @@ export default async function Image({ params }: { params: Promise<{ formId: stri
     console.error('Failed to fetch form title for OG image:', error);
   }
 
+  // Fetch Patrick Hand font
+  const fontData = await fetch(
+    new URL('../../../assets/fonts/PatrickHand-Regular.ttf', import.meta.url)
+  ).then((res) => res.arrayBuffer());
+
   return new ImageResponse(
     (
       <div
         style={{
-          background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
+          background: '#ffffff',
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '80px',
-          fontFamily: 'system-ui, sans-serif',
+          padding: '60px',
+          position: 'relative',
         }}
       >
-        {/* Logo/Branding */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            marginBottom: '60px',
-          }}
-        >
-          {/* Form Icon */}
-          <div
-            style={{
-              width: '80px',
-              height: '80px',
-              background: 'white',
-              borderRadius: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '48px',
-            }}
-          >
-            📋
-          </div>
-          <div
-            style={{
-              fontSize: '48px',
-              fontWeight: 900,
-              color: 'white',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            AnyForm
-          </div>
-        </div>
-
-        {/* Form Title */}
-        <div
-          style={{
-            fontSize: '64px',
-            fontWeight: 700,
-            color: 'white',
-            textAlign: 'center',
-            maxWidth: '900px',
-            lineHeight: 1.2,
-            marginBottom: '40px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-          }}
-        >
-          {title}
-        </div>
-
-        {/* Subtitle */}
-        <div
-          style={{
-            fontSize: '32px',
-            color: 'rgba(255, 255, 255, 0.7)',
-            textAlign: 'center',
-            fontWeight: 500,
-          }}
-        >
-          Fill out this form
-        </div>
-
-        {/* Decorative elements */}
+        {/* Subtle dot grid background */}
         <div
           style={{
             position: 'absolute',
-            bottom: '60px',
-            right: '60px',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+            opacity: 0.5,
+          }}
+        />
+
+        {/* Main Card with border */}
+        <div
+          style={{
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            gap: '15px',
-            fontSize: '24px',
-            color: 'rgba(255, 255, 255, 0.5)',
-            fontWeight: 600,
+            justifyContent: 'center',
+            background: '#ffffff',
+            border: '3px solid #000000',
+            borderRadius: '24px',
+            padding: '60px',
+            width: '100%',
+            maxWidth: '1000px',
+            height: '85%',
+            position: 'relative',
+            boxShadow: '0 0 0 rgba(0,0,0,0)',
           }}
         >
+          {/* Logo in top-left */}
           <div
             style={{
-              width: '40px',
-              height: '40px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
+              position: 'absolute',
+              top: '40px',
+              left: '40px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '12px',
             }}
           >
-            ✓
+            {/* AnyForm Logo SVG */}
+            <svg
+              viewBox="0 0 40 40"
+              width="48"
+              height="48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect
+                x="4"
+                y="6"
+                width="28"
+                height="30"
+                rx="3"
+                fill="black"
+                stroke="black"
+                strokeWidth="2"
+              />
+              <path
+                d="M28 6 L32 10 L28 10 Z"
+                fill="white"
+                stroke="black"
+                strokeWidth="1"
+              />
+              <line
+                x1="10"
+                y1="14"
+                x2="26"
+                y2="14"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="10"
+                y1="20"
+                x2="26"
+                y2="20"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="10"
+                y1="26"
+                x2="22"
+                y2="26"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <rect
+                x="10"
+                y="30"
+                width="6"
+                height="6"
+                rx="1"
+                fill="white"
+                stroke="white"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M12 32.5 L13.5 34 L16 31.5"
+                stroke="black"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+            <div
+              style={{
+                fontSize: '36px',
+                fontWeight: 400,
+                color: '#000000',
+                fontFamily: '"Patrick Hand"',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              AnyForm
+            </div>
           </div>
-          Powered by AnyForm
+
+          {/* Form Title - centered */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              maxWidth: '800px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '72px',
+                fontWeight: 400,
+                color: '#000000',
+                lineHeight: 1.1,
+                fontFamily: '"Patrick Hand"',
+                marginBottom: '30px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {title}
+            </div>
+
+            {/* CTA Button */}
+            <div
+              style={{
+                fontSize: '24px',
+                fontWeight: 400,
+                background: '#000000',
+                color: '#ffffff',
+                padding: '16px 48px',
+                borderRadius: '9999px',
+                fontFamily: '"Patrick Hand"',
+              }}
+            >
+              Fill out this form
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '35px',
+              fontSize: '18px',
+              color: 'rgba(0, 0, 0, 0.4)',
+              fontFamily: '"Patrick Hand"',
+              fontWeight: 400,
+            }}
+          >
+            Powered by AnyForm
+          </div>
         </div>
       </div>
     ),
     {
       ...size,
+      fonts: [
+        {
+          name: 'Patrick Hand',
+          data: fontData,
+          style: 'normal',
+          weight: 400,
+        },
+      ],
     }
   );
 }
