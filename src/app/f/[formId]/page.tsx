@@ -24,17 +24,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!form) return { title: "Form Not Found" };
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.anyform.live';
+  const formUrl = `${baseUrl}/f/${id}`;
+  const ogImageUrl = `${baseUrl}/f/${id}/opengraph-image`;
+
   return {
     title: form.title,
+    description: "Fill out this form on AnyForm",
     openGraph: {
       title: form.title,
       description: "Fill out this form on AnyForm",
       type: "website",
+      url: formUrl,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: form.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: form.title,
       description: "Fill out this form on AnyForm",
+      images: [ogImageUrl],
     }
   };
 }
