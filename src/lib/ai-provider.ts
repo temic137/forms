@@ -28,23 +28,35 @@ interface AIResponse {
 
 // Export available Gemini models for easy reference
 export const GEMINI_MODELS = {
-  // Primary Models (Tier 1)
-  PRO: "gemini-2.5-pro",          // 5 RPM
-  FLASH: "gemini-2.5-flash",      // 15 RPM (Best Balance)
-  FLASH_LITE: "gemini-2.5-flash-lite", // 15 RPM (High Volume)
+  // Tier 1: Gemini 3 Preview (Cutting Edge)
+  THREE_PRO: "gemini-3-pro-preview",    // Most Powerful
+  THREE_FLASH: "gemini-3-flash-preview", // Fastest/Best Balance
+
+  // Tier 2: Gemini 2.5 (Stable Backups)
+  PRO: "gemini-2.5-pro",
+  FLASH: "gemini-2.5-flash",
+  FLASH_LITE: "gemini-2.5-flash-lite",
   
-  // Backup Models (Tier 2 - Gemini 2.0 Family)
-  FLASH_2_0: "gemini-2.0-flash",       // 15 RPM
-  FLASH_LITE_2_0: "gemini-2.0-flash-lite", // 15 RPM
-  EXPERIMENTAL: "gemini-2.0-flash-exp", // Experimental
+  // Tier 3: Gemini 2.0 (Deep Backups)
+  FLASH_2_0: "gemini-2.0-flash",
+  FLASH_LITE_2_0: "gemini-2.0-flash-lite",
+  EXPERIMENTAL: "gemini-2.0-flash-exp",
   
   // Legacy Fallback
   FLASH_LEGACY: "gemini-1.5-flash-latest"
 };
 
 const GEMINI_ROTATION = [
+  // Primary: Gemini 3
+  GEMINI_MODELS.THREE_FLASH,
+  GEMINI_MODELS.THREE_PRO,
+  
+  // Secondary: Gemini 2.5
   GEMINI_MODELS.FLASH,
   GEMINI_MODELS.FLASH_LITE,
+  GEMINI_MODELS.PRO,
+  
+  // Tertiary: Gemini 2.0
   GEMINI_MODELS.FLASH_2_0,
   GEMINI_MODELS.FLASH_LITE_2_0,
   GEMINI_MODELS.EXPERIMENTAL
@@ -60,8 +72,8 @@ async function callGemini(options: AICompletionOptions): Promise<string> {
     throw new Error("GOOGLE_AI_API_KEY not configured");
   }
 
-  // Use requested model or default to rotation strategy if generic "gemini" is requested
-  let activeModel = options.model || GEMINI_MODELS.FLASH;
+  // Default to Gemini 3 Flash Preview if no model specified
+  let activeModel = options.model || process.env.GEMINI_MODEL || GEMINI_MODELS.THREE_FLASH;
   
   // Attempt to call Gemini with smart rotation on rate limits
   for (const modelCandidate of [activeModel, ...GEMINI_ROTATION.filter(m => m !== activeModel)]) {
@@ -70,8 +82,8 @@ async function callGemini(options: AICompletionOptions): Promise<string> {
       return await executeGeminiRequest(modelCandidate, apiKey, options);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      if (errorMsg.includes("429") || errorMsg.includes("Rate Limit")) {
-        console.warn(`⚠️ [Gemini] ${modelCandidate} rate limited. Rotating to next model...`);
+      if (errorMsg.includes("429") || errorMsg.includes("Rate Limit") || errorMsg.includes("Not Found") || errorMsg.includes("404")) {
+        console.warn(`⚠️ [Gemini] ${modelCandidate} failed (Rate Limit/Not Found). Rotating to next model...`);
         continue; // Try next model in rotation
       }
       throw error; // If not a rate limit (e.g., invalid key), fail immediately
