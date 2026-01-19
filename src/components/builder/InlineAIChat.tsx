@@ -544,24 +544,24 @@ export default function InlineAIChat({
       {/* Field Picker Modal */}
       {showFieldPicker && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 w-full max-w-md max-h-[70vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
-              <h3 className="font-semibold text-neutral-900">Select a Field</h3>
+          <div className="bg-white rounded-2xl border border-black w-full max-w-md max-h-[70vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-4 py-3 border-b border-black flex items-center justify-between bg-paper">
+              <h3 className="font-bold text-black font-paper text-lg">Select a Field</h3>
               <button
                 onClick={() => setShowFieldPicker(false)}
-                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors"
+                className="p-1.5 text-black/60 hover:text-black hover:bg-gray-100 rounded-full transition-colors border-2 border-transparent hover:border-black"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-neutral-200">
+            <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-black/20">
               {fields.length === 0 ? (
                 <div className="text-center py-12 px-4">
-                  <div className="w-12 h-12 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <MousePointer2 className="w-6 h-6 text-neutral-300" />
+                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-black/20">
+                    <MousePointer2 className="w-6 h-6 text-black/30" />
                   </div>
-                  <p className="text-sm font-medium text-neutral-900">No fields yet</p>
-                  <p className="text-xs text-neutral-500 mt-1">Add fields to your form to reference them here.</p>
+                  <p className="text-sm font-bold text-black font-paper">No fields yet</p>
+                  <p className="text-xs text-black/50 mt-1 font-paper">Add fields to your form to reference them here.</p>
                 </div>
               ) : (
                 <div className="space-y-1">
@@ -571,25 +571,25 @@ export default function InlineAIChat({
                       onClick={() => insertFieldReference(field, index)}
                       onMouseEnter={() => onHighlightField?.(field.id)}
                       onMouseLeave={() => onHighlightField?.(null)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-start gap-3 group ${
+                      className={`w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-start gap-3 group border ${
                         selectedFieldId === field.id
-                          ? "bg-blue-50 border border-blue-100 ring-1 ring-blue-100"
-                          : "hover:bg-neutral-50 border border-transparent hover:border-neutral-100"
+                          ? "bg-blue-50 border-black"
+                          : "bg-transparent border-transparent hover:bg-white hover:border-black"
                       }`}
                     >
-                      <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5 transition-colors ${
-                        selectedFieldId === field.id ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-neutral-500 group-hover:bg-white group-hover:shadow-sm"
+                      <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 transition-colors border-2 ${
+                        selectedFieldId === field.id ? "bg-white text-black border-black" : "bg-gray-100 text-gray-500 border-transparent group-hover:bg-white group-hover:border-black group-hover:text-black"
                       }`}>
                         {index + 1}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${selectedFieldId === field.id ? "text-blue-900" : "text-neutral-900"}`}>
+                        <p className={`text-sm font-bold truncate font-paper ${selectedFieldId === field.id ? "text-black" : "text-black/80"}`}>
                           {field.label}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-neutral-500 capitalize">{field.type.replace("-", " ")}</span>
+                          <span className="text-xs text-black/50 capitalize font-bold font-paper">{field.type.replace("-", " ")}</span>
                           {field.required && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-600 rounded-md font-medium border border-neutral-200">Required</span>
+                            <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-black/70 rounded-md font-bold border border-black/20 font-paper">Required</span>
                           )}
                         </div>
                         
@@ -597,19 +597,19 @@ export default function InlineAIChat({
                         {(field.quizConfig || (field.options && field.options.length > 0)) && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {field.quizConfig?.correctAnswer !== undefined && (
-                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-100 rounded-md font-medium">
+                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded-md font-bold font-paper">
                                 <Check className="w-2.5 h-2.5" />
                                 Answer Set
                               </span>
                             )}
                             {field.quizConfig?.points && (
-                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-md font-medium">
+                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-bold font-paper">
                                 <Award className="w-2.5 h-2.5" />
                                 {field.quizConfig.points} pts
                               </span>
                             )}
                             {field.options?.slice(0, 3).map((opt, i) => (
-                              <span key={i} className="text-[10px] px-1.5 py-0.5 bg-neutral-100 text-neutral-600 rounded-md border border-neutral-200 truncate max-w-[100px]">
+                              <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-black/60 rounded-md border border-black/10 truncate max-w-[100px] font-paper font-bold">
                                 {opt}
                               </span>
                             ))}
@@ -619,15 +619,15 @@ export default function InlineAIChat({
                       
                       {/* Hover Actions */}
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1 items-end">
-                        <span className="text-[10px] font-medium text-neutral-400">Click to select</span>
+                        <span className="text-[10px] font-bold text-black/40 font-paper">Click to select</span>
                       </div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <div className="px-4 py-3 border-t border-neutral-100 bg-neutral-50/50">
-               <p className="text-xs text-neutral-500 text-center">
+            <div className="px-4 py-3 border-t-2 border-black bg-gray-50/50">
+               <p className="text-xs text-black/50 text-center font-bold font-paper">
                 Refers to fields by number (e.g., &quot;Field 1&quot;) for better AI accuracy.
               </p>
             </div>
@@ -635,18 +635,18 @@ export default function InlineAIChat({
         </div>
       )}
 
-      <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-[400px] max-w-full bg-white border-l border-neutral-200 z-50 flex flex-col font-sans shadow-2xl shadow-neutral-200/50">
+      <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-[400px] max-w-full bg-paper border-l border-black z-50 flex flex-col font-paper">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="px-5 py-4 border-b border-black flex items-center justify-between bg-paper sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-neutral-900 text-white flex items-center justify-center shadow-lg shadow-neutral-900/20">
+            <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center border border-black">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-neutral-900 leading-none">AI Designer</h2>
+              <h2 className="text-lg font-bold text-black leading-none">AI Designer</h2>
               <div className="flex items-center gap-1.5 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide">Online</span>
+                <span className="w-2 h-2 rounded-full bg-green-500 border border-black animate-pulse" />
+                <span className="text-[12px] font-bold text-black/60 uppercase tracking-wide">Online</span>
               </div>
             </div>
           </div>
@@ -655,37 +655,37 @@ export default function InlineAIChat({
             {/* History Button */}
             <button
               onClick={() => setShowHistoryPanel(!showHistoryPanel)}
-              className={`p-2 rounded-lg transition-all relative group ${
+              className={`p-2 rounded-lg transition-all relative group border ${
                 history.length > 1
-                  ? "text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100"
-                  : "text-neutral-300 cursor-not-allowed"
+                  ? "border-transparent hover:border-black hover:bg-gray-50 text-black"
+                  : "border-transparent text-gray-300 cursor-not-allowed"
               }`}
               disabled={history.length <= 1}
             >
               <History className="w-4 h-4" />
               {history.length > 1 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full ring-2 ring-white" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full ring-1 ring-white" />
               )}
               {/* Tooltip */}
-              <div className="absolute top-full mt-2 right-0 bg-neutral-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+              <div className="absolute top-full mt-2 right-0 bg-black text-white text-xs py-1 px-2 rounded border border-black opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity font-paper">
                 History
               </div>
             </button>
 
-            <div className="h-4 w-px bg-neutral-200 mx-1" />
+            <div className="h-4 w-px bg-black/20 mx-1" />
 
             {/* Undo Button */}
             <button
               onClick={handleUndo}
               disabled={!canUndo}
-              className={`p-2 rounded-lg transition-all group relative ${
+              className={`p-2 rounded-lg transition-all group relative border ${
                 canUndo
-                  ? "text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100"
-                  : "text-neutral-300 cursor-not-allowed"
+                  ? "border-transparent hover:border-black hover:bg-gray-50 text-black"
+                  : "border-transparent text-gray-300 cursor-not-allowed"
               }`}
             >
               <Undo2 className="w-4 h-4" />
-              <div className="absolute top-full mt-2 right-0 bg-neutral-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+              <div className="absolute top-full mt-2 right-0 bg-black text-white text-xs py-1 px-2 rounded border border-black opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity font-paper">
                 Undo (Ctrl+Z)
               </div>
             </button>
@@ -694,34 +694,34 @@ export default function InlineAIChat({
             <button
               onClick={handleRedo}
               disabled={!canRedo}
-              className={`p-2 rounded-lg transition-all group relative ${
+              className={`p-2 rounded-lg transition-all group relative border-2 ${
                 canRedo
-                  ? "text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100"
-                  : "text-neutral-300 cursor-not-allowed"
+                  ? "border-transparent hover:border-black hover:bg-gray-50 text-black"
+                  : "border-transparent text-gray-300 cursor-not-allowed"
               }`}
             >
               <Redo2 className="w-4 h-4" />
-              <div className="absolute top-full mt-2 right-0 bg-neutral-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+              <div className="absolute top-full mt-2 right-0 bg-black text-white text-xs py-1 px-2 rounded border border-black opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity font-paper">
                 Redo (Ctrl+Y)
               </div>
             </button>
 
-            <div className="h-4 w-px bg-neutral-200 mx-1" />
+            <div className="h-4 w-px bg-black/20 mx-1" />
 
             <button
               onClick={clearChat}
-              className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors group relative"
+              className="p-2 text-black/60 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors group relative border border-transparent hover:border-red-200"
               title="Clear chat"
             >
               <Trash2 className="w-4 h-4" />
-              <div className="absolute top-full mt-2 right-0 bg-neutral-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+              <div className="absolute top-full mt-2 right-0 bg-black text-white text-xs py-1 px-2 rounded border border-black opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity font-paper">
                 Clear Chat
               </div>
             </button>
 
             <button
               onClick={onClose}
-              className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+              className="p-2 text-black/60 hover:text-black hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-black"
             >
               <X className="w-4 h-4" />
             </button>
@@ -730,9 +730,9 @@ export default function InlineAIChat({
 
         {/* Undo/Redo Feedback Toast */}
         {lastChangeDescription && (
-          <div className="absolute top-[70px] left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-neutral-900/90 backdrop-blur text-white text-xs font-medium rounded-full shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in duration-200">
-            <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">
-              <Check className="w-2.5 h-2.5" />
+          <div className="absolute top-[70px] left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black text-white text-sm font-bold font-paper rounded-full flex items-center gap-2 animate-in slide-in-from-top-2 fade-in duration-200 border border-black">
+            <div className="w-5 h-5 rounded-full bg-white text-black flex items-center justify-center border border-black">
+              <Check className="w-3 h-3" />
             </div>
             {lastChangeDescription}
           </div>
@@ -740,12 +740,12 @@ export default function InlineAIChat({
 
         {/* History Panel */}
         {showHistoryPanel && history.length > 1 && (
-          <div className="bg-neutral-50/50 border-b border-neutral-200 max-h-60 overflow-y-auto shadow-inner">
-            <div className="sticky top-0 bg-neutral-50/95 backdrop-blur px-4 py-2 border-b border-neutral-200 flex items-center justify-between z-10">
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Version History</span>
+          <div className="bg-paper border-b border-black max-h-60 overflow-y-auto">
+            <div className="sticky top-0 bg-paper px-4 py-2 border-b border-black flex items-center justify-between z-10">
+              <span className="text-xs font-bold text-black uppercase tracking-wider font-paper">Version History</span>
               <button
                 onClick={() => setShowHistoryPanel(false)}
-                className="text-neutral-400 hover:text-neutral-900"
+                className="text-black/60 hover:text-black"
               >
                 <ChevronUp className="w-3.5 h-3.5" />
               </button>
@@ -760,39 +760,39 @@ export default function InlineAIChat({
                     onClick={() => jumpToHistoryState(actualIndex)}
                     className={`w-full px-3 py-2.5 text-left flex items-center gap-3 rounded-xl transition-all border ${
                       isCurrent 
-                        ? "bg-white border-neutral-200 shadow-sm ring-1 ring-neutral-100" 
-                        : "border-transparent hover:bg-white hover:border-neutral-200 hover:shadow-sm"
+                        ? "bg-white border-black" 
+                        : "border-transparent hover:bg-white hover:border-black/50"
                     }`}
                   >
                     <div className="flex flex-col items-center gap-0.5">
-                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border ${
+                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold border ${
                         isCurrent 
-                          ? "bg-neutral-900 text-white border-neutral-900" 
-                          : "bg-white text-neutral-500 border-neutral-200"
+                          ? "bg-black text-white border-black" 
+                          : "bg-white text-black border-black/30"
                       }`}>
                         {actualIndex + 1}
                       </span>
                       {reverseIndex !== history.length - 1 && (
-                        <div className="w-px h-2 bg-neutral-200" />
+                        <div className="w-px h-2 bg-black/20" />
                       )}
                     </div>
                    
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium truncate ${isCurrent ? "text-neutral-900" : "text-neutral-600"}`}>
+                      <p className={`text-sm font-bold truncate font-paper ${isCurrent ? "text-black" : "text-black/70"}`}>
                         {state.description || "Form modification"}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-neutral-400 font-mono">
+                        <span className="text-[10px] text-black/50 font-paper font-bold">
                           {formatHistoryTime(state.timestamp)}
                         </span>
-                        <span className="text-[10px] text-neutral-400">
+                        <span className="text-[10px] text-black/50 font-paper font-bold">
                           • {state.fields.length} fields
                         </span>
                       </div>
                     </div>
                     
                     {isCurrent && (
-                      <span className="px-2 py-0.5 bg-neutral-900 text-white text-[10px] rounded-full font-medium">
+                      <span className="px-2 py-0.5 bg-black text-white text-[10px] rounded-full font-bold font-paper">
                         Current
                       </span>
                     )}
@@ -805,19 +805,19 @@ export default function InlineAIChat({
 
         {/* Selected Field Indicator */}
         {selectedFieldId && (
-          <div className="px-4 py-2.5 bg-blue-50/50 border-b border-blue-100 flex items-center gap-3 animate-in slide-in-from-top-1">
-            <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-              <Target className="w-3.5 h-3.5" />
+          <div className="px-4 py-2.5 bg-blue-50 border-b border-black flex items-center gap-3 animate-in slide-in-from-top-1">
+            <div className="w-8 h-8 rounded-lg bg-white border border-black flex items-center justify-center text-black">
+              <Target className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-blue-600/80 font-medium">Focusing on</p>
-              <p className="text-sm font-semibold text-blue-900 truncate">
+              <p className="text-xs text-black/60 font-bold font-paper">Focusing on</p>
+              <p className="text-sm font-bold text-black truncate font-paper">
                 {fields.find(f => f.id === selectedFieldId)?.label || "Selected Field"}
               </p>
             </div>
             <button
               onClick={() => onFieldSelect?.(null)}
-              className="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-md transition-colors"
+              className="px-2 py-1 text-xs font-bold text-black bg-white border border-black hover:bg-gray-50 rounded-lg transition-colors font-paper"
             >
               Clear Focus
             </button>
@@ -825,53 +825,53 @@ export default function InlineAIChat({
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-neutral-200 hover:scrollbar-thumb-neutral-300">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-black/20 hover:scrollbar-thumb-black/40">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-4">
-              <div className="w-16 h-16 rounded-2xl bg-neutral-900 text-white flex items-center justify-center shadow-xl shadow-neutral-900/10 mb-6 rotate-3 hover:rotate-6 transition-transform">
+              <div className="w-16 h-16 rounded-2xl bg-black text-white flex items-center justify-center border border-black mb-6 rotate-3 hover:rotate-6 transition-transform">
                 <Sparkles className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold text-neutral-900 mb-2">
+              <h3 className="text-xl font-bold text-black mb-2 font-paper">
                 AI Form Designer
               </h3>
-              <p className="text-sm text-neutral-500 max-w-[260px] leading-relaxed mb-8">
+              <p className="text-base text-black/60 max-w-[260px] leading-relaxed mb-8 font-paper font-bold">
                 I can help you build your form, configure quizzes, and organize fields. Just ask naturally!
               </p>
               
-              <div className="grid grid-cols-1 gap-2 w-full max-w-xs">
+              <div className="grid grid-cols-1 gap-3 w-full max-w-xs">
                 {/* Quick Start Cards */}
                 <button 
                   onClick={() => handleQuickAction("Create a contact form with name, email, and message")}
-                  className="p-3 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all text-left group"
+                  className="p-3 rounded-xl bg-white border border-black hover:-translate-y-0.5 transition-all text-left group"
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Zap className="w-4 h-4 text-amber-500" />
-                    <span className="text-xs font-semibold text-neutral-900">Quick Start</span>
+                    <Zap className="w-4 h-4 text-black" />
+                    <span className="text-sm font-bold text-black font-paper">Quick Start</span>
                   </div>
-                  <p className="text-sm text-neutral-600 group-hover:text-neutral-900">&quot;Create a contact form&quot;</p>
+                  <p className="text-sm text-black/70 font-paper font-bold group-hover:text-black">&quot;Create a contact form&quot;</p>
                 </button>
 
                 <button 
                   onClick={() => handleQuickAction("Add a multiple choice question about product satisfaction")}
-                  className="p-3 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all text-left group"
+                  className="p-3 rounded-xl bg-white border border-black hover:-translate-y-0.5 transition-all text-left group"
                 >
                    <div className="flex items-center gap-2 mb-1">
-                    <Plus className="w-4 h-4 text-blue-500" />
-                    <span className="text-xs font-semibold text-neutral-900">Add Fields</span>
+                    <Plus className="w-4 h-4 text-black" />
+                    <span className="text-sm font-bold text-black font-paper">Add Fields</span>
                   </div>
-                  <p className="text-sm text-neutral-600 group-hover:text-neutral-900">&quot;Add a satisfaction question&quot;</p>
+                  <p className="text-sm text-black/70 font-paper font-bold group-hover:text-black">&quot;Add a satisfaction question&quot;</p>
                 </button>
 
                 {quizModeEnabled && (
                   <button 
                     onClick={() => handleQuickAction("Make question 1 worth 10 points and set option A as correct")}
-                    className="p-3 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all text-left group"
+                    className="p-3 rounded-xl bg-white border border-black hover:-translate-y-0.5 transition-all text-left group"
                   >
                      <div className="flex items-center gap-2 mb-1">
-                      <GraduationCap className="w-4 h-4 text-purple-500" />
-                      <span className="text-xs font-semibold text-neutral-900">Quiz Mode</span>
+                      <GraduationCap className="w-4 h-4 text-black" />
+                      <span className="text-sm font-bold text-black font-paper">Quiz Mode</span>
                     </div>
-                    <p className="text-sm text-neutral-600 group-hover:text-neutral-900">&quot;Set points and answers&quot;</p>
+                    <p className="text-sm text-black/70 font-paper font-bold group-hover:text-black">&quot;Set points and answers&quot;</p>
                   </button>
                 )}
               </div>
@@ -884,32 +884,32 @@ export default function InlineAIChat({
               >
                 <div
                   className={`
-                    relative max-w-[90%] rounded-2xl p-4 shadow-sm
+                    relative max-w-[90%] rounded-2xl p-4 font-paper
                     ${message.role === "user"
-                      ? "bg-neutral-900 text-white"
-                      : "bg-white border border-neutral-200 text-neutral-800"
+                      ? "bg-black text-white"
+                      : "bg-white border border-black text-black"
                     }
                   `}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap">{message.content}</p>
                   
                   {/* Modifications List */}
                   {message.modifications && message.modifications.length > 0 && (
-                    <div className={`mt-3 pt-3 border-t space-y-1.5 ${message.role === "user" ? "border-neutral-800" : "border-neutral-100"}`}>
-                      <p className={`text-[10px] font-semibold uppercase tracking-wider mb-2 ${message.role === "user" ? "text-neutral-500" : "text-neutral-400"}`}>
+                    <div className={`mt-3 pt-3 border-t-2 space-y-1.5 ${message.role === "user" ? "border-white/20" : "border-black/10"}`}>
+                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${message.role === "user" ? "text-white/70" : "text-black/50"}`}>
                         Actions Taken
                       </p>
                       {message.modifications.map((mod, i) => (
                         <div
                           key={i}
-                          className={`flex items-start gap-2 text-xs p-2 rounded-lg ${
+                          className={`flex items-start gap-2 text-xs font-bold p-2 rounded-lg border ${
                             message.role === "user" 
-                              ? "bg-neutral-800/50 text-neutral-200" 
-                              : "bg-neutral-50 text-neutral-700"
+                              ? "bg-white/10 text-white border-white/20" 
+                              : "bg-gray-50 text-black border-black/10"
                           }`}
                         >
-                          <div className={`mt-0.5 p-1 rounded-md ${
-                             message.role === "user" ? "bg-neutral-700" : "bg-white border border-neutral-200"
+                          <div className={`mt-0.5 p-1 rounded-md border ${
+                             message.role === "user" ? "bg-black border-white/20" : "bg-white border-black/20"
                           }`}>
                             {getModificationIcon(mod.action)}
                           </div>
@@ -919,8 +919,8 @@ export default function InlineAIChat({
                     </div>
                   )}
                   
-                  <div className={`text-[10px] mt-2 flex items-center justify-end opacity-60 ${
-                    message.role === "user" ? "text-neutral-400" : "text-neutral-400"
+                  <div className={`text-[10px] font-bold mt-2 flex items-center justify-end opacity-60 ${
+                    message.role === "user" ? "text-white/70" : "text-black/50"
                   }`}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
@@ -931,16 +931,16 @@ export default function InlineAIChat({
           
           {isLoading && (
             <div className="flex justify-start w-full">
-              <div className="bg-white border border-neutral-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-3">
+              <div className="bg-white border border-black rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-3">
                 <Spinner size="sm" />
-                <span className="text-sm text-neutral-500 animate-pulse">Designing...</span>
+                <span className="text-sm font-bold text-black font-paper animate-pulse">Designing...</span>
               </div>
             </div>
           )}
 
           {error && (
             <div className="flex justify-center w-full">
-              <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-2 text-xs font-medium flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-2 text-xs font-bold font-paper flex items-center gap-2">
                 <X className="w-3.5 h-3.5" />
                 {error}
               </div>
@@ -951,7 +951,7 @@ export default function InlineAIChat({
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t border-neutral-200">
+        <div className="p-4 bg-paper border-t border-black">
           
           {/* Quick Actions / Suggestions Scroll */}
           {messages.length > 0 && (
@@ -960,10 +960,10 @@ export default function InlineAIChat({
                 <button
                   key={i}
                   onClick={() => handleQuickAction(action)}
-                  className={`flex-shrink-0 text-xs px-3 py-1.5 rounded-full border transition-all whitespace-nowrap font-medium ${
+                  className={`flex-shrink-0 text-xs px-3 py-1.5 rounded-full border transition-all whitespace-nowrap font-bold font-paper ${
                     action === "Undo last change" 
-                      ? "border-neutral-300 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 hover:border-neutral-400" 
-                      : "border-neutral-200 bg-white text-neutral-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50"
+                      ? "border-black bg-gray-100 text-black hover:bg-gray-200" 
+                      : "border-black/20 bg-white text-black/70 hover:border-black hover:text-black hover:bg-gray-50"
                   }`}
                 >
                   {action === "Undo last change" && <Undo2 className="w-3 h-3 inline mr-1.5 -mt-0.5" />}
@@ -976,13 +976,13 @@ export default function InlineAIChat({
           <div className="relative flex flex-col gap-2">
             {/* Quiz Quick Actions Toggle Panel */}
             {showQuizQuickActions && quizModeEnabled && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border border-neutral-200 shadow-xl p-2 animate-in slide-in-from-bottom-2 z-20">
-                <div className="flex items-center justify-between px-2 py-1 mb-2 border-b border-neutral-100">
-                  <span className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-purple-500" />
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border border-black p-2 animate-in slide-in-from-bottom-2 z-20">
+                <div className="flex items-center justify-between px-2 py-1 mb-2 border-b border-black/10">
+                  <span className="text-xs font-bold text-black flex items-center gap-1.5 font-paper">
+                    <GraduationCap className="w-3.5 h-3.5 text-black" />
                     Quiz Commands
                   </span>
-                  <button onClick={() => setShowQuizQuickActions(false)} className="text-neutral-400 hover:text-neutral-900">
+                  <button onClick={() => setShowQuizQuickActions(false)} className="text-black/40 hover:text-black">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
@@ -995,12 +995,12 @@ export default function InlineAIChat({
                         setShowQuizQuickActions(false);
                         inputRef.current?.focus();
                       }}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 rounded-lg transition-colors text-left group"
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors text-left group border border-transparent hover:border-black/10"
                     >
-                      <div className="w-6 h-6 rounded-md bg-neutral-100 text-neutral-500 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
+                      <div className="w-6 h-6 rounded-md bg-white border border-black/20 text-black/60 flex items-center justify-center group-hover:border-black group-hover:text-black transition-all">
                         <qa.icon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-xs font-medium text-neutral-700 group-hover:text-neutral-900">{qa.label}</span>
+                      <span className="text-xs font-bold text-black/70 group-hover:text-black font-paper">{qa.label}</span>
                     </button>
                   ))}
                 </div>
@@ -1018,7 +1018,7 @@ export default function InlineAIChat({
                   : quizModeEnabled
                     ? "Ask to set answers, points, or add questions..."
                     : "Describe the form you want to build..."}
-                className="w-full min-h-[50px] max-h-[120px] resize-none rounded-xl border border-neutral-300 bg-white pl-4 pr-12 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all shadow-sm"
+                className="w-full min-h-[50px] max-h-[120px] resize-none rounded-xl border border-black bg-white pl-4 pr-12 py-3 text-sm font-bold text-black placeholder:text-black/40 focus:outline-none transition-all font-paper"
                 style={{ height: input ? 'auto' : '50px' }}
               />
               
@@ -1027,10 +1027,10 @@ export default function InlineAIChat({
                  {quizModeEnabled && fields.length > 0 && (
                   <button
                     onClick={() => setShowQuizQuickActions(!showQuizQuickActions)}
-                    className={`p-1.5 rounded-lg transition-colors ${
+                    className={`p-1.5 rounded-lg transition-colors border ${
                       showQuizQuickActions 
-                        ? "bg-purple-100 text-purple-700" 
-                        : "text-neutral-400 hover:text-purple-600 hover:bg-purple-50"
+                        ? "bg-purple-100 text-purple-900 border-purple-200" 
+                        : "border-transparent text-black/40 hover:text-black hover:bg-gray-50 hover:border-black/20"
                     }`}
                     title="Quiz commands"
                   >
@@ -1042,23 +1042,23 @@ export default function InlineAIChat({
                 {fields.length > 0 && (
                   <button
                     onClick={() => setShowFieldPicker(true)}
-                    className="p-1.5 rounded-lg text-neutral-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                    className="p-1.5 rounded-lg text-black/40 hover:text-black hover:bg-gray-50 transition-colors border border-transparent hover:border-black/20"
                     title="Reference a field"
                   >
                     <MousePointer2 className="w-4 h-4" />
                   </button>
                 )}
                 
-                <div className="w-px h-4 bg-neutral-200 mx-1" />
+                <div className="w-px h-4 bg-black/20 mx-1" />
 
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim() || isLoading}
                   className={`
-                    p-2 rounded-lg transition-all
+                    p-2 rounded-lg transition-all border
                     ${input.trim() && !isLoading
-                      ? "bg-neutral-900 text-white hover:bg-neutral-800 shadow-md transform hover:-translate-y-0.5"
-                      : "bg-neutral-100 text-neutral-300 cursor-not-allowed"
+                      ? "bg-black text-white border-black hover:bg-gray-800 transform hover:-translate-y-0.5"
+                      : "bg-gray-100 text-gray-400 border-transparent cursor-not-allowed"
                     }
                   `}
                 >
@@ -1067,7 +1067,7 @@ export default function InlineAIChat({
               </div>
             </div>
             
-            <p className="text-[10px] text-neutral-400 text-center font-medium">
+            <p className="text-[10px] text-black/40 text-center font-bold font-paper">
               Press Enter to send, Shift+Enter for new line
             </p>
           </div>
