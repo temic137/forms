@@ -9,6 +9,7 @@
  * With smart stage skipping for latency optimization
  */
 
+import { getAICompletion, GEMINI_MODELS } from './ai-provider';
 import { executeWithFallback, ModelPurpose } from './ai-models';
 import { analyzeFieldTypes, FULL_FIELD_PALETTE, FieldTypeKey } from './semantic-field-analyzer';
 import { enhanceQuestionsWithAI } from './question-enhancer';
@@ -104,7 +105,7 @@ const DEFAULT_CONFIG: PipelineConfig = {
 // STAGE 1: CONTENT ANALYSIS
 // ============================================================================
 
-async function analyzeContent(prompt: string, userContext?: string): Promise<ContentAnalysis> {
+async function analyzeContent(prompt: string, userContext?: string, model: string = GEMINI_MODELS.FLASH_LITE): Promise<ContentAnalysis> {
   const systemPrompt = `You are an expert form strategist. Analyze the user's request to understand:
 1. What type of form they need
 2. Who the audience is
@@ -148,8 +149,7 @@ Return JSON:
   "confidence": 0.0-1.0
 }`;
 
-  const result = await executeWithFallback({
-    purpose: 'content-analysis',
+  const result = await getAICompletion({
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -157,7 +157,7 @@ Return JSON:
     temperature: 0.3,
     maxTokens: 1500,
     responseFormat: 'json',
-    timeoutMs: 3000,
+    model: model
   });
 
   const parsed = JSON.parse(result.content);
@@ -206,7 +206,8 @@ async function generateFormStructure(
   prompt: string,
   analysis: ContentAnalysis,
   questionCount?: number,
-  referenceData?: string
+  referenceData?: string,
+  model?: string
 ): Promise<{ title: string; fields: FormField[]; quizMode?: GeneratedForm['quizMode'] }> {
   
   // Enhanced logging to debug reference data
@@ -345,8 +346,7 @@ Return the form as valid JSON.`;
   const purpose: ModelPurpose = (analysis.isQuiz && referenceData) ? 'quiz-generation' : 'form-generation';
   console.log(`   🎯 Model purpose: ${purpose}`);
 
-  const result = await executeWithFallback({
-    purpose,
+  const result = await getAICompletion({
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -354,7 +354,7 @@ Return the form as valid JSON.`;
     temperature: analysis.isQuiz ? 0.4 : 0.3,
     maxTokens: 6000,
     responseFormat: 'json',
-    timeoutMs: 8000,
+    model: model // Use the specific model passed to the function
   });
 
   const parsed = JSON.parse(result.content);
@@ -529,12 +529,15 @@ export async function runFormGenerationPipeline(
   // STAGE 1: Content Analysis (Sequential - must complete first)
   // ════════════════════════════════════════════════════════════════════════
   console.log('\n📊 STAGE 1: CONTENT ANALYSIS');
-  console.log('   🤖 Model: llama-3.1-8b-instant (fast classifier)');
+  console.log(`   🤖 Model: ${GEMINI_MODELS.FLASH_LITE} (fast classifier)`);
   const stage1Start = Date.now();
-  const analysis = await analyzeContent(input.prompt, input.userContext);
+  
+  // Use Flash-Lite for analysis (High volume, 15 RPM)
+  const analysis = await analyzeContent(input.prompt, input.userContext); // analyzeContent needs update to accept model
+  
   const stage1Time = Date.now() - stage1Start;
   stagesCompleted.push('content-analysis');
-  modelsUsed.push('llama-3.1-8b-instant');
+  modelsUsed.push(GEMINI_MODELS.FLASH_LITE);
 
   console.log(`   ⏱️  Completed in ${stage1Time}ms`);
   console.log(`   📋 Results:`);
@@ -556,15 +559,20 @@ export async function runFormGenerationPipeline(
   // ════════════════════════════════════════════════════════════════════════
   // STAGE 2: Form Structure Generation (Sequential - needs analysis)
   // ════════════════════════════════════════════════════════════════════════
-  const stage2Model = analysis.isQuiz && input.referenceData ? 'llama-4-scout-17b' : 'llama-3.3-70b-versatile';
+  // Use Gemini 2.5 Flash for generation (Best balance, 15 RPM)
+  // AVOID Pro (5 RPM) to prevent rate limits during hackathon demos
+  const stage2Model = GEMINI_MODELS.FLASH;
   console.log('\n🏗️  STAGE 2: FORM STRUCTURE GENERATION');
   console.log(`   🤖 Model: ${stage2Model} (high-quality generator)`);
   const stage2Start = Date.now();
+  
+  // Pass model to generateFormStructure
   const { title, fields: rawFields, quizMode } = await generateFormStructure(
     input.prompt,
     analysis,
     input.questionCount,
-    input.referenceData
+    input.referenceData,
+    stage2Model
   );
   const stage2Time = Date.now() - stage2Start;
   stagesCompleted.push('form-generation');
@@ -592,8 +600,8 @@ export async function runFormGenerationPipeline(
   if (config.parallelOptimization && !shouldSkipOptimization && !shouldSkipEnhancement) {
     console.log('\n⚡ STAGE 3+4: PARALLEL OPTIMIZATION');
     console.log('   Running in PARALLEL mode for faster results');
-    console.log('   🤖 Stage 3 Model: llama-3.1-8b-instant (field optimizer)');
-    console.log('   🤖 Stage 4 Model: kimi-k2-instruct (question enhancer)');
+    console.log(`   🤖 Stage 3 Model: ${GEMINI_MODELS.FLASH_LITE} (field optimizer)`);
+    console.log(`   🤖 Stage 4 Model: ${GEMINI_MODELS.FLASH_LITE} (question enhancer)`);
     const parallelStart = Date.now();
 
     // Run field optimization and question enhancement in parallel
@@ -649,31 +657,31 @@ export async function runFormGenerationPipeline(
     console.log(`      • Question enhancements: ${labelChanges}`);
 
     stagesCompleted.push('field-optimization', 'question-enhancement');
-    modelsUsed.push('llama-3.1-8b-instant', 'kimi-k2-instruct');
+    modelsUsed.push(GEMINI_MODELS.FLASH_LITE);
   } else {
     // Run stages sequentially or skip
     if (!shouldSkipOptimization) {
       console.log('\n🔧 STAGE 3: FIELD TYPE OPTIMIZATION (Sequential)');
-      console.log('   🤖 Model: llama-3.1-8b-instant (field analyzer)');
+      console.log(`   🤖 Model: ${GEMINI_MODELS.FLASH_LITE} (field analyzer)`);
       const stage3Start = Date.now();
       optimizedFields = await optimizeFieldTypes(rawFields, analysis.formType);
       const stage3Time = Date.now() - stage3Start;
       console.log(`   ⏱️  Completed in ${stage3Time}ms`);
       stagesCompleted.push('field-optimization');
-      modelsUsed.push('llama-3.1-8b-instant');
+      modelsUsed.push(GEMINI_MODELS.FLASH_LITE);
     } else {
       console.log('\n⏭️  STAGE 3: SKIPPED (simple form or disabled)');
     }
 
     if (!shouldSkipEnhancement) {
       console.log('\n✨ STAGE 4: QUESTION ENHANCEMENT (Sequential)');
-      console.log('   🤖 Model: kimi-k2-instruct (creative enhancer)');
+      console.log(`   🤖 Model: ${GEMINI_MODELS.FLASH_LITE} (creative enhancer)`);
       const stage4Start = Date.now();
       optimizedFields = await enhanceQuestions(optimizedFields, analysis, config);
       const stage4Time = Date.now() - stage4Start;
       console.log(`   ⏱️  Completed in ${stage4Time}ms`);
       stagesCompleted.push('question-enhancement');
-      modelsUsed.push('kimi-k2-instruct');
+      modelsUsed.push(GEMINI_MODELS.FLASH_LITE);
     } else {
       console.log('\n⏭️  STAGE 4: SKIPPED (simple form or disabled)');
     }

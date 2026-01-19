@@ -26,6 +26,30 @@ interface AIResponse {
   provider: AIProvider;
 }
 
+// Export available Gemini models for easy reference
+export const GEMINI_MODELS = {
+  // Primary Models (Tier 1)
+  PRO: "gemini-2.5-pro",          // 5 RPM
+  FLASH: "gemini-2.5-flash",      // 15 RPM (Best Balance)
+  FLASH_LITE: "gemini-2.5-flash-lite", // 15 RPM (High Volume)
+  
+  // Backup Models (Tier 2 - Gemini 2.0 Family)
+  FLASH_2_0: "gemini-2.0-flash",       // 15 RPM
+  FLASH_LITE_2_0: "gemini-2.0-flash-lite", // 15 RPM
+  EXPERIMENTAL: "gemini-2.0-flash-exp", // Experimental
+  
+  // Legacy Fallback
+  FLASH_LEGACY: "gemini-1.5-flash-latest"
+};
+
+const GEMINI_ROTATION = [
+  GEMINI_MODELS.FLASH,
+  GEMINI_MODELS.FLASH_LITE,
+  GEMINI_MODELS.FLASH_2_0,
+  GEMINI_MODELS.FLASH_LITE_2_0,
+  GEMINI_MODELS.EXPERIMENTAL
+];
+
 /**
  * Google Gemini API Client (FREE - Best for complex reasoning)
  * Get key from: https://makersuite.google.com/app/apikey
@@ -36,9 +60,28 @@ async function callGemini(options: AICompletionOptions): Promise<string> {
     throw new Error("GOOGLE_AI_API_KEY not configured");
   }
 
-  // Use Gemini 1.5 Flash (free tier, very fast and capable)
-  const model = options.model || "gemini-1.5-flash-latest";
+  // Use requested model or default to rotation strategy if generic "gemini" is requested
+  let activeModel = options.model || GEMINI_MODELS.FLASH;
   
+  // Attempt to call Gemini with smart rotation on rate limits
+  for (const modelCandidate of [activeModel, ...GEMINI_ROTATION.filter(m => m !== activeModel)]) {
+    try {
+      console.log(`🔷 [Gemini] Using model: ${modelCandidate}`);
+      return await executeGeminiRequest(modelCandidate, apiKey, options);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes("429") || errorMsg.includes("Rate Limit")) {
+        console.warn(`⚠️ [Gemini] ${modelCandidate} rate limited. Rotating to next model...`);
+        continue; // Try next model in rotation
+      }
+      throw error; // If not a rate limit (e.g., invalid key), fail immediately
+    }
+  }
+
+  throw new Error("All Gemini models exhausted due to rate limits.");
+}
+
+async function executeGeminiRequest(model: string, apiKey: string, options: AICompletionOptions): Promise<string> {
   // Convert messages to Gemini format
   const contents = options.messages
     .filter(m => m.role !== "system") // System messages go in systemInstruction
@@ -80,6 +123,10 @@ async function callGemini(options: AICompletionOptions): Promise<string> {
 
   if (!response.ok) {
     const error = await response.text();
+    // Specifically catch 429 (Rate Limit) errors for better fallback handling
+    if (response.status === 429) {
+      throw new Error(`Gemini Rate Limit Exceeded (429): ${error}`);
+    }
     throw new Error(`Gemini API error: ${error}`);
   }
 
@@ -240,15 +287,15 @@ async function callCohere(options: AICompletionOptions): Promise<string> {
  */
 export async function getAICompletion(options: AICompletionOptions): Promise<AIResponse> {
   // Try providers in order of quality/speed for form generation
-  // Cohere is prioritized for structured JSON generation (excellent for forms)
+  // Gemini is prioritized for the Gemini 3 Hackathon
   const providers: { name: AIProvider; fn: () => Promise<string> }[] = [
-    {
-      name: "cohere",
-      fn: () => callCohere(options),
-    },
     {
       name: "gemini",
       fn: () => callGemini(options),
+    },
+    {
+      name: "cohere",
+      fn: () => callCohere(options),
     },
     {
       name: "together",
@@ -274,7 +321,14 @@ export async function getAICompletion(options: AICompletionOptions): Promise<AIR
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.log(`✗ ${provider.name} failed: ${errorMsg}`);
+      
+      // Smart logging for rate limits vs other errors
+      if (errorMsg.includes("Rate Limit") || errorMsg.includes("429")) {
+        console.warn(`⚠️ ${provider.name} rate limited, switching to fallback...`);
+      } else {
+        console.log(`✗ ${provider.name} failed: ${errorMsg}`);
+      }
+      
       errors.push({ provider: provider.name, error: errorMsg });
       // Continue to next provider
     }

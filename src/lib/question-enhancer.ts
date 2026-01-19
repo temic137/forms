@@ -5,7 +5,7 @@
  * add variation, and enhance user experience
  */
 
-import { executeWithFallback } from './ai-models';
+import { getAICompletion, GEMINI_MODELS } from './ai-provider';
 
 // ============================================================================
 // QUESTION ENHANCEMENT TYPES
@@ -221,8 +221,7 @@ Return a JSON array with one result per input question, in the same order.`;
     console.log('         🤖 [Question Enhancer] Calling AI model for creative enhancement...');
     const startTime = Date.now();
     
-    const result = await executeWithFallback({
-      purpose: 'question-enhancement',
+    const result = await getAICompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -230,7 +229,7 @@ Return a JSON array with one result per input question, in the same order.`;
       temperature: 0.6, // Higher for creativity
       maxTokens: 3000,
       responseFormat: 'json',
-      timeoutMs: 4000,
+      model: GEMINI_MODELS.FLASH_LITE // Use Flash-Lite for enhancement
     });
 
     const elapsed = Date.now() - startTime;
@@ -333,8 +332,7 @@ For each question:
 Return JSON array with enhanced questions.`;
 
   try {
-    const result = await executeWithFallback({
-      purpose: 'quiz-generation',
+    const result = await getAICompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -342,7 +340,7 @@ Return JSON array with enhanced questions.`;
       temperature: 0.4,
       maxTokens: 4000,
       responseFormat: 'json',
-      timeoutMs: 6000,
+      model: GEMINI_MODELS.FLASH_LITE // Use Flash-Lite for quiz enhancement
     });
 
     const parsed = JSON.parse(result.content);
@@ -430,8 +428,7 @@ For each question:
 Return JSON array with analysis and enhancements.`;
 
   try {
-    const result = await executeWithFallback({
-      purpose: 'form-generation',
+    const result = await getAICompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -439,7 +436,7 @@ Return JSON array with analysis and enhancements.`;
       temperature: 0.3,
       maxTokens: 3000,
       responseFormat: 'json',
-      timeoutMs: 5000,
+      model: GEMINI_MODELS.FLASH_LITE // Use Flash-Lite for survey enhancement
     });
 
     const parsed = JSON.parse(result.content);

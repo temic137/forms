@@ -5,7 +5,7 @@
  * from the full field palette (30+ types)
  */
 
-import { executeWithFallback } from './ai-models';
+import { getAICompletion, GEMINI_MODELS } from './ai-provider';
 
 // ============================================================================
 // FIELD TYPE DEFINITIONS (Full Palette)
@@ -274,8 +274,7 @@ Remember:
 - Return valid JSON only`;
 
   try {
-    const result = await executeWithFallback({
-      purpose: 'quiz-generation',
+    const result = await getAICompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -283,7 +282,7 @@ Remember:
       temperature: 0.3,
       maxTokens: 500,
       responseFormat: 'json',
-      timeoutMs: 3000,
+      model: GEMINI_MODELS.FLASH_LITE // Use Flash-Lite for simple option generation
     });
 
     const parsed = JSON.parse(result.content);
@@ -345,8 +344,7 @@ ${questionsText}
 Return a JSON array with one object per question, in the same order.`;
 
   try {
-    const result = await executeWithFallback({
-      purpose: 'quiz-generation',
+    const result = await getAICompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -354,7 +352,7 @@ Return a JSON array with one object per question, in the same order.`;
       temperature: 0.3,
       maxTokens: 2000,
       responseFormat: 'json',
-      timeoutMs: 5000,
+      model: GEMINI_MODELS.FLASH_LITE // Use Flash-Lite for batch option generation
     });
 
     const parsed = JSON.parse(result.content);
@@ -487,8 +485,7 @@ Return a JSON array with one result per input field, in the same order.`;
     console.log('         🤖 [Semantic Analyzer] Calling AI model for semantic analysis...');
     const startTime = Date.now();
     
-    const result = await executeWithFallback({
-      purpose: 'field-optimization',
+    const result = await getAICompletion({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -496,7 +493,7 @@ Return a JSON array with one result per input field, in the same order.`;
       temperature: 0.2,
       maxTokens: 3000,
       responseFormat: 'json',
-      timeoutMs: 5000,
+      model: GEMINI_MODELS.FLASH_LITE // Use Flash-Lite for semantic analysis
     });
 
     const elapsed = Date.now() - startTime;
