@@ -105,16 +105,25 @@ export default function DragDropFormBuilder({
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
 
-  const DISPLAY_ONLY_FIELD_TYPES = new Set([
-    "display-text",
-    "h1",
-    "heading",
-    "paragraph",
-    "banner",
-    "divider",
-    "image",
-    "video",
-  ]);
+  // Scroll to highlighted field
+  useEffect(() => {
+    if (highlightedFieldId) {
+      // Small delay to ensure DOM is updated
+      const timeoutId = setTimeout(() => {
+        const element = document.getElementById(`field-${highlightedFieldId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Clear highlight after 2 seconds
+          const clearTimer = setTimeout(() => {
+            setHighlightedFieldId(null);
+          }, 2000);
+          return () => clearTimeout(clearTimer);
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [highlightedFieldId]);
 
   const fieldDisplayNumbers = useMemo(() => {
     const map = new Map<string, number>();
@@ -1246,7 +1255,7 @@ export default function DragDropFormBuilder({
                             {pageFields.map((field, fieldIndexInPage) => {
                               const globalIndex = fields.findIndex(f => f.id === field.id);
                               return (
-                                <div key={field.id}>
+                                <div key={field.id} id={`field-${field.id}`}>
                                   <DraggableField
                                     field={field}
                                     index={globalIndex}
@@ -1326,7 +1335,7 @@ export default function DragDropFormBuilder({
                     </div>
 
                     {fields.map((field, index) => (
-                      <div key={field.id}>
+                      <div key={field.id} id={`field-${field.id}`}>
                         <DraggableField
                           field={field}
                           index={index}
@@ -1846,6 +1855,20 @@ export default function DragDropFormBuilder({
             </div>
           </>
         )}
+
+        {/* Inline AI Chat Panel */}
+        <InlineAIChat
+          isOpen={showAIChat}
+          onClose={() => setShowAIChat(false)}
+          formTitle={formTitle}
+          fields={fields}
+          onFieldsChange={onFieldsChange}
+          onFormTitleChange={onFormTitleChange}
+          selectedFieldId={selectedFieldId || undefined}
+          onFieldSelect={setSelectedFieldId}
+          onHighlightField={setHighlightedFieldId}
+          quizModeEnabled={quizMode?.enabled}
+        />
       </div>
 
       {/* AI Suggestions Modal for Follow-up Questions */}
@@ -1944,19 +1967,6 @@ export default function DragDropFormBuilder({
         )
       }
 
-      {/* Inline AI Chat Panel */}
-      <InlineAIChat
-        isOpen={showAIChat}
-        onClose={() => setShowAIChat(false)}
-        formTitle={formTitle}
-        fields={fields}
-        onFieldsChange={onFieldsChange}
-        onFormTitleChange={onFormTitleChange}
-        selectedFieldId={selectedFieldId || undefined}
-        onFieldSelect={setSelectedFieldId}
-        onHighlightField={setHighlightedFieldId}
-        quizModeEnabled={quizMode?.enabled}
-      />
     </div>
   );
 }

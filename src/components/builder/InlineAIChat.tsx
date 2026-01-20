@@ -235,6 +235,7 @@ export default function InlineAIChat({
   const applyModifications = useCallback((modifications: FieldModification[], newTitle?: string) => {
     let updatedFields = [...fields];
     const changeDescriptions: string[] = [];
+    let lastModifiedFieldId: string | null = null;
 
     for (const mod of modifications) {
       switch (mod.action) {
@@ -254,6 +255,8 @@ export default function InlineAIChat({
               quizConfig: mod.field.quizConfig,
             };
             
+            lastModifiedFieldId = newField.id;
+
             // Check if insertIndex is specified for positional insert
             if (typeof mod.insertIndex === "number") {
               // Insert at specific position
@@ -281,6 +284,7 @@ export default function InlineAIChat({
               return f;
             });
             changeDescriptions.push(`Updated "${fieldToUpdate?.label || "field"}"`);
+            lastModifiedFieldId = mod.fieldId;
           }
           break;
 
@@ -299,6 +303,7 @@ export default function InlineAIChat({
               const [field] = updatedFields.splice(fieldIndex, 1);
               updatedFields.splice(mod.newIndex, 0, field);
               changeDescriptions.push(`Reordered "${field.label}"`);
+              lastModifiedFieldId = mod.fieldId;
             }
           }
           break;
@@ -319,6 +324,7 @@ export default function InlineAIChat({
               return f;
             });
             changeDescriptions.push(`Set quiz config for "${fieldToConfig?.label || "field"}"`);
+            lastModifiedFieldId = mod.fieldId;
           }
           break;
       }
@@ -338,7 +344,15 @@ export default function InlineAIChat({
       onFormTitleChange(newTitle);
       setPendingDescription(prev => prev ? `${prev}, Changed title` : "Changed title");
     }
-  }, [fields, onFieldsChange, onFormTitleChange]);
+
+    // Highlight the modified field
+    if (lastModifiedFieldId && onHighlightField) {
+      // Small delay to allow render
+      setTimeout(() => {
+        onHighlightField(lastModifiedFieldId);
+      }, 50);
+    }
+  }, [fields, onFieldsChange, onFormTitleChange, onHighlightField]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -545,7 +559,7 @@ export default function InlineAIChat({
       {showFieldPicker && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl border border-black w-full max-w-md max-h-[70vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-4 py-3 border-b border-black flex items-center justify-between bg-paper">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
               <h3 className="font-bold text-black font-paper text-lg">Select a Field</h3>
               <button
                 onClick={() => setShowFieldPicker(false)}
@@ -554,10 +568,10 @@ export default function InlineAIChat({
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-black/20">
+            <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300">
               {fields.length === 0 ? (
                 <div className="text-center py-12 px-4">
-                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-black/20">
+                  <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-gray-200">
                     <MousePointer2 className="w-6 h-6 text-black/30" />
                   </div>
                   <p className="text-sm font-bold text-black font-paper">No fields yet</p>
@@ -626,7 +640,7 @@ export default function InlineAIChat({
                 </div>
               )}
             </div>
-            <div className="px-4 py-3 border-t-2 border-black bg-gray-50/50">
+            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
                <p className="text-xs text-black/50 text-center font-bold font-paper">
                 Refers to fields by number (e.g., &quot;Field 1&quot;) for better AI accuracy.
               </p>
@@ -635,9 +649,9 @@ export default function InlineAIChat({
         </div>
       )}
 
-      <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-[400px] max-w-full bg-paper border-l border-black z-50 flex flex-col font-paper">
+      <div className="fixed lg:absolute inset-y-0 right-0 w-full sm:w-96 max-w-full bg-white border-l border-gray-200 z-50 flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-black flex items-center justify-between bg-paper sticky top-0 z-10">
+        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center border border-black">
               <Sparkles className="w-4 h-4" />
@@ -740,8 +754,8 @@ export default function InlineAIChat({
 
         {/* History Panel */}
         {showHistoryPanel && history.length > 1 && (
-          <div className="bg-paper border-b border-black max-h-60 overflow-y-auto">
-            <div className="sticky top-0 bg-paper px-4 py-2 border-b border-black flex items-center justify-between z-10">
+          <div className="bg-white border-b border-gray-200 max-h-60 overflow-y-auto">
+            <div className="sticky top-0 bg-white px-4 py-2 border-b border-gray-200 flex items-center justify-between z-10">
               <span className="text-xs font-bold text-black uppercase tracking-wider font-paper">Version History</span>
               <button
                 onClick={() => setShowHistoryPanel(false)}
@@ -805,7 +819,7 @@ export default function InlineAIChat({
 
         {/* Selected Field Indicator */}
         {selectedFieldId && (
-          <div className="px-4 py-2.5 bg-blue-50 border-b border-black flex items-center gap-3 animate-in slide-in-from-top-1">
+          <div className="px-4 py-2.5 bg-blue-50 border-b border-gray-200 flex items-center gap-3 animate-in slide-in-from-top-1">
             <div className="w-8 h-8 rounded-lg bg-white border border-black flex items-center justify-center text-black">
               <Target className="w-4 h-4" />
             </div>
@@ -825,7 +839,7 @@ export default function InlineAIChat({
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-black/20 hover:scrollbar-thumb-black/40">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-4">
               <div className="w-16 h-16 rounded-2xl bg-black text-white flex items-center justify-center border border-black mb-6 rotate-3 hover:rotate-6 transition-transform">
@@ -951,7 +965,7 @@ export default function InlineAIChat({
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-paper border-t border-black">
+        <div className="p-4 bg-white border-t border-gray-200">
           
           {/* Quick Actions / Suggestions Scroll */}
           {messages.length > 0 && (
@@ -1018,7 +1032,7 @@ export default function InlineAIChat({
                   : quizModeEnabled
                     ? "Ask to set answers, points, or add questions..."
                     : "Describe the form you want to build..."}
-                className="w-full min-h-[50px] max-h-[120px] resize-none rounded-xl border border-black bg-white pl-4 pr-12 py-3 text-sm font-bold text-black placeholder:text-black/40 focus:outline-none transition-all font-paper"
+                className="w-full min-h-[50px] max-h-[120px] resize-none rounded-xl border border-gray-300 bg-white pl-4 pr-12 py-3 text-sm font-bold text-black placeholder:text-black/40 focus:outline-none focus:border-black transition-all font-paper"
                 style={{ height: input ? 'auto' : '50px' }}
               />
               
