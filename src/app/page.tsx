@@ -276,7 +276,7 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-black mb-6 leading-tight">
-              Skip the grunt work
+             Build forms instantly
             </h1>
 
             <AnimatedLandingDescription />
