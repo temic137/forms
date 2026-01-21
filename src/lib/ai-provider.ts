@@ -73,7 +73,7 @@ async function callGemini(options: AICompletionOptions): Promise<string> {
   }
 
   // Default to Gemini 3 Flash Preview if no model specified
-  let activeModel = options.model || process.env.GEMINI_MODEL || GEMINI_MODELS.THREE_FLASH;
+  const activeModel = options.model || process.env.GEMINI_MODEL || GEMINI_MODELS.THREE_FLASH;
   
   // Attempt to call Gemini with smart rotation on rate limits
   for (const modelCandidate of [activeModel, ...GEMINI_ROTATION.filter(m => m !== activeModel)]) {
@@ -157,7 +157,12 @@ async function callGroq(options: AICompletionOptions): Promise<string> {
   }
 
   const groq = new Groq({ apiKey });
-  const model = options.model || "llama-3.3-70b-versatile";
+  
+  // If model is a Gemini model (fallback scenario), use Groq default
+  let model = options.model;
+  if (!model || model.startsWith("gemini")) {
+    model = "llama-3.3-70b-versatile";
+  }
 
   type GroqMessage = {
     role: "system" | "user" | "assistant";
@@ -187,7 +192,11 @@ async function callTogether(options: AICompletionOptions): Promise<string> {
   }
 
   // Use Qwen 2.5 72B (very capable, fast, free tier)
-  const model = options.model || "Qwen/Qwen2.5-72B-Instruct-Turbo";
+  // If model is a Gemini model (fallback scenario), use Together default
+  let model = options.model;
+  if (!model || model.startsWith("gemini")) {
+    model = "Qwen/Qwen2.5-72B-Instruct-Turbo";
+  }
 
   const requestBody: Record<string, unknown> = {
     model,
@@ -235,7 +244,11 @@ async function callCohere(options: AICompletionOptions): Promise<string> {
 
   // Use Command R or Command R+ (free tier models, excellent for structured tasks)
   // Available models: command, command-r, command-r-plus, command-r7b-12-2024
-  const model = options.model || "command";
+  // If model is a Gemini model (fallback scenario), use Cohere default
+  let model = options.model;
+  if (!model || model.startsWith("gemini")) {
+    model = "command";
+  }
 
   // Combine system and user messages for Cohere
   const systemMessage = options.messages.find(m => m.role === "system")?.content || "";
