@@ -37,14 +37,32 @@ interface ChatResponse {
 }
 
 const VALID_FIELD_TYPES: FieldType[] = [
+  // Text Inputs
   "short-answer", "long-answer", "text", "textarea",
-  "email", "phone", "address",
+  
+  // Contact Info
+  "email", "phone", "address", "tel",
+  
+  // Numbers
   "number", "currency",
-  "multiple-choice", "choices", "dropdown", "multiselect", "checkbox", "checkboxes", "radio", "select",
-  "date", "time", "date-picker",
-  "star-rating", "slider", "opinion-scale", "ranking",
+  
+  // Choices & Selection
+  "multiple-choice", "choices", "dropdown", "picture-choice", "multiselect", "checkbox", "checkboxes", "radio", "select", "switch", "choice-matrix",
+  
+  // Date & Time
+  "date", "time", "date-picker", "datetime-picker", "time-picker", "date-range",
+  
+  // Rating & Ranking
+  "ranking", "star-rating", "slider", "opinion-scale",
+  
+  // Display Elements
+  "display-text", "h1", "heading", "paragraph", "banner", "divider", "html", "image", "video",
+  
+  // File Uploads
   "file", "file-uploader",
-  "display-text", "heading", "paragraph", "divider",
+  
+  // Other
+  "url", "color-picker", "password", "signature", "voice-recording", "submission-picker", "subform", "captcha", "location", "table", "section-collapse", "pdf-viewer", "social-links"
 ];
 
 export async function POST(req: NextRequest) {
@@ -154,14 +172,15 @@ YOUR CAPABILITIES:
 10. Batch operations on multiple fields
 
 VALID FIELD TYPES:
-- Text inputs: "short-answer", "long-answer", "text", "textarea"
-- Contact: "email", "phone", "address"
+- Text inputs: "short-answer", "long-answer", "text", "textarea", "password", "url"
+- Contact: "email", "phone", "address", "tel", "social-links"
 - Numbers: "number", "currency"
-- Choices: "multiple-choice", "dropdown", "multiselect", "checkbox", "checkboxes", "radio", "select"
-- Date/Time: "date", "time", "date-picker"
+- Choices: "multiple-choice", "dropdown", "multiselect", "checkbox", "checkboxes", "radio", "select", "switch", "picture-choice", "choice-matrix"
+- Date/Time: "date", "time", "date-picker", "datetime-picker", "time-picker", "date-range"
 - Rating: "star-rating", "slider", "opinion-scale", "ranking"
-- Files: "file", "file-uploader"
-- Display: "display-text", "heading", "paragraph", "divider"
+- Files: "file", "file-uploader", "signature", "voice-recording"
+- Display: "display-text", "heading", "h1", "paragraph", "divider", "banner", "html", "image", "video", "pdf-viewer"
+- Advanced: "color-picker", "submission-picker", "subform", "captcha", "location", "table", "section-collapse"
 
 RESPONSE FORMAT (JSON):
 {
