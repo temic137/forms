@@ -4,9 +4,8 @@
  */
 
 import Groq from "groq-sdk";
-import { CohereClient } from "cohere-ai";
 
-export type AIProvider = "gemini" | "groq" | "together" | "huggingface" | "cohere";
+export type AIProvider = "gemini" | "groq";
 
 interface AIMessage {
   role: "system" | "user" | "assistant";
@@ -19,6 +18,7 @@ interface AICompletionOptions {
   maxTokens?: number;
   responseFormat?: "json" | "text";
   model?: string;
+  preferredProvider?: AIProvider;
 }
 
 interface AIResponse {
@@ -182,132 +182,6 @@ async function callGroq(options: AICompletionOptions): Promise<string> {
 }
 
 /**
- * Together AI Client (FREE tier available - Good open source models)
- * Get key from: https://api.together.xyz/settings/api-keys
- */
-async function callTogether(options: AICompletionOptions): Promise<string> {
-  const apiKey = process.env.TOGETHER_API_KEY;
-  if (!apiKey) {
-    throw new Error("TOGETHER_API_KEY not configured");
-  }
-
-  // Use Qwen 2.5 72B (very capable, fast, free tier)
-  // If model is a Gemini model (fallback scenario), use Together default
-  let model = options.model;
-  if (!model || model.startsWith("gemini")) {
-    model = "Qwen/Qwen2.5-72B-Instruct-Turbo";
-  }
-
-  const requestBody: Record<string, unknown> = {
-    model,
-    messages: options.messages,
-    temperature: options.temperature || 0.2,
-    max_tokens: options.maxTokens || 3000,
-  };
-
-  if (options.responseFormat === "json") {
-    requestBody.response_format = { type: "json_object" };
-  }
-
-  const response = await fetch("https://api.together.xyz/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Together AI error: ${error}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-/**
- * Cohere API Client (FREE tier - Excellent for structured generation)
- * Get key from: https://dashboard.cohere.com/api-keys
- * Free tier: 100 requests/min, great for form generation
- */
-async function callCohere(options: AICompletionOptions): Promise<string> {
-  const apiKey = process.env.COHERE_API_KEY;
-  if (!apiKey) {
-    throw new Error("COHERE_API_KEY not configured");
-  }
-
-  const cohere = new CohereClient({
-    token: apiKey,
-  });
-
-  // Use Command R or Command R+ (free tier models, excellent for structured tasks)
-  // Available models: command, command-r, command-r-plus, command-r7b-12-2024
-  // If model is a Gemini model (fallback scenario), use Cohere default
-  let model = options.model;
-  if (!model || model.startsWith("gemini")) {
-    model = "command";
-  }
-
-  // Combine system and user messages for Cohere
-  const systemMessage = options.messages.find(m => m.role === "system")?.content || "";
-  const userMessages = options.messages.filter(m => m.role !== "system");
-  
-  // Build the full prompt combining system and user messages
-  let prompt = "";
-  if (systemMessage) {
-    prompt = `${systemMessage}\n\n`;
-  }
-  
-  // Combine all user messages
-  for (const msg of userMessages) {
-    if (msg.role === "user") {
-      prompt += `${msg.content}\n\n`;
-    } else if (msg.role === "assistant") {
-      prompt += `Assistant: ${msg.content}\n\n`;
-    }
-  }
-  
-  // For JSON format, add explicit instruction
-  if (options.responseFormat === "json") {
-    prompt += "\n\nIMPORTANT: Respond with ONLY valid JSON. No markdown, no code blocks, no explanatory text. Just the raw JSON object.";
-  }
-
-  try {
-    // Use Cohere's generate endpoint for better structured output
-    const response = await cohere.generate({
-      model,
-      prompt: prompt.trim(),
-      temperature: options.temperature || 0.3,
-      maxTokens: options.maxTokens || 3000,
-    });
-
-    let content = response.generations?.[0]?.text || "";
-    
-    // If JSON format is requested, try to extract JSON from the response
-    if (options.responseFormat === "json") {
-      // Try to extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-      if (jsonMatch) {
-        content = jsonMatch[1];
-      } else {
-        // Try to find JSON object in the response
-        const jsonObjectMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonObjectMatch) {
-          content = jsonObjectMatch[0];
-        }
-      }
-    }
-
-    return content.trim();
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Cohere API error: ${errorMsg}`);
-  }
-}
-
-/**
  * Main AI completion function with automatic provider fallback
  */
 export async function getAICompletion(options: AICompletionOptions): Promise<AIResponse> {
@@ -319,18 +193,19 @@ export async function getAICompletion(options: AICompletionOptions): Promise<AIR
       fn: () => callGemini(options),
     },
     {
-      name: "cohere",
-      fn: () => callCohere(options),
-    },
-    {
-      name: "together",
-      fn: () => callTogether(options),
-    },
-    {
       name: "groq",
       fn: () => callGroq(options),
     },
   ];
+
+  // If a preferred provider is specified, move it to the front
+  if (options.preferredProvider) {
+    const preferredIndex = providers.findIndex(p => p.name === options.preferredProvider);
+    if (preferredIndex > 0) {
+      const [preferred] = providers.splice(preferredIndex, 1);
+      providers.unshift(preferred);
+    }
+  }
 
   const errors: Array<{ provider: AIProvider; error: string }> = [];
 
@@ -371,14 +246,8 @@ export async function getAICompletion(options: AICompletionOptions): Promise<AIR
 export function getAvailableProviders(): AIProvider[] {
   const available: AIProvider[] = [];
   
-  if (process.env.COHERE_API_KEY) {
-    available.push("cohere");
-  }
   if (process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY) {
     available.push("gemini");
-  }
-  if (process.env.TOGETHER_API_KEY) {
-    available.push("together");
   }
   if (process.env.GROQ_API_KEY) {
     available.push("groq");
@@ -397,4 +266,3 @@ export function getGroqClient() {
   }
   return new Groq({ apiKey });
 }
-

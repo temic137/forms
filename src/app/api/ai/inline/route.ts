@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
       temperature: 0.7,
       maxTokens: 1000,
       responseFormat,
+      preferredProvider: "groq",
     });
 
     // Parse JSON response

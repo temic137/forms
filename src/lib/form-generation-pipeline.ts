@@ -10,9 +10,57 @@
  */
 
 import { getAICompletion, GEMINI_MODELS } from './ai-provider';
-import { executeWithFallback, ModelPurpose } from './ai-models';
+import { ModelPurpose } from './ai-models';
 import { analyzeFieldTypes, FULL_FIELD_PALETTE, FieldTypeKey } from './semantic-field-analyzer';
 import { enhanceQuestionsWithAI } from './question-enhancer';
+
+// ============================================================================
+// HELPER: ROBUST JSON PARSING
+// ============================================================================
+
+function cleanAndParseJSON(text: string, context: string): unknown {
+  if (!text) {
+    throw new Error(`Empty response received from AI in ${context}`);
+  }
+
+  // 1. Try direct parse
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Continue to cleanup
+  }
+
+  // 2. Extract JSON from markdown code blocks
+  const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[1]);
+    } catch {
+      // Continue
+    }
+  }
+
+  // 3. Find first { and last } to handle surrounding text
+  const firstOpen = text.indexOf('{');
+  const lastClose = text.lastIndexOf('}');
+  
+  if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
+    const cleaned = text.substring(firstOpen, lastClose + 1);
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      // Continue
+    }
+  }
+
+  // 4. If we're here, parsing failed. Log the content for debugging.
+  console.error(`❌ JSON Parse Failed in ${context}:`);
+  console.error(`   Content length: ${text.length}`);
+  console.error(`   Preview: ${text.substring(0, 200)}...`);
+  console.error(`   End: ...${text.substring(text.length - 200)}`);
+  
+  throw new Error(`Failed to parse JSON in ${context}. See logs for content.`);
+}
 
 // ============================================================================
 // PIPELINE TYPES
@@ -160,7 +208,8 @@ Return JSON:
     model: model
   });
 
-  const parsed = JSON.parse(result.content);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parsed = cleanAndParseJSON(result.content, 'analyzeContent') as any;
 
   return {
     purpose: parsed.purpose || 'Form data collection',
@@ -354,12 +403,13 @@ Return the form as valid JSON.`;
       { role: 'user', content: userPrompt },
     ],
     temperature: analysis.isQuiz ? 0.4 : 0.3,
-    maxTokens: 6000,
+    maxTokens: 4000, // Reduced from 6000 to avoid timeouts
     responseFormat: 'json',
     model: effectiveModel // Use Gemini 3 Pro for complex tasks, or passed model (Gemini 3 Flash)
   });
 
-  const parsed = JSON.parse(result.content);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parsed = cleanAndParseJSON(result.content, 'generateFormStructure') as any;
 
   // Normalize fields
   const fields: FormField[] = (parsed.fields || []).map((f: Record<string, unknown>, idx: number) => {
