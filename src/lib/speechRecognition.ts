@@ -451,8 +451,9 @@ export class SpeechRecognitionService {
 
     this.restartAttempts++;
 
-    // Delay before restarting - longer for iOS Safari to avoid rapid loops
-    const restartDelay = this.isIOS ? 300 : 150;
+    // IMPROVED: Longer delay before restarting to reduce flickering
+    // iOS Safari needs even longer delay to avoid rapid restart loops
+    const restartDelay = this.isIOS ? 500 : 300;
 
     this.restartTimeout = setTimeout(() => {
       if (this.shouldAutoRestart && this.config) {

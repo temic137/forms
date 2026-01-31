@@ -79,6 +79,11 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
   const mobileRetryCountRef = useRef(0);
   const maxMobileRetries = 3;
   
+  // Mobile UI stability - prevent flickering during auto-restarts
+  const isUserInitiatedRef = useRef(false);
+  const errorDisplayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastErrorTimeRef = useRef<number>(0);
+  
   // Initialize service once using useMemo
   const service = useMemo(() => {
     if (typeof window !== 'undefined') {
@@ -117,6 +122,11 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
       // Clear no-speech timeout
       if (noSpeechTimeoutRef.current) {
         clearTimeout(noSpeechTimeoutRef.current);
+      }
+      
+      // Clear error display timeout
+      if (errorDisplayTimeoutRef.current) {
+        clearTimeout(errorDisplayTimeoutRef.current);
       }
       
       // Cleanup on unmount
@@ -217,16 +227,44 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
    * Handle speech recognition errors
    */
   const handleError = useCallback((voiceError: VoiceError) => {
-    // On mobile, some errors are expected and should trigger retry
-    if (isMobile && voiceError.type === 'no-speech' && mobileRetryCountRef.current < maxMobileRetries) {
-      mobileRetryCountRef.current++;
-      console.log(`Mobile: no-speech error, retry ${mobileRetryCountRef.current}/${maxMobileRetries}`);
-      // Don't set error state for mobile no-speech, let it restart
-      return;
+    const now = Date.now();
+    
+    // On mobile, filter out transient errors during auto-restart
+    if (isMobile) {
+      // Don't show errors for no-speech during auto-retry
+      if (voiceError.type === 'no-speech' && mobileRetryCountRef.current < maxMobileRetries) {
+        mobileRetryCountRef.current++;
+        console.log(`Mobile: no-speech error, retry ${mobileRetryCountRef.current}/${maxMobileRetries}`);
+        return;
+      }
+      
+      // Don't show aborted errors on mobile - these are normal during restarts
+      if (voiceError.type === 'aborted') {
+        console.log('Mobile: aborted error (ignoring - expected during restart)');
+        return;
+      }
+      
+      // Prevent error spam - show error only if last error was > 2 seconds ago
+      if (now - lastErrorTimeRef.current < 2000) {
+        console.log('Mobile: suppressing rapid error display');
+        return;
+      }
+    }
+    
+    lastErrorTimeRef.current = now;
+    
+    // Clear any pending error timeout
+    if (errorDisplayTimeoutRef.current) {
+      clearTimeout(errorDisplayTimeoutRef.current);
     }
     
     setError(voiceError);
-    setIsListening(false);
+    
+    // Only update listening state if this is a user-initiated action
+    // Don't flicker the UI during automatic restarts
+    if (isUserInitiatedRef.current || !isMobile) {
+      setIsListening(false);
+    }
     
     // Reset mobile retry count on actual error
     mobileRetryCountRef.current = 0;
@@ -241,6 +279,13 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     // Notify parent component of error
     if (onErrorCallback) {
       onErrorCallback(voiceError);
+    }
+    
+    // On mobile, keep error visible for at least 3 seconds so user can read it
+    if (isMobile && voiceError.type !== 'permission-denied') {
+      errorDisplayTimeoutRef.current = setTimeout(() => {
+        setError(null);
+      }, 3000);
     }
   }, [onErrorCallback, isMobile]);
 
@@ -322,6 +367,15 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     // Clear any previous errors
     setError(null);
     
+    // Clear error display timeout
+    if (errorDisplayTimeoutRef.current) {
+      clearTimeout(errorDisplayTimeoutRef.current);
+      errorDisplayTimeoutRef.current = null;
+    }
+    
+    // Mark this as user-initiated
+    isUserInitiatedRef.current = true;
+    
     // Reset mobile retry count
     mobileRetryCountRef.current = 0;
 
@@ -377,6 +431,9 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
    * Stop listening for speech input
    */
   const stopListening = useCallback(() => {
+    // Mark this as user-initiated stop
+    isUserInitiatedRef.current = false;
+    
     // Clear no-speech timeout
     if (noSpeechTimeoutRef.current) {
       clearTimeout(noSpeechTimeoutRef.current);
