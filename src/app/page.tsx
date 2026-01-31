@@ -12,8 +12,12 @@ const DragDropFormBuilder = dynamic(() => import("@/components/builder/DragDropF
   loading: () => <div className="min-h-screen flex items-center justify-center"><Spinner size="lg" variant="primary" /></div>,
   ssr: false
 });
+const VoiceModeLazy = dynamic(() => import("@/components/voice/VoiceModeLazy"), {
+  loading: () => <div className="p-6"><Spinner size="md" variant="primary" /></div>,
+  ssr: false
+});
 import { Spinner } from "@/components/ui/Spinner";
-import { Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText, Zap, Brain, Shield, BarChart3, Palette, Code2, Clock, Users } from "lucide-react";
+import { Sparkles, Globe, Trash2, Upload, X, Edit2, Camera, FileJson, Check, Minus, ArrowRight, AlertCircle, FileText, Zap, Brain, Shield, BarChart3, Palette, Code2, Clock, Users, Mic } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
@@ -68,6 +72,7 @@ export default function Home() {
   // Help popup and onboarding state
   const [showHelpPopup, setShowHelpPopup] = useState(false);
   const [hasCreatedForm, setHasCreatedForm] = useState(false);
+  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
 
   // Check if user has created a form before (for progressive disclosure)
   useEffect(() => {
@@ -310,20 +315,39 @@ export default function Home() {
 
 
               <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="relative">
-                  <textarea
-                    id="landing-prompt-input"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onPaste={(e) => setQuery(e.currentTarget.value)}
-                    placeholder={placeholderExamples[placeholderIndex]}
-                    className="w-full px-3 py-3 text-sm paper-input resize-none bg-white"
-                    style={{
-                      minHeight: '80px',
-                    }}
-                    disabled={loading}
-                  />
-                </div>
+                {/* Voice Mode Inline */}
+                {isVoiceModeActive ? (
+                  <div className="bg-white border-2 border-black/20 rounded-xl p-4 sm:p-6">
+                    <VoiceModeLazy
+                      inline
+                      onTranscriptComplete={(transcript) => {
+                        setQuery(transcript);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsVoiceModeActive(false)}
+                      className="mt-3 text-xs sm:text-sm font-bold text-black/60 hover:text-black font-paper underline touch-manipulation min-h-[44px] flex items-center"
+                    >
+                      ← Switch to typing
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <textarea
+                      id="landing-prompt-input"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onPaste={(e) => setQuery(e.currentTarget.value)}
+                      placeholder={placeholderExamples[placeholderIndex]}
+                      className="w-full px-3 py-3 text-sm paper-input resize-none bg-white"
+                      style={{
+                        minHeight: '80px',
+                      }}
+                      disabled={loading}
+                    />
+                  </div>
+                )}
 
                 {/* Attachments Area */}
                 <div className="space-y-2 flex flex-col items-center">
@@ -409,6 +433,20 @@ export default function Home() {
                       {attachedUrl ? (<span className="hidden sm:inline">URL Attached</span>) : (<span className="hidden sm:inline">Attach URL</span>)}
                       {attachedUrl ? (<span className="sm:hidden">URL</span>) : (<span className="sm:hidden">URL</span>)}
                     </button>
+
+                    {/* Voice Mode Button - only show when not in voice mode */}
+                    {!isVoiceModeActive && (
+                      <button
+                        type="button"
+                        onClick={() => setIsVoiceModeActive(true)}
+                        disabled={loading}
+                        className="flex items-center gap-1.5 px-2 py-1 text-xs font-bold paper-button bg-white text-black border-black/10 hover:border-black/30"
+                      >
+                        <Mic className="w-3 h-3" />
+                        <span className="hidden sm:inline">Voice Mode</span>
+                        <span className="sm:hidden">Voice</span>
+                      </button>
+                    )}
 
                     {attachedFiles.length > 0 && (
                       <button

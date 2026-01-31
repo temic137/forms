@@ -12,10 +12,11 @@ import ShareButton from "@/components/ShareButton";
 // import IntegrationButton from "@/components/IntegrationButton";
 // Lazy load the heavy builder component
 const DragDropFormBuilder = lazy(() => import("@/components/builder/DragDropFormBuilder"));
+const VoiceModeLazy = lazy(() => import("@/components/voice/VoiceModeLazy"));
 import PostSaveShareModal from "@/components/PostSaveShareModal";
 import AnimatedFormTitle from "@/components/AnimatedFormTitle";
 import AnimatedDashboardSubtitle from "@/components/AnimatedDashboardSubtitle";
-import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X, UserPlus, History, Clock } from "lucide-react";
+import { FileText, Edit2, Trash2, BarChart3, Sparkles, Upload, Globe, Camera, FileJson, Plus, AlertCircle, X, UserPlus, History, Clock, Mic } from "lucide-react";
 import { useToastContext } from "@/contexts/ToastContext";
 import { ConfirmationDialog, useConfirmDialog } from "@/components/ui/ConfirmationDialog";
 import { useCollaboration } from "@/hooks/useCollaboration";
@@ -73,6 +74,9 @@ export default function DashboardPage() {
   const [opensAt, setOpensAt] = useState<string | undefined>(undefined);
   const [isClosed, setIsClosed] = useState(false);
   const [closedMessage, setClosedMessage] = useState<string | undefined>(undefined);
+  
+  // Voice Mode state
+  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
 
   const {
     query,
@@ -607,19 +611,40 @@ export default function DashboardPage() {
 
 
             <form onSubmit={handleSubmit} className="space-y-3 w-full">
-              <div className="relative">
-                <textarea
-                  id="prompt"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
-                  className="paper-input w-full px-4 py-4 text-base resize-none border-2 border-black/20 focus:border-black/40 rounded-xl bg-white"
-                  style={{
-                    minHeight: '100px'
-                  }}
-                  disabled={generatingForm}
-                />
-              </div>
+              {/* Voice Mode Inline */}
+              {isVoiceModeActive ? (
+                <div className="bg-white border-2 border-black/20 rounded-xl p-4 sm:p-6">
+                  <Suspense fallback={<div className="p-6"><Spinner size="md" variant="primary" /></div>}>
+                    <VoiceModeLazy
+                      inline
+                      onTranscriptComplete={(transcript) => {
+                        setQuery(transcript);
+                      }}
+                    />
+                  </Suspense>
+                  <button
+                    type="button"
+                    onClick={() => setIsVoiceModeActive(false)}
+                    className="mt-3 text-xs sm:text-sm font-bold text-black/60 hover:text-black font-paper underline touch-manipulation min-h-[44px] flex items-center"
+                  >
+                    ← Switch to typing
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <textarea
+                    id="prompt"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Describe your form here... (e.g., 'A registration form for a cooking class with dietary restrictions')"
+                    className="paper-input w-full px-4 py-4 text-base resize-none border-2 border-black/20 focus:border-black/40 rounded-xl bg-white"
+                    style={{
+                      minHeight: '100px'
+                    }}
+                    disabled={generatingForm}
+                  />
+                </div>
+              )}
 
               {/* Attachments Area */}
               <div className="space-y-2 flex flex-col items-center">
@@ -701,6 +726,19 @@ export default function DashboardPage() {
                     <Globe className="w-4 h-4" />
                     {attachedUrl ? "URL Attached" : "Attach URL"}
                   </button>
+
+                  {/* Voice Mode Button - only show when not in voice mode */}
+                  {!isVoiceModeActive && (
+                    <button
+                      type="button"
+                      onClick={() => setIsVoiceModeActive(true)}
+                      disabled={generatingForm}
+                      className="paper-button flex items-center gap-1.5 px-3 py-2 text-sm font-bold bg-white text-black border-2 border-black/20 hover:border-black/40"
+                    >
+                      <Mic className="w-4 h-4" />
+                      Voice Mode
+                    </button>
+                  )}
 
                   {attachedFiles.length > 0 && (
                     <button

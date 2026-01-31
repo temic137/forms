@@ -28,10 +28,10 @@ const methods = [
   },
   {
     id: "voice" as CreationMethod,
-    title: "Voice Input",
-    description: "Speak your form requirements using voice recognition",
+    title: "Voice Mode",
+    description: "Dictate your form requirements using voice recognition",
     icon: Mic,
-    features: ["Hands-free", "Multi-language", "Real-time transcription"],
+    features: ["Hands-free dictation", "Natural speech", "Real-time transcription"],
   },
   {
     id: "file" as CreationMethod,

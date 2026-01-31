@@ -13,7 +13,7 @@ interface CreationMethodSelectorProps {
 const methods = [
   {
     id: "prompt" as CreationMethodInline,
-    label: "Text/Voice",
+    label: "Text",
     icon: null, // No icon, it's the default
   },
   {

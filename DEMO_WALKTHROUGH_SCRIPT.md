@@ -1,100 +1,56 @@
-# Demo Walkthrough Script (Updated)
+# ⚡ 60-Second Demo Script (High Impact)
 
-Here is a step-by-step screen recording script designed to showcase the most impressive features of your app.
+Your friend is right—60 seconds is the "golden minute" for engagement. This script is designed to be fast-paced, punchy, and focus on the **"Wow" moments** to keep viewers watching.
 
-**Constraints:**
-*   No voiceover.
-*   No Google Sheets / Notion integration demos.
-*   **Include:** Inline AI Chat feature (AI Designer).
-*   **Exclude:** File Upload demo.
+**Time Budget:** 60 Seconds strict.
+**Style:** Fast cuts, no mouse meandering. Go straight to the action.
 
 ---
 
-## 🎬 Screen Recording Script
+## 🎬 The "Speed Run" Script
 
-### Preparation
-*   Open your app in a browser window.
-*   Clear any clutter from the screen.
-*   **Recommendation:** Since there is no voiceover, use **short text overlays** (titles) in your video editor to introduce each section.
+### 0:00 - 0:15 | The Hook: Creation
+**Overlay:** "Build forms at the speed of thought."
 
-### Phase 1: Creation (0:00 - 0:30)
+1.  **Action:** Start on Dashboard. Click **"Create"**.
+2.  **Action:** Click **"AI Prompt"**.
+3.  **Action:** Type fast: *"Feedback form for a tech conference"*
+4.  **Action:** Hit Enter.
+5.  **Edit Note:** **SPEED UP** the loading part (2x-4x speed) so the form appears instantly.
+6.  **Action:** Quick scroll (2s) to show the full form created.
 
-**Overlay Text:** "1. Create with AI"
+### 0:15 - 0:35 | The Magic: AI Designer
+**Overlay:** "Your AI Co-Pilot."
 
-1.  **Dashboard Start**
-    *   Start on the dashboard. Hover over the clean interface to show the "Tool-First" design.
-    *   Click **"Create"**.
+7.  **Action:** Click **"AI"** (Sparkles) button. Panel slides in.
+8.  **Action:** Type: *"Add a rating scale for speakers"* -> **Enter**.
+9.  **Action:** Field appears instantly.
+10. **Action:** Click a text field. Click the **Sparkle Icon** (Inline AI).
+11. **Action:** Click **"Rewrite Formal"**. Text updates immediately.
+12. **Overlay:** "Refines content instantly."
 
-2.  **AI Prompt Generation**
-    *   Click the **"AI Prompt"** card.
-    *   Type a prompt: *"Create a customer satisfaction survey for a coffee shop."*
-    *   Click **"Generate"**.
-    *   *Wait* on the loading screen to build anticipation.
-    *   **Result:** Scroll slowly through the generated form to show the relevant fields it created.
+### 0:35 - 0:50 | The Flow: Share & Analyze
+**Overlay:** "Share. Collect. Analyze."
 
-### Phase 2: AI Designer Chat (0:30 - 1:00)
+13. **Action:** Click **"Share"**.
+14. **Action:** Click **"Copy Link"**.
+15. **Action:** Open new tab, paste link. (Show the live form for 2s).
+16. **Action:** *CUT* straight to the **Submissions Dashboard** with data already there.
+17. **Action:** Hover over a row to show the data is real.
 
-**Overlay Text:** "2. Edit with AI Chat"
+### 0:50 - 1:00 | The Outro
+**Overlay:** "The Tool-First Form Builder."
 
-3.  **Open AI Chat**
-    *   Click the **"AI"** button (with Sparkles icon) in the top header bar.
-    *   The "AI Designer" panel slides in from the right.
-
-4.  **Natural Language Commands**
-    *   Type: *"Add a rating question for coffee quality"*
-    *   Press Enter.
-    *   **Result:** Watch the new field appear instantly in the builder.
-    *   Type: *"Make all fields required"*
-    *   Press Enter.
-    *   **Result:** Show the "Required" toggles switching on.
-
-### Phase 3: Inline Field AI (1:00 - 1:20)
-
-**Overlay Text:** "3. Smart Refinements"
-
-5.  **Inline AI - Improve Text**
-    *   Click on a text field (e.g., "Any comments?").
-    *   **Action:** Click the small **Sparkle/AI Icon** inside the field editor.
-    *   **Action:** Select **"Rewrite formal"** from the dropdown menu.
-    *   **Result:** Watch the text transform.
-
-6.  **Inline AI - Generate Options**
-    *   (Optional) If you have a dropdown field, click the **"✨ Generate"** button to auto-fill options.
-
-### Phase 4: User Experience (1:20 - 1:45)
-
-**Overlay Text:** "4. Publish & Share"
-
-7.  **Preview & Submit**
-    *   Click **"Share"** or **"Preview"**.
-    *   Open the form in a new tab (simulating a real user).
-    *   Quickly fill out the form:
-        *   *Name:* "Demo User"
-        *   *Rating:* 5 stars
-    *   Click **"Submit"**.
-
-### Phase 5: Results (1:45 - 2:00)
-
-**Overlay Text:** "5. Instant Analytics"
-
-8.  **View Data**
-    *   Return to the Admin/Dashboard tab.
-    *   Click on the **"Submissions"** tab.
-    *   Highlight the new row that just appeared.
-
-### Phase 6: Closing
-
-9.  **Final Shot**
-    *   Return to the "My Forms" list showing the new form.
-    *   Fade to black.
+18. **Action:** Click back to "My Forms".
+19. **Action:** Show the clean grid of forms.
+20. **Final Overlay:** [Your App Name/Logo] + URL.
+21. **Fade to Black.**
 
 ---
 
-## 💡 Text Overlay Tips
+## ✂️ Editing Tips for "Interesting"
 
-Since you aren't using voice, text overlays are **essential** to guide the viewer.
-
-**Keep it minimal:**
-*   Don't write paragraphs.
-*   Use 3-5 word titles for each section (as shown in the script).
-*   *Optional:* Use small "pop-up" text bubbles for specific features, e.g., pointing to the chat panel with text: **"Conversational Editing"**.
+1.  **Speed Ramps:** Fast-forward any loading screens or typing. Viewers read faster than you type.
+2.  **Zoom Cuts:** When showing the "Inline AI" (step 10), **zoom in** on the video editor so they clearly see the text change.
+3.  **Music:** Use an upbeat, modern background track (lo-fi or tech-house) to keep the energy up.
+4.  **No Dead Air:** Never have the mouse just sitting there. Always be moving to the next action.
