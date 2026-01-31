@@ -41,6 +41,49 @@ export interface UseVoiceInputReturn {
   setLanguage: (lang: string) => void;
 }
 
+const normalizeTranscript = (value: string): string => (value ? value.replace(/\s+/g, ' ').trim() : '');
+
+const mergeTranscripts = (current: string, incoming: string): string => {
+  const cleanCurrent = normalizeTranscript(current);
+  const cleanIncoming = normalizeTranscript(incoming);
+
+  if (!cleanCurrent) {
+    return cleanIncoming;
+  }
+
+  if (!cleanIncoming) {
+    return cleanCurrent;
+  }
+
+  if (cleanIncoming === cleanCurrent) {
+    return cleanCurrent;
+  }
+
+  if (cleanIncoming.startsWith(cleanCurrent)) {
+    return cleanIncoming;
+  }
+
+  if (cleanCurrent.startsWith(cleanIncoming)) {
+    return cleanCurrent;
+  }
+
+  const currentWords = cleanCurrent.split(' ').filter(Boolean);
+  const incomingWords = cleanIncoming.split(' ').filter(Boolean);
+  const maxOverlap = Math.min(currentWords.length, incomingWords.length);
+
+  for (let overlap = maxOverlap; overlap > 0; overlap--) {
+    const currentSuffix = currentWords.slice(-overlap).join(' ');
+    const incomingPrefix = incomingWords.slice(0, overlap).join(' ');
+
+    if (currentSuffix === incomingPrefix) {
+      const merged = `${cleanCurrent} ${incomingWords.slice(overlap).join(' ')}`;
+      return normalizeTranscript(merged);
+    }
+  }
+
+  return normalizeTranscript(`${cleanCurrent} ${cleanIncoming}`);
+};
+
 /**
  * Custom React hook for voice input using Web Speech API
  * 
@@ -70,6 +113,7 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
 
   // Refs to maintain transcript state and avoid stale closures
   const finalTranscriptRef = useRef(initialTranscript);
+  const lastFinalResultRef = useRef('');
   
   // No-speech timeout handling (Requirement 10.2: auto-pause after 10 seconds)
   const noSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -191,14 +235,31 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
     if (isFinal) {
       // Track transcription latency (Requirement 12.2: < 1s)
       performanceMonitor.mark('transcription-latency');
-      
-      // Append final result to accumulated transcript
-      const updatedTranscript = finalTranscriptRef.current 
-        ? `${finalTranscriptRef.current} ${newTranscript}`.trim()
-        : newTranscript;
-      
-      finalTranscriptRef.current = updatedTranscript;
-      setTranscript(updatedTranscript);
+
+      const cleanIncoming = normalizeTranscript(newTranscript);
+
+      if (!cleanIncoming) {
+        setInterimTranscript('');
+        return;
+      }
+
+      if (cleanIncoming === lastFinalResultRef.current) {
+        setInterimTranscript('');
+        return;
+      }
+
+      const previousTranscript = finalTranscriptRef.current;
+      const mergedTranscript = mergeTranscripts(previousTranscript, cleanIncoming);
+
+      lastFinalResultRef.current = cleanIncoming;
+
+      const hasChanged = mergedTranscript !== previousTranscript;
+
+      if (hasChanged) {
+        finalTranscriptRef.current = mergedTranscript;
+        setTranscript(mergedTranscript);
+      }
+
       setInterimTranscript(''); // Clear interim immediately for final results
 
       // Measure transcription latency
@@ -213,8 +274,8 @@ export function useVoiceInput(config: UseVoiceInputConfig = {}): UseVoiceInputRe
       }
 
       // Notify parent component of transcript change
-      if (onTranscriptChange) {
-        onTranscriptChange(updatedTranscript);
+      if (hasChanged && onTranscriptChange) {
+        onTranscriptChange(mergedTranscript);
       }
     } else {
       // Update interim transcript with debouncing to reduce re-renders

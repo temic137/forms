@@ -229,6 +229,33 @@ describe('useVoiceInput', () => {
       expect(result.current.transcript).toBe('Hello world');
     });
 
+    test('should normalize cumulative final transcripts without duplication', async () => {
+      const { result } = renderHook(() => useVoiceInput());
+
+      await act(async () => {
+        await result.current.startListening();
+      });
+
+      const phrases = [
+        'create',
+        'create a',
+        'create a survey',
+        'create a survey for',
+        'create a survey for a party',
+        'create a survey for a party I\'m about to have',
+      ];
+
+      for (const phrase of phrases) {
+        await act(async () => {
+          if (mockCallbacks.onResult) {
+            mockCallbacks.onResult(phrase, true);
+          }
+        });
+      }
+
+      expect(result.current.transcript).toBe('create a survey for a party I\'m about to have');
+    });
+
     test('should update interim transcript', async () => {
       const { result } = renderHook(() => useVoiceInput());
 
@@ -346,7 +373,7 @@ describe('useVoiceInput', () => {
         }
       });
 
-      expect(result.current.transcript).toBe('Edited:  new speech');
+      expect(result.current.transcript).toBe('Edited: new speech');
     });
   });
 
