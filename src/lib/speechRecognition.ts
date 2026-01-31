@@ -85,6 +85,7 @@ export class SpeechRecognitionService {
   private lastResultTime: number = 0;
   private noResultTimeout: NodeJS.Timeout | null = null;
   private hasReceivedResult: boolean = false;
+  private microphonePermissionGranted: boolean = false;
 
   constructor() {
     this.supported = this.detectBrowserSupport().speechRecognition;
@@ -150,13 +151,22 @@ export class SpeechRecognitionService {
           } : {})
         } 
       });
-      
-      // Store the stream for later use
-      this.mediaStream = stream;
-      
+
+      this.microphonePermissionGranted = true;
+
+      if (this.isMobile) {
+        // Release the stream immediately so SpeechRecognition can claim the mic
+        stream.getTracks().forEach(track => track.stop());
+        this.mediaStream = null;
+      } else {
+        // Store the stream for desktop audio-level monitoring
+        this.mediaStream = stream;
+      }
+
       return stream;
     } catch (error) {
       console.error('Microphone permission request failed:', error);
+      this.microphonePermissionGranted = false;
       throw createVoiceError('permission-denied', error as Error);
     }
   }
@@ -339,6 +349,7 @@ export class SpeechRecognitionService {
         console.log('Mobile: speech detected');
         this.restartAttempts = 0;
         this.hasReceivedResult = true;
+        this.emitMobileAudioActivity(75);
         
         // Reset no-result timeout since speech was detected
         if (this.isMobile) {
@@ -347,15 +358,36 @@ export class SpeechRecognitionService {
       };
     }
 
+    if ('onspeechend' in this.recognition) {
+      (this.recognition as SpeechRecognition & { onspeechend: (() => void) | null }).onspeechend = () => {
+        console.log('Mobile: speech ended');
+        this.emitMobileAudioActivity(5);
+      };
+    }
+
     if ('onaudiostart' in this.recognition) {
       (this.recognition as SpeechRecognition & { onaudiostart: (() => void) | null }).onaudiostart = () => {
         console.log('Mobile: audio capture started');
+        this.emitMobileAudioActivity(40);
+      };
+    }
+    if ('onaudioend' in this.recognition) {
+      (this.recognition as SpeechRecognition & { onaudioend: (() => void) | null }).onaudioend = () => {
+        console.log('Mobile: audio capture ended');
+        this.emitMobileAudioActivity(0);
       };
     }
     
     if ('onsoundstart' in this.recognition) {
       (this.recognition as SpeechRecognition & { onsoundstart: (() => void) | null }).onsoundstart = () => {
         console.log('Mobile: sound detected');
+        this.emitMobileAudioActivity(55);
+      };
+    }
+    if ('onsoundend' in this.recognition) {
+      (this.recognition as SpeechRecognition & { onsoundend: (() => void) | null }).onsoundend = () => {
+        console.log('Mobile: sound ended');
+        this.emitMobileAudioActivity(10);
       };
     }
   }
@@ -526,22 +558,34 @@ export class SpeechRecognitionService {
         return;
       }
 
-      try {
-        // On mobile, ensure we have microphone permission first
-        if (this.isMobile && !this.mediaStream) {
-          // Request permission if not already granted
-          this.requestMicrophonePermission()
-            .then(() => {
-              this.startRecognition(resolve, reject);
-            })
-            .catch(reject);
-        } else {
-          this.startRecognition(resolve, reject);
+      const beginRecognition = () => {
+        this.startRecognition(resolve, reject);
+      };
+
+      // Mobile browsers cannot share the microphone between Web Speech and getUserMedia
+      if (this.isMobile) {
+        if (this.microphonePermissionGranted) {
+          beginRecognition();
+          return;
         }
-      } catch (error) {
-        const voiceError = createVoiceError('aborted', error as Error);
-        reject(voiceError);
+        this.requestMicrophonePermission()
+          .then(() => {
+            beginRecognition();
+          })
+          .catch(reject);
+        return;
       }
+
+      if (!this.mediaStream) {
+        this.requestMicrophonePermission()
+          .then(() => {
+            beginRecognition();
+          })
+          .catch(reject);
+        return;
+      }
+
+      beginRecognition();
     });
   }
   
@@ -560,7 +604,11 @@ export class SpeechRecognitionService {
     try {
       this.recognition.start();
       this.hasReceivedResult = false;
-      this.startAudioLevelMonitoring();
+      if (!this.isMobile) {
+        this.startAudioLevelMonitoring();
+      } else {
+        this.emitMobileAudioActivity(5);
+      }
       resolve();
     } catch (error) {
       const voiceError = createVoiceError('aborted', error as Error);
@@ -575,6 +623,9 @@ export class SpeechRecognitionService {
    * Requirement 12.5: Optimize audio level calculations
    */
   private async startAudioLevelMonitoring(): Promise<void> {
+    if (this.isMobile) {
+      return;
+    }
     try {
       // Check if mediaDevices is available (requires HTTPS or localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -643,6 +694,15 @@ export class SpeechRecognitionService {
     } catch (error) {
       console.warn('Failed to start audio level monitoring:', error);
       // Don't fail the entire recognition if audio monitoring fails
+    }
+  }
+
+  private emitMobileAudioActivity(level: number): void {
+    if (!this.isMobile) {
+      return;
+    }
+    if (this.callbacks.onAudioLevel) {
+      this.callbacks.onAudioLevel(Math.max(0, Math.min(100, level)));
     }
   }
 
@@ -809,6 +869,7 @@ export class SpeechRecognitionService {
     this.config = null;
     this.hasReceivedResult = false;
     this.lastResultTime = 0;
+    this.microphonePermissionGranted = false;
   }
 }
 
