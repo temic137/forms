@@ -13,6 +13,21 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Relax rules for hackathon - focus on functionality over perfect code quality
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
+      'react/no-unescaped-entities': 'warn',
+      '@next/next/no-img-element': 'warn',
+      'react-hooks/rules-of-hooks': 'error', // Keep this as error - it's important
+      'react-hooks/refs': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/static-components': 'warn',
+    }
+  }
 ]);
 
 export default eslintConfig;

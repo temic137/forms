@@ -16,11 +16,30 @@ Visit `http://localhost:3000`
 
 ## 📚 Documentation
 
-Detailed documentation can be found in the [docs/](docs/) directory.
+### Getting Started
+- [Start Here](docs/START_HERE.md) - Comprehensive guide to the tool-first design
+- [Quick Deploy to Vercel](docs/QUICK_DEPLOY_VERCEL.md)
+- [Environment Variables](docs/ENV_FILES_EXPLANATION.md)
 
-- [Visual Guide](docs/QUICK_VISUAL_GUIDE.md)
-- [Implementation Steps](docs/IMPLEMENTATION_STEPS.md)
-- [Design Principles](docs/DESIGN_PRINCIPLES.md)
+### Features
+- [Voice Input Guide](docs/VOICE_INPUT_GUIDE.md)
+- [Quiz Mode Feature](docs/QUIZ_MODE_FEATURE.md)
+- [Embed Feature Guide](docs/EMBED_FEATURE_GUIDE.md)
+- [Multiple Creation Methods](docs/MULTIPLE_CREATION_METHODS_GUIDE.md)
+- [Enhanced Form Generation](docs/ENHANCED_FORM_GENERATION.md)
+- [Multi-Model Intelligence](docs/MULTI_MODEL_INTELLIGENCE.md)
+- [Dynamic Intelligent Generation](docs/DYNAMIC_INTELLIGENT_GENERATION.md)
+
+### Setup Guides
+- [Google OAuth Setup](docs/GOOGLE_OAUTH_SETUP_GUIDE.md)
+- [Google Sheets Integration](docs/GOOGLE_SHEETS_SETUP.md)
+- [Notion Integration](docs/NOTION_SETUP.md)
+- [Notifications Setup](docs/NOTIFICATIONS_SETUP.md)
+- [Database Migration Guide](docs/DATABASE_MIGRATION_GUIDE.md)
+
+### Deployment
+- [Vercel Deployment](docs/VERCEL_DEPLOYMENT.md)
+- [Testing Guide](docs/TESTING_GUIDE.md)
 
 ## 🛠 Tech Stack
 
