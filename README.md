@@ -24,10 +24,6 @@
 
 ---
 
-## 🎥 Demo
-
-[**🔗 Live Demo**](https://your-vercel-url.vercel.app) | [**📹 Video Demo**](https://youtube.com/watch?v=your-video)
-
 ### Quick Preview
 
 ![AnyForm Landing Page](https://i.imgur.com/Y6JkRtj.png)
@@ -304,61 +300,13 @@ Make sure to set these in Vercel:
 
 ---
 
-## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-Copyright © 2026 [Your Name]. All Rights Reserved.
-
-This project is proprietary and confidential. Unauthorized copying, distribution, or use of this software is strictly prohibited without explicit permission from the author.
-
----
-
-## 🏆 Hackathon
-
-Built for the **Google DeepMind Gemini 3 Hackathon** (December 2025 - February 2026)
-
-### Highlights:
-- 🎤 **Unique Voice Mode** - Smart auto-stop, mobile-optimized
-- 🤖 **Extensive Gemini Usage** - Text, Vision, Embeddings, Function Calling
-- 📱 **Production-Ready** - Fully deployed and functional
-- 🎨 **Professional Design** - Clean, accessible, responsive
-
----
 
 ## 🙏 Acknowledgments
 
 - **Google DeepMind** for the incredible Gemini 3 API
 - **Vercel** for seamless deployment
-- **The open-source community** for amazing tools
 
----
-
-## 📧 Contact
-
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-- **Email**: your.email@example.com
-- **Twitter**: [@yourhandle](https://twitter.com/yourhandle)
-- **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
-
----
-
-## 🔗 Links
-
-- 🌐 [Live Demo](https://your-vercel-url.vercel.app)
-- 📹 [Video Demo](https://youtube.com/watch?v=your-video)
-- 📝 [Devpost Submission](https://devpost.com/software/anyform)
-- 📚 [Documentation](./docs)
 
 ---
 
