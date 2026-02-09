@@ -11,6 +11,8 @@
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint",
+    "check-env": "node scripts/check-env.js",
+    "prebuild": "node scripts/check-env.js",
     "generate-favicon": "node scripts/generate-favicon.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
