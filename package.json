@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && NEXT_TURBOPACK=0 next build",
+    "build": "prisma generate && cross-env NEXT_TURBOPACK=0 next build",
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint",
@@ -72,6 +72,7 @@
     "@types/react-dom": "^19",
     "@types/xlsx": "^0.0.35",
     "autoprefixer": "^10.4.23",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "postcss": "^8.5.6",
