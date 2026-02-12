@@ -326,6 +326,11 @@ export function getReactHookFormValidation(
     required: required ? "This field is required" : false,
   };
   
+  // Debug logging (remove in production)
+  if (fieldType === "email" || fieldType === "phone" || fieldType === "url") {
+    console.log(`[Validation] ${fieldType} field - rules:`, allRules);
+  }
+  
   // Add validation rules
   allRules.forEach((rule) => {
     switch (rule.type) {
@@ -343,10 +348,14 @@ export function getReactHookFormValidation(
         break;
       case "pattern":
         try {
-          // Extract pattern from regex string format
+          // The pattern value is stored as a string (from .source)
+          // We need to create a RegExp from it
           const patternStr = rule.value.toString();
+          // Check if it's already in /pattern/flags format or just the pattern string
           const match = patternStr.match(/^\/(.+)\/([gimsuy]*)$/);
-          const pattern = match ? new RegExp(match[1], match[2]) : new RegExp(patternStr);
+          const pattern = match 
+            ? new RegExp(match[1], match[2]) 
+            : new RegExp(patternStr); // patternStr is just the pattern without delimiters
           validation.pattern = {
             value: pattern,
             message: rule.message,
@@ -379,6 +388,11 @@ export function getReactHookFormValidation(
   // Add valueAsNumber for number fields
   if (fieldType === "number" || fieldType === "currency") {
     validation.valueAsNumber = true;
+  }
+  
+  // Debug logging (remove in production)
+  if (fieldType === "email" || fieldType === "phone" || fieldType === "url") {
+    console.log(`[Validation] ${fieldType} final validation:`, validation);
   }
   
   return validation;

@@ -1143,6 +1143,8 @@ export default function FormRenderer({
           <input
             id={id}
             type="email"
+            pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+            title="Please enter a valid email address"
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1160,6 +1162,7 @@ export default function FormRenderer({
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
+            required={required}
           />
         )}
 
@@ -1167,6 +1170,8 @@ export default function FormRenderer({
           <input
             id={id}
             type="tel"
+            pattern="[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{4,15}"
+            title="Please enter a valid phone number"
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1184,6 +1189,7 @@ export default function FormRenderer({
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
+            required={required}
           />
         )}
 
@@ -1917,6 +1923,8 @@ export default function FormRenderer({
             id={id}
             type="number"
             value={(formValues[id] as string | number) || ''}
+            step="any"
+            title="Please enter a valid number"
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1934,6 +1942,7 @@ export default function FormRenderer({
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
+            required={required}
           />
         )}
 
@@ -1971,6 +1980,8 @@ export default function FormRenderer({
           <input
             id={id}
             type="url"
+            pattern="https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+            title="Please enter a valid URL starting with http:// or https://"
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -1988,6 +1999,7 @@ export default function FormRenderer({
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
+            required={required}
           />
         )}
 
@@ -1996,6 +2008,8 @@ export default function FormRenderer({
           <input
             id={id}
             type="tel"
+            pattern="[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{4,15}"
+            title="Please enter a valid phone number"
             className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
               hasError ? "border-red-500" : ""
             }`}
@@ -2013,6 +2027,7 @@ export default function FormRenderer({
             aria-invalid={hasError ? "true" : "false"}
             aria-errormessage={hasError ? errorId : undefined}
             aria-required={required ? "true" : "false"}
+            required={required}
           />
         )}
 
