@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { ChangeEvent } from "react";
 import { Field, MultiStepConfig, QuizModeConfig } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
-import { validateField } from "@/lib/validation";
+import { validateField, getReactHookFormValidation } from "@/lib/validation";
 import { QuizScore } from "@/lib/scoring";
 import MultiStepRenderer from "@/components/MultiStepRenderer";
 import FileUpload from "@/components/FileUpload";
@@ -1102,7 +1102,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             placeholder={placeholder}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1127,7 +1127,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             placeholder={placeholder}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLTextAreaElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1152,7 +1152,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             placeholder={placeholder || "your@email.com"}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1176,7 +1176,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             placeholder={placeholder || "+1 (555) 000-0000"}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1201,7 +1201,7 @@ export default function FormRenderer({
                 borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                 color: 'var(--foreground)',
               } as React.CSSProperties}
-              {...(isPreviewMode ? { name: `${id}_street`, value: (formValues[`${id}_street`] as string) || '' } : register(`${id}_street`, { required }))}
+              {...(isPreviewMode ? { name: `${id}_street`, value: (formValues[`${id}_street`] as string) || '' } : register(`${id}_street`, getReactHookFormValidation('text', required, f.validation)))}
               {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_street`, event.target.value) } : {})}
               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             />
@@ -1218,7 +1218,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_city`, value: (formValues[`${id}_city`] as string) || '' } : register(`${id}_city`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_city`, value: (formValues[`${id}_city`] as string) || '' } : register(`${id}_city`, getReactHookFormValidation('text', required, f.validation)))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_city`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1234,7 +1234,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_state`, value: (formValues[`${id}_state`] as string) || '' } : register(`${id}_state`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_state`, value: (formValues[`${id}_state`] as string) || '' } : register(`${id}_state`, getReactHookFormValidation('text', required, f.validation)))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_state`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1252,7 +1252,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_zip`, value: (formValues[`${id}_zip`] as string) || '' } : register(`${id}_zip`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_zip`, value: (formValues[`${id}_zip`] as string) || '' } : register(`${id}_zip`, getReactHookFormValidation('text', required, f.validation)))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_zip`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1268,7 +1268,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_country`, value: (formValues[`${id}_country`] as string) || '' } : register(`${id}_country`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_country`, value: (formValues[`${id}_country`] as string) || '' } : register(`${id}_country`, getReactHookFormValidation('text', required, f.validation)))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_country`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
               />
@@ -1702,7 +1702,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
@@ -1726,7 +1726,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
@@ -1750,7 +1750,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
@@ -1783,7 +1783,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_start` } : register(`${id}_start`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_start` } : register(`${id}_start`, getReactHookFormValidation('date', required, f.validation)))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_start`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                 aria-describedby={helpText ? helpTextId : undefined}
@@ -1813,7 +1813,7 @@ export default function FormRenderer({
                   borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                   color: 'var(--foreground)',
                 } as React.CSSProperties}
-                {...(isPreviewMode ? { name: `${id}_end` } : register(`${id}_end`, { required }))}
+                {...(isPreviewMode ? { name: `${id}_end` } : register(`${id}_end`, getReactHookFormValidation('date', required, f.validation)))}
                 {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(`${id}_end`, event.target.value) } : {})}
                 onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
                 aria-describedby={helpText ? helpTextId : undefined}
@@ -1926,7 +1926,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id } : register(id, { required, valueAsNumber: true }))}
+            {...(isPreviewMode ? { name: id } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             placeholder={placeholder || "0"}
             {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value ? parseFloat(event.target.value) : undefined) } : {})}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1954,7 +1954,7 @@ export default function FormRenderer({
                 borderColor: hasError ? '#ef4444' : 'var(--card-border)',
                 color: 'var(--foreground)',
               } as React.CSSProperties}
-              {...(isPreviewMode ? { name: id } : register(id, { required, valueAsNumber: true }))}
+              {...(isPreviewMode ? { name: id } : register(id, getReactHookFormValidation(type, required, f.validation)))}
               placeholder="0.00"
               {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value ? parseFloat(event.target.value) : undefined) } : {})}
               onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
@@ -1966,9 +1966,59 @@ export default function FormRenderer({
           </div>
         )}
 
+        {/* URL Field */}
+        {type === "url" && (
+          <input
+            id={id}
+            type="url"
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, getReactHookFormValidation(type, required, f.validation)))}
+            placeholder={placeholder || "https://example.com"}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
+        {/* Tel Field */}
+        {type === "tel" && (
+          <input
+            id={id}
+            type="tel"
+            className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              hasError ? "border-red-500" : ""
+            }`}
+            style={{
+              '--tw-ring-color': styling?.primaryColor || 'var(--accent)',
+              background: 'var(--card-bg)',
+              borderColor: hasError ? '#ef4444' : 'var(--card-border)',
+              color: 'var(--foreground)',
+            } as React.CSSProperties}
+            {...(isPreviewMode ? { name: id, value: (formValues[id] as string) || '' } : register(id, getReactHookFormValidation(type, required, f.validation)))}
+            placeholder={placeholder || "+1 (555) 000-0000"}
+            {...(isPreviewMode ? { onChange: (event: ChangeEvent<HTMLInputElement>) => setValue(id, event.target.value) } : {})}
+            onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
+            aria-describedby={helpText ? helpTextId : undefined}
+            aria-invalid={hasError ? "true" : "false"}
+            aria-errormessage={hasError ? errorId : undefined}
+            aria-required={required ? "true" : "false"}
+          />
+        )}
+
         {/* Fallback for unsupported types */}
         {![
-          "short-answer", "text", "long-answer", "textarea", "email", "phone", "address",
+          "short-answer", "text", "long-answer", "textarea", "email", "phone", "tel", "url", "address",
           "multiple-choice", "choices", "radio", "dropdown", "select", "checkboxes", "multiselect", "checkbox", "switch",
           "date", "date-picker", "time", "time-picker", "datetime-picker", "date-range",
           "star-rating", "slider", "opinion-scale", "ranking", "number", "currency", "file", "file-uploader"
@@ -1985,7 +2035,7 @@ export default function FormRenderer({
               borderColor: hasError ? '#ef4444' : 'var(--card-border)',
               color: 'var(--foreground)',
             } as React.CSSProperties}
-            {...(isPreviewMode ? { name: id } : register(id, { required }))}
+            {...(isPreviewMode ? { name: id } : register(id, getReactHookFormValidation(type, required, f.validation)))}
             placeholder={placeholder}
             onBlur={() => isPreviewMode ? undefined : handleFieldBlur(id)}
             aria-describedby={helpText ? helpTextId : undefined}
@@ -1997,7 +2047,7 @@ export default function FormRenderer({
 
         {hasError && (
           <p id={errorId} className="text-sm text-red-600 mt-1" role="alert">
-            {validationErrors[id] || "This field is required"}
+            {(formState.errors[id]?.message as string) || validationErrors[id] || "This field is required"}
           </p>
         )}
       </div>

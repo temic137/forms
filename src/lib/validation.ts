@@ -1,4 +1,4 @@
-import { ValidationRule } from "@/types/form";
+import { ValidationRule, FieldType } from "@/types/form";
 
 /**
  * Validates a field value against an array of validation rules
@@ -177,12 +177,17 @@ export function formatErrorMessage(
  * Common validation patterns for reuse
  */
 export const ValidationPatterns = {
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  phone: /^[\d\s\-\+\(\)]+$/,
-  url: /^https?:\/\/.+/,
+  email: /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/,
+  phone: /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/,
+  url: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/,
   alphanumeric: /^[a-zA-Z0-9]+$/,
   numeric: /^\d+$/,
   alpha: /^[a-zA-Z]+$/,
+  // More specific patterns
+  phoneStrict: /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{4,15}$/,
+  zipCode: /^[0-9]{5}(-[0-9]{4})?$/,
+  postalCode: /^[A-Za-z0-9]{3,10}$/,
+  currency: /^\d+(\.\d{1,2})?$/,
 };
 
 /**
@@ -221,19 +226,160 @@ export const createValidationRule = {
 
   email: (message?: string): ValidationRule => ({
     type: "pattern",
-    value: ValidationPatterns.email.toString(),
+    value: ValidationPatterns.email.source,
     message: message || "Please enter a valid email address",
   }),
 
   phone: (message?: string): ValidationRule => ({
     type: "pattern",
-    value: ValidationPatterns.phone.toString(),
+    value: ValidationPatterns.phone.source,
     message: message || "Please enter a valid phone number",
   }),
 
   url: (message?: string): ValidationRule => ({
     type: "pattern",
-    value: ValidationPatterns.url.toString(),
+    value: ValidationPatterns.url.source,
     message: message || "Please enter a valid URL",
   }),
+
+  currency: (message?: string): ValidationRule => ({
+    type: "pattern",
+    value: ValidationPatterns.currency.source,
+    message: message || "Please enter a valid currency amount (e.g., 10.99)",
+  }),
 };
+
+/**
+ * Get default validation rules for a field type
+ * These provide built-in security and data integrity for common field types
+ */
+export function getDefaultValidationForFieldType(
+  fieldType: FieldType
+): ValidationRule[] {
+  switch (fieldType) {
+    case "email":
+      return [createValidationRule.email()];
+    
+    case "phone":
+    case "tel":
+      return [createValidationRule.phone()];
+    
+    case "url":
+      return [createValidationRule.url()];
+    
+    case "currency":
+      return [createValidationRule.currency()];
+    
+    case "number":
+      return [
+        {
+          type: "pattern",
+          value: /^-?\d*\.?\d+$/.source,
+          message: "Please enter a valid number",
+        },
+      ];
+    
+    default:
+      return [];
+  }
+}
+
+/**
+ * Merge custom validation rules with default rules
+ * Custom rules take precedence and can override defaults
+ */
+export function mergeValidationRules(
+  fieldType: FieldType,
+  customRules?: ValidationRule[]
+): ValidationRule[] {
+  const defaultRules = getDefaultValidationForFieldType(fieldType);
+  
+  if (!customRules || customRules.length === 0) {
+    return defaultRules;
+  }
+  
+  // If custom rules exist, use them as they may be more specific
+  // but keep default pattern validation if no pattern is provided
+  const hasCustomPattern = customRules.some(rule => rule.type === "pattern");
+  
+  if (hasCustomPattern) {
+    // Custom pattern rules replace default pattern validation
+    return customRules;
+  }
+  
+  // Merge default pattern validation with custom rules
+  return [...defaultRules, ...customRules];
+}
+
+/**
+ * Convert validation rules to react-hook-form validation options
+ * This provides client-side validation for better UX and security
+ */
+export function getReactHookFormValidation(
+  fieldType: FieldType,
+  required: boolean,
+  customRules?: ValidationRule[]
+): Record<string, unknown> {
+  const allRules = mergeValidationRules(fieldType, customRules);
+  
+  const validation: Record<string, unknown> = {
+    required: required ? "This field is required" : false,
+  };
+  
+  // Add validation rules
+  allRules.forEach((rule) => {
+    switch (rule.type) {
+      case "minLength":
+        validation.minLength = {
+          value: Number(rule.value),
+          message: rule.message,
+        };
+        break;
+      case "maxLength":
+        validation.maxLength = {
+          value: Number(rule.value),
+          message: rule.message,
+        };
+        break;
+      case "pattern":
+        try {
+          // Extract pattern from regex string format
+          const patternStr = rule.value.toString();
+          const match = patternStr.match(/^\/(.+)\/([gimsuy]*)$/);
+          const pattern = match ? new RegExp(match[1], match[2]) : new RegExp(patternStr);
+          validation.pattern = {
+            value: pattern,
+            message: rule.message,
+          };
+        } catch (error) {
+          console.error("Invalid regex pattern:", rule.value, error);
+        }
+        break;
+      case "min":
+        validation.min = {
+          value: Number(rule.value),
+          message: rule.message,
+        };
+        break;
+      case "max":
+        validation.max = {
+          value: Number(rule.value),
+          message: rule.message,
+        };
+        break;
+      case "custom":
+        validation.validate = (value: unknown) => {
+          const error = validateCustom(value as string | number | undefined, rule);
+          return error || true;
+        };
+        break;
+    }
+  });
+  
+  // Add valueAsNumber for number fields
+  if (fieldType === "number" || fieldType === "currency") {
+    validation.valueAsNumber = true;
+  }
+  
+  return validation;
+}

@@ -4,7 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useState, useMemo, useCallback } from "react";
 import { Field, MultiStepConfig, FormStyling } from "@/types/form";
 import { getVisibleFields } from "@/lib/conditionalLogic";
-import { validateField } from "@/lib/validation";
+import { validateField, mergeValidationRules, getReactHookFormValidation } from "@/lib/validation";
 import ConversationalForm from "@/components/ConversationalForm";
 
 interface EmbedFormRendererProps {
@@ -128,9 +128,10 @@ export default function EmbedFormRenderer({
           continue;
         }
         
-        // Validate with custom rules if present
-        if (field.validation && field.validation.length > 0) {
-          const error = validateField(value as string | number | undefined, field.validation);
+        // Validate with merged rules (includes default validation for field types)
+        const validationRules = mergeValidationRules(field.type, field.validation);
+        if (validationRules.length > 0) {
+          const error = validateField(value as string | number | undefined, validationRules);
           if (error) {
             newFieldErrors[key] = error;
           }
@@ -383,7 +384,7 @@ function renderFieldInput(
           id={key}
           type={field.type}
           placeholder={field.placeholder}
-          {...register(key, { required: field.required })}
+          {...register(key, getReactHookFormValidation(field.type, field.required, field.validation))}
           style={inputStyles}
         />
       );
@@ -394,7 +395,7 @@ function renderFieldInput(
           id={key}
           type="number"
           placeholder={field.placeholder}
-          {...register(key, { required: field.required, valueAsNumber: true })}
+          {...register(key, getReactHookFormValidation(field.type, field.required, field.validation))}
           style={inputStyles}
         />
       );
@@ -404,7 +405,7 @@ function renderFieldInput(
         <input
           id={key}
           type="date"
-          {...register(key, { required: field.required })}
+          {...register(key, getReactHookFormValidation(field.type, field.required, field.validation))}
           style={inputStyles}
         />
       );
@@ -414,7 +415,7 @@ function renderFieldInput(
         <input
           id={key}
           type="time"
-          {...register(key, { required: field.required })}
+          {...register(key, getReactHookFormValidation(field.type, field.required, field.validation))}
           style={inputStyles}
         />
       );
@@ -425,7 +426,7 @@ function renderFieldInput(
           id={key}
           placeholder={field.placeholder}
           rows={4}
-          {...register(key, { required: field.required })}
+          {...register(key, getReactHookFormValidation(field.type, field.required, field.validation))}
           style={{ ...inputStyles, resize: "vertical" }}
         />
       );
@@ -435,7 +436,7 @@ function renderFieldInput(
       return (
         <select
           id={key}
-          {...register(key, { required: field.required })}
+          {...register(key, getReactHookFormValidation(field.type, field.required, field.validation))}
           style={inputStyles}
         >
           <option value="">Select an option</option>

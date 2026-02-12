@@ -5,7 +5,7 @@ import { Field, FieldType } from "@/types/form";
 import { Spinner } from "@/components/ui/Spinner";
 import { Send, UploadCloud, Check, ChevronRight, X, User, Bot, AlertCircle, RefreshCw, Paperclip } from "lucide-react";
 import FileUpload, { FileMetadata } from "@/components/FileUpload";
-import { validateField } from "@/lib/validation";
+import { validateField, mergeValidationRules } from "@/lib/validation";
 
 interface Message {
   id: string;
@@ -202,8 +202,9 @@ export default function ConversationalForm({
     const handleAnswer = async (value: any, displayValue?: React.ReactNode) => {
         const field = fields[currentFieldIndex];
         
-        // Validation
-        const error = validateField(value, field.validation || []);
+        // Validation with merged rules (includes default validation for field types)
+        const validationRules = mergeValidationRules(field.type, field.validation);
+        const error = validateField(value, validationRules);
         if (field.required && (!value || (Array.isArray(value) && value.length === 0))) {
             setValidationError("This field is required.");
             return;
