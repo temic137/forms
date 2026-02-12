@@ -297,15 +297,7 @@ Make sure to set these in Vercel:
 - Lead generation forms
 - Customer feedback surveys
 - Job application forms
-
----
-
-
-
-## 🙏 Acknowledgments
-
-- **Google DeepMind** for the incredible Gemini 3 API
-- **Vercel** for seamless deployment
+- And a lot more
 
 
 ---
